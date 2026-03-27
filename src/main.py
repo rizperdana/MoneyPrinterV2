@@ -1,5 +1,9 @@
+import os
 import schedule
 import subprocess
+
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
 
 from art import *
 from cache import *
@@ -8,7 +12,6 @@ from config import *
 from status import *
 from uuid import uuid4
 from constants import *
-from classes.Tts import TTS
 from termcolor import colored
 from classes.Twitter import Twitter
 from classes.YouTube import YouTube
@@ -17,6 +20,13 @@ from classes.Outreach import Outreach
 from classes.AFM import AffiliateMarketing
 from llm_provider import list_models, select_model, get_active_model
 from post_bridge_integration import maybe_crosspost_youtube_short
+
+try:
+    from classes.Tts import TTS
+    TTS_AVAILABLE = True
+except ImportError:
+    TTS_AVAILABLE = False
+    TTS = None
 
 def main():
     """Main entry point for the application, providing a menu-driven interface
@@ -158,6 +168,11 @@ def main():
 
                     # Get user input
                     user_input = int(question("Select an option: "))
+
+                    if not TTS_AVAILABLE:
+                        error("TTS not available - install kittentts")
+                        break
+
                     tts = TTS()
 
                     if user_input == 1:

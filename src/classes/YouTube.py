@@ -228,7 +228,7 @@ class YouTube:
         Returns:
             image_prompts (List[str]): Generated List of image prompts.
         """
-        n_prompts = len(self.script) / 3
+        n_prompts = min(max(int(len(self.script) / 50), 3), 8)
 
         prompt = f"""
         Generate {n_prompts} Image Prompts for AI Image Generation,
@@ -347,13 +347,26 @@ class YouTube:
         }
 
         try:
-            response = requests.post(
-                endpoint,
-                headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
-                json=payload,
-                timeout=300,
-            )
-            response.raise_for_status()
+            import time as _time
+            for attempt in range(3):
+                response = requests.post(
+                    endpoint,
+                    headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+                    json=payload,
+                    timeout=300,
+                )
+                if response.status_code == 429:
+                    wait = 10 * (attempt + 1)
+                    if get_verbose():
+                        warning(f"Rate limited, waiting {wait}s before retry...")
+                    _time.sleep(wait)
+                    continue
+                response.raise_for_status()
+                break
+            else:
+                if get_verbose():
+                    warning("Max retries exceeded for image generation")
+                return None
             body = response.json()
 
             candidates = body.get("candidates", [])

@@ -2,9 +2,16 @@ __pycache__
 config.json
 .mp/
 venv/
+venv312/
 Songs/
 google-maps-scraper-0.9.7/
 niche.txt
 *.exe
 auto.sh
 .DS_Store
+.env
+*.wav
+*.mp3
+*.mp4
+kittentts_pkg/
+.tool-versions

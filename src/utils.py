@@ -91,6 +91,11 @@ def fetch_songs() -> None:
         download_urls = [configured_url] if configured_url else []
         download_urls.extend(DEFAULT_SONG_ARCHIVE_URLS)
 
+        # Skip if no URLs configured
+        if not download_urls or (len(download_urls) == 1 and not download_urls[0]):
+            info(f" => No song archive URL configured - skipping. Add your own MP3/WAV to Songs/ folder")
+            return
+
         archive_path = os.path.join(files_dir, "songs.zip")
         downloaded = False
 

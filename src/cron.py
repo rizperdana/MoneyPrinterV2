@@ -4,11 +4,17 @@ import sys
 from status import *
 from cache import get_accounts
 from config import get_verbose
-from classes.Tts import TTS
 from classes.Twitter import Twitter
 from classes.YouTube import YouTube
 from llm_provider import select_model
 from post_bridge_integration import maybe_crosspost_youtube_short
+
+try:
+    from classes.Tts import TTS
+    TTS_AVAILABLE = True
+except ImportError:
+    TTS_AVAILABLE = False
+    TTS = None
 
 def main():
     """Main function to post content to Twitter or upload videos to YouTube.
@@ -61,6 +67,10 @@ def main():
                     success("Done posting.")
                 break
     elif purpose == "youtube":
+        if not TTS_AVAILABLE:
+            error("TTS not available - install kittentts")
+            sys.exit(1)
+
         tts = TTS()
 
         accounts = get_accounts("youtube")
