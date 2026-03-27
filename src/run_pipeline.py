@@ -126,12 +126,15 @@ def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool
                 if img_path:
                     success(f"Image {i+1}/{len(prompts)}: {os.path.basename(img_path)}")
                 else:
-                    warning(f"Image {i+1}/{len(prompts)}: FAILED")
+                    warning(f"Image {i+1}/{len(prompts)}: FAILED (will use placeholder)")
                 if i < len(prompts) - 1:
-                    time.sleep(5)  # Rate limit
-        else:
-            warning("No Gemini API key. Using placeholder images.")
-            _generate_placeholder_images(youtube, len(prompts))
+                    time.sleep(3)
+
+        # Fill remaining slots with placeholders if any images failed
+        if len(youtube.images) < len(prompts):
+            missing = len(prompts) - len(youtube.images)
+            warning(f"{missing} images failed. Generating {missing} placeholders.")
+            _generate_placeholder_images(youtube, missing, offset=len(youtube.images))
 
         if len(youtube.images) == 0:
             error("No images generated. Cannot create video.")
@@ -173,7 +176,7 @@ def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool
     return result
 
 
-def _generate_placeholder_images(youtube, count: int):
+def _generate_placeholder_images(youtube, count: int, offset: int = 0):
     """Generate colored placeholder images when AI image gen is unavailable."""
     from PIL import Image, ImageDraw, ImageFont
 
@@ -188,19 +191,20 @@ def _generate_placeholder_images(youtube, count: int):
     ]
 
     for i in range(min(count, len(colors))):
-        img = Image.new("RGB", (1080, 1920), colors[i])
+        idx = offset + i
+        img = Image.new("RGB", (1080, 1920), colors[i % len(colors)])
         draw = ImageDraw.Draw(img)
         try:
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
         except Exception:
             font = ImageFont.load_default()
 
-        label = labels[i] if i < len(labels) else f"Scene {i+1}"
+        label = labels[i % len(labels)]
         bbox = draw.textbbox((0, 0), label, font=font)
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.text(((1080 - w) // 2, (1920 - h) // 2), label, fill="white", font=font)
 
-        path = os.path.join(ROOT_DIR, ".mp", f"placeholder_{i}.png")
+        path = os.path.join(ROOT_DIR, ".mp", f"placeholder_{idx}.png")
         os.makedirs(os.path.dirname(path), exist_ok=True)
         img.save(path)
         youtube.images.append(path)

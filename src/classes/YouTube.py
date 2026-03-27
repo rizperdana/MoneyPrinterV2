@@ -347,26 +347,17 @@ class YouTube:
         }
 
         try:
-            import time as _time
-            for attempt in range(3):
-                response = requests.post(
-                    endpoint,
-                    headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
-                    json=payload,
-                    timeout=300,
-                )
-                if response.status_code == 429:
-                    wait = 10 * (attempt + 1)
-                    if get_verbose():
-                        warning(f"Rate limited, waiting {wait}s before retry...")
-                    _time.sleep(wait)
-                    continue
-                response.raise_for_status()
-                break
-            else:
+            response = requests.post(
+                endpoint,
+                headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+                json=payload,
+                timeout=300,
+            )
+            if response.status_code == 429:
                 if get_verbose():
-                    warning("Max retries exceeded for image generation")
+                    warning("Gemini image API rate limited (429). Falling back.")
                 return None
+            response.raise_for_status()
             body = response.json()
 
             candidates = body.get("candidates", [])
