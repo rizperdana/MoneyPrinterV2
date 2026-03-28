@@ -133,18 +133,135 @@ class YouTube:
         """
         return generate_text(prompt, model_name=model_name)
 
+    def _research_trending_topics(self) -> str:
+        """
+        Researches trending topics using DuckDuckGo search and instant answers.
+        Returns raw search context to feed into the LLM for topic selection.
+
+        Returns:
+            context (str): Research context with trending keywords and topics.
+        """
+        context_parts = []
+
+        # Method 1: DuckDuckGo Instant Answer API (free, no key needed)
+        try:
+            search_query = f"{self.niche} trending 2026"
+            ddg_url = "https://api.duckduckgo.com/"
+            params = {
+                "q": search_query,
+                "format": "json",
+                "no_html": 1,
+                "skip_disambig": 1,
+            }
+            resp = requests.get(ddg_url, params=params, timeout=10,
+                                headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code == 200:
+                data = resp.json()
+                # Extract related topics
+                related = data.get("RelatedTopics", [])
+                topics_found = []
+                for item in related[:8]:
+                    if isinstance(item, dict) and item.get("Text"):
+                        topics_found.append(item["Text"][:120])
+                if topics_found:
+                    context_parts.append("DuckDuckGo Related Topics:\n" +
+                                         "\n".join(f"- {t}" for t in topics_found))
+        except Exception as e:
+            if get_verbose():
+                warning(f"DuckDuckGo instant answer failed: {e}")
+
+        # Method 2: DuckDuckGo HTML search for trending keywords
+        try:
+            search_query = f"{self.niche} latest news trends"
+            ddg_html_url = f"https://html.duckduckgo.com/html/?q={requests.utils.quote(search_query)}"
+            resp = requests.get(ddg_html_url, timeout=10,
+                                headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"})
+            if resp.status_code == 200:
+                # Extract result snippets from HTML
+                import re as _re
+                snippets = _re.findall(r'class="result__snippet"[^>]*>(.*?)</a>', resp.text, _re.DOTALL)
+                if snippets:
+                    clean_snippets = []
+                    for s in snippets[:6]:
+                        clean = _re.sub(r'<[^>]+>', '', s).strip()
+                        if clean and len(clean) > 20:
+                            clean_snippets.append(clean[:150])
+                    if clean_snippets:
+                        context_parts.append("Recent Search Results:\n" +
+                                             "\n".join(f"- {s}" for s in clean_snippets))
+        except Exception as e:
+            if get_verbose():
+                warning(f"DuckDuckGo HTML search failed: {e}")
+
+        # Method 3: Google Trends RSS (simple, no auth needed)
+        try:
+            trends_url = "https://trends.google.com/trending/rss?geo=US"
+            resp = requests.get(trends_url, timeout=10,
+                                headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code == 200:
+                import re as _re
+                # Extract topic names from RSS
+                titles = _re.findall(r'<title>(.*?)</title>', resp.text)
+                # Filter for niche-relevant trends
+                niche_words = set(self.niche.lower().split())
+                relevant = []
+                for t in titles[1:]:  # Skip first (feed title)
+                    t_clean = _re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', t).strip()
+                    if t_clean and len(t_clean) > 3:
+                        relevant.append(t_clean)
+                if relevant:
+                    # Take top 10 trending topics for context
+                    context_parts.append("Google Trends (US) Today:\n" +
+                                         "\n".join(f"- {t}" for t in relevant[:10]))
+        except Exception as e:
+            if get_verbose():
+                warning(f"Google Trends RSS failed: {e}")
+
+        if context_parts:
+            return "\n\n".join(context_parts)
+        return ""
+
     def generate_topic(self) -> str:
         """
         Generates a topic based on trending subjects in the niche.
-        Researches current trends to pick engaging, timely topics.
+        Uses web research to find real trending topics, then picks the best one.
 
         Returns:
             topic (str): The generated topic.
         """
-        # Research trending topics in the niche
-        trend_prompt = f"""You are a YouTube content strategist. Research what's trending right now in the niche: {self.niche}
+        # Step 1: Research what's actually trending
+        research_context = self._research_trending_topics()
 
-Think about:
+        if research_context:
+            if get_verbose():
+                info(f" => Research context ({len(research_context)} chars) gathered from web search")
+
+            # Feed real research data into the LLM
+            trend_prompt = f"""You are a YouTube content strategist. Based on the following REAL-TIME research data, pick the best trending topic for a YouTube Short in the niche: {self.niche}
+
+=== RESEARCH DATA ===
+{research_context}
+=== END RESEARCH DATA ===
+
+Based on the research above, generate 3 specific, engaging video topic ideas that:
+1. Are related to what's ACTUALLY trending right now (from the data above)
+2. Would perform well as YouTube Shorts (curiosity-driven, visual, surprising)
+3. Are specific enough to make a 45-60 second video about
+
+Each topic should be one sentence, specific, and curiosity-driven.
+
+Output format: Just list 3 topics, one per line, numbered 1-3.
+Example:
+1. Scientists just discovered a new species of glowing shark in the deep ocean
+2. The James Webb telescope captured something that shouldn't exist
+3. Why octopuses might be smarter than we thought - new study reveals shocking results"""
+        else:
+            # Fallback: no web research available, use LLM knowledge
+            if get_verbose():
+                warning("Web research unavailable. Using LLM knowledge for topic generation.")
+            trend_prompt = f"""You are a YouTube content strategist. Think about what's trending RIGHT NOW in the niche: {self.niche}
+
+Consider:
 1. What topics are people searching for RIGHT NOW in this niche?
 2. What recent discoveries, news, or viral moments relate to this niche?
 3. What would make someone stop scrolling and watch?
@@ -192,34 +309,48 @@ Example:
 
     def generate_script(self) -> str:
         """
-        Generate a script for a video, depending on the subject of the video, the number of paragraphs, and the AI model.
+        Generate a script for a video with clear Hook + Body + CTA structure.
+
+        Structure:
+        - Hook (first 1-2 sentences): Grab attention immediately with a bold claim or question
+        - Body (3-4 key points): Main content with interesting facts/reasons
+        - CTA (last 1-2 sentences): Call to action - subscribe, like, comment
 
         Returns:
             script (str): The script of the video.
         """
         sentence_length = get_script_sentence_length()
-        prompt = f"""
-        Generate a script for a video in {sentence_length} sentences, depending on the subject of the video.
+        prompt = f"""Write a YouTube Shorts script about: {self.subject}
 
-        The script is to be returned as a string with the specified number of paragraphs.
+The script MUST follow this exact structure:
 
-        Here is an example of a string:
-        "This is an example string."
+SECTION 1 - HOOK (1-2 sentences):
+Start with a shocking fact, bold claim, or intriguing question that grabs attention IMMEDIATELY.
+Examples: "You won't believe what scientists just found..." or "This changes everything we know about..."
 
-        Do not under any circumstance reference this prompt in your response.
+SECTION 2 - BODY ({sentence_length - 3} sentences):
+Present 3-4 key points, facts, or reasons that support the hook.
+Each sentence should build on the previous one. Keep it punchy and engaging.
+Use transitions like "But here's the thing..." or "What's even crazier..."
 
-        Get straight to the point, don't start with unnecessary things like, "welcome to this video".
+SECTION 3 - CALL TO ACTION (1-2 sentences):
+End with a compelling CTA. Ask viewers to like, subscribe, or comment.
+Examples: "Follow for more mind-blowing facts!" or "Drop a comment if this blew your mind!"
 
-        Obviously, the script should be related to the subject of the video.
-        
-        YOU MUST NOT EXCEED THE {sentence_length} SENTENCES LIMIT. MAKE SURE THE {sentence_length} SENTENCES ARE SHORT.
-        YOU MUST NOT INCLUDE ANY TYPE OF MARKDOWN OR FORMATTING IN THE SCRIPT, NEVER USE A TITLE.
-        YOU MUST WRITE THE SCRIPT IN THE LANGUAGE SPECIFIED IN [LANGUAGE].
-        ONLY RETURN THE RAW CONTENT OF THE SCRIPT. DO NOT INCLUDE "VOICEOVER", "NARRATOR" OR SIMILAR INDICATORS OF WHAT SHOULD BE SPOKEN AT THE BEGINNING OF EACH PARAGRAPH OR LINE. YOU MUST NOT MENTION THE PROMPT, OR ANYTHING ABOUT THE SCRIPT ITSELF. ALSO, NEVER TALK ABOUT THE AMOUNT OF PARAGRAPHS OR LINES. JUST WRITE THE SCRIPT
-        
-        Subject: {self.subject}
-        Language: {self.language}
-        """
+RULES:
+- Total: {sentence_length} SHORT sentences maximum
+- NO markdown, NO formatting, NO titles, NO section labels
+- NO "welcome to this video" or "in this video"
+- NO narrator/voiceover indicators
+- Write in {self.language}
+- Get straight to the point
+- Each sentence should be punchy (under 15 words when possible)
+
+Subject: {self.subject}
+Language: {self.language}
+
+Return ONLY the raw script text. No labels, no formatting, just the spoken words."""
+
         completion = self.generate_response(prompt)
 
         # Apply regex to remove *
@@ -235,6 +366,11 @@ Example:
             return self.generate_script()
 
         self.script = completion
+
+        if get_verbose():
+            # Count approximate sections
+            sentences = [s.strip() for s in re.split(r'[.!?]+', completion) if len(s.strip()) > 5]
+            info(f" => Script: {len(sentences)} sentences, {len(completion)} chars")
 
         return completion
 
@@ -286,49 +422,56 @@ Example:
     def generate_prompts(self) -> List[str]:
         """
         Generates AI Image Prompts based on the provided Video Script.
-        Each prompt describes a visual scene matching the corresponding sentence.
-        Prompts form a visual story with consistent style.
+        Each scene gets 2 sub-prompts (different angle/perspective) for visual variety.
+        Target: 8-12 total images for a richer visual experience.
 
         Returns:
             image_prompts (List[str]): Generated List of image prompts.
         """
-        n_prompts = min(max(int(len(self.script) / 50), 3), 8)
-
         # Split script into sentences for scene mapping
         sentences = [s.strip() for s in re.split(r'[.!?]+', self.script) if len(s.strip()) > 10]
 
-        prompt = f"""You are a visual director creating a storyboard for a short video.
+        # Target 4-6 scenes, each with 2 images = 8-12 total
+        n_scenes = min(max(len(sentences), 4), 6)
+
+        prompt = f"""You are a visual director creating a storyboard for a YouTube Short.
 
 Subject: {self.subject}
 Script sentences (in order):
-{chr(10).join(f'{i+1}. {s}' for i, s in enumerate(sentences[:n_prompts]))}
+{chr(10).join(str(i+1) + '. ' + s for i, s in enumerate(sentences[:n_scenes]))}
 
-For EACH sentence above, write ONE visual scene description for AI image generation.
+For EACH sentence above, write TWO visual scene descriptions (A and B) for AI image generation.
+- Scene A: Wide/establishing shot showing the main subject
+- Scene B: Close-up or different angle of the SAME scene for visual variety
 
 Requirements:
-- Each scene must visually represent what that sentence describes
-- Use consistent cinematic style: same color palette, lighting mood, camera angle style
+- Each scene pair must visually represent what that sentence describes
+- Use consistent cinematic style across ALL scenes
 - Each prompt: 15-25 words, describe what we SEE (not abstract concepts)
-- Include the main subject in every scene
 - Make scenes flow like a visual story (beginning to middle to end)
+- Scene B should complement Scene A (different angle, zoom level, or detail focus)
 
-Output format: Write each scene on its own line, numbered 1 to {min(len(sentences), n_prompts)}.
+Output format: Numbered 1A, 1B, 2A, 2B, etc. One per line.
 Do NOT use JSON. Do NOT use quotes. Just numbered lines.
 
 Example:
-1. vast blue ocean surface stretching to horizon under golden sunset light with distant waves
-2. camera plunging underwater revealing colorful coral reef teeming with tropical fish
-3. deep dark ocean trench with bioluminescent creatures glowing in the abyss"""
+1A. vast blue ocean surface stretching to horizon under golden sunset light with distant waves
+1B. aerial drone view of ocean waves crashing against rocky coastline at sunset
+2A. camera plunging underwater revealing colorful coral reef teeming with tropical fish
+2B. extreme close-up of bright orange clownfish swimming through purple sea anemone
+3A. deep dark ocean trench with bioluminescent creatures glowing in the abyss
+3B. wide shot of giant squid illuminated by bioluminescent plankton in deep ocean"""
 
         completion = str(self.generate_response(prompt)).strip()
 
         image_prompts = []
 
-        # Parse numbered lines (most reliable format)
+        # Parse numbered lines (1A, 1B, 2A, 2B format)
         lines = completion.split('\n')
         for line in lines:
             line = line.strip()
-            match = re.match(r'^[\d]+[\.\)\-\s]+(.+)$', line)
+            # Match patterns like "1A.", "1B.", "2A.", "2B." etc.
+            match = re.match(r'^[\d]+[AB]?[\.\)\-\s]+(.+)$', line)
             if match:
                 scene = match.group(1).strip().strip('"').strip("'")
                 if len(scene) > 10:
@@ -344,29 +487,34 @@ Example:
             except Exception:
                 pass
 
-        # Fallback: extract from script sentences directly
+        # Fallback: generate from script sentences directly (2 per sentence)
         if not image_prompts:
             if get_verbose():
                 warning("LLM prompt parsing failed. Generating from script sentences...")
-            for sentence in sentences[:n_prompts]:
-                visual = f"cinematic scene depicting: {sentence.strip()[:80]}, photorealistic, dramatic lighting"
-                image_prompts.append(visual)
+            for sentence in sentences[:n_scenes]:
+                # Scene A: wide shot
+                visual_a = f"wide cinematic shot of {sentence.strip()[:60]}, photorealistic, dramatic lighting"
+                image_prompts.append(visual_a)
+                # Scene B: close-up
+                visual_b = f"close-up detail of {sentence.strip()[:60]}, cinematic, shallow depth of field"
+                image_prompts.append(visual_b)
 
-        # Ensure we have at least n_prompts
-        while len(image_prompts) < n_prompts and sentences:
-            idx = len(image_prompts)
+        # Ensure minimum of 8 images
+        while len(image_prompts) < 8 and sentences:
+            idx = len(image_prompts) // 2
             if idx < len(sentences):
-                visual = f"visual representation of {sentences[idx].strip()[:60]}, cinematic, detailed"
+                variant = "wide establishing shot" if len(image_prompts) % 2 == 0 else "close-up detail view"
+                visual = f"{variant} of {sentences[idx].strip()[:60]}, cinematic, detailed"
                 image_prompts.append(visual)
             else:
                 break
 
-        # Trim to max
-        image_prompts = image_prompts[:n_prompts]
+        # Cap at 12 images max
+        image_prompts = image_prompts[:12]
 
         self.image_prompts = image_prompts
 
-        success(f"Generated {len(image_prompts)} Image Prompts.")
+        success(f"Generated {len(image_prompts)} Image Prompts ({len(image_prompts)//2} scenes x 2 angles).")
 
         return image_prompts
 
