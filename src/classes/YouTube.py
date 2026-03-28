@@ -630,7 +630,7 @@ Example:
                 warning("POLLINATIONS_API_KEY not set. Skipping Pollinations.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail, no text, no letters, no words, no fingers"
+        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, ultra detailed, dramatic lighting, depth of field, no text, no letters, no words, no fingers, no hands, wide shot"
         print(f"Generating AI image via Pollinations API: {prompt[:80]}...")
 
         try:
@@ -682,7 +682,7 @@ Example:
                 warning("g4f not installed. Cannot use Pollinations/Flux.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail, no text, no letters, no words, no fingers"
+        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, ultra detailed, dramatic lighting, depth of field, no text, no letters, no words, no fingers, no hands, wide shot"
         print(f"Generating AI image via g4f (Pollinations/Flux): {prompt[:80]}...")
 
         try:
@@ -825,7 +825,7 @@ Example:
                 warning("CF_WORKER_URL or CF_WORKER_API_KEY not set. Skipping Cloudflare.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, photorealistic, high detail, 4k, no text, no letters, no words, no writing, no fingers, no hands close-up"
+        enhanced_prompt = f"{prompt}, cinematic, photorealistic, 4k, ultra detailed, dramatic lighting, depth of field, no text, no letters, no words, no writing, no fingers, no hands, no people close-up, wide shot, landscape"
         print(f"Generating AI image via Cloudflare Workers AI (SDXL): {prompt[:80]}...")
 
         try:
