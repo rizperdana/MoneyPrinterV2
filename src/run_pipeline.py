@@ -110,7 +110,9 @@ def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool
         metadata = youtube.generate_metadata()
         result["title"] = metadata["title"]
         result["description"] = metadata["description"]
+        result["tags"] = metadata.get("tags", [])
         success(f"Title: {metadata['title']}")
+        success(f"Tags: {len(result['tags'])} SEO tags")
 
         # Step 4: Generate Image Prompts
         info("Step 4/7: Generating image prompts...")
@@ -119,16 +121,13 @@ def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool
 
         # Step 5: Generate Images
         info("Step 5/7: Generating images...")
-        gemini_key = get_nanobanana2_api_key()
-        if gemini_key:
-            for i, prompt in enumerate(prompts):
-                img_path = youtube.generate_image(prompt)
-                if img_path:
-                    success(f"Image {i+1}/{len(prompts)}: {os.path.basename(img_path)}")
-                else:
-                    warning(f"Image {i+1}/{len(prompts)}: FAILED (will use placeholder)")
-                if i < len(prompts) - 1:
-                    time.sleep(3)
+        for i, prompt in enumerate(prompts):
+            img_path = youtube.generate_image(prompt, delay_between=30)
+            if img_path:
+                success(f"Image {i+1}/{len(prompts)}: {os.path.basename(img_path)}")
+            else:
+                warning(f"Image {i+1}/{len(prompts)}: FAILED (will use placeholder)")
+            # 30s delay is handled inside generate_image() after each success
 
         # Fill remaining slots with placeholders if any images failed
         if len(youtube.images) < len(prompts):

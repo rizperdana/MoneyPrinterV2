@@ -3,6 +3,7 @@ import base64
 import json
 import time
 import os
+import random
 import requests
 import assemblyai as aai
 
@@ -75,6 +76,7 @@ class YouTube:
         self._language: str = language
 
         self.images = []
+        self._g4f_quota_exhausted = False
 
         # Initialize the Firefox profile
         self.options: Options = Options()
@@ -199,10 +201,10 @@ class YouTube:
 
     def generate_metadata(self) -> dict:
         """
-        Generates Video metadata for the to-be-uploaded YouTube Short (Title, Description).
+        Generates Video metadata for the to-be-uploaded YouTube Short (Title, Description, Tags).
 
         Returns:
-            metadata (dict): The generated metadata.
+            metadata (dict): The generated metadata with keys: title, description, tags.
         """
         title = self.generate_response(
             f"Please generate a YouTube Video Title for the following subject, including hashtags: {self.subject}. Only return the title, nothing else. Limit the title under 100 characters."
@@ -217,13 +219,35 @@ class YouTube:
             f"Please generate a YouTube Video Description for the following script: {self.script}. Only return the description, nothing else."
         )
 
-        self.metadata = {"title": title, "description": description}
+        # Generate SEO tags
+        tags_raw = self.generate_response(
+            f"Generate a JSON array of 10-15 YouTube SEO tags (single words or short phrases) for a video about: {self.subject}. "
+            f"Return ONLY a JSON array of strings, e.g. [\"tag1\", \"tag2\"]. No other text."
+        )
+
+        tags = []
+        try:
+            cleaned = str(tags_raw).replace("```json", "").replace("```", "").strip()
+            tags = json.loads(cleaned)
+            if not isinstance(tags, list):
+                tags = []
+        except Exception:
+            # Fallback: extract from subject
+            if get_verbose():
+                warning("Failed to parse tags JSON. Using subject words as fallback.")
+            tags = [w for w in self.subject.split() if len(w) > 2][:10]
+
+        self.metadata = {"title": title, "description": description, "tags": tags}
+
+        if get_verbose():
+            info(f" => Generated {len(tags)} SEO tags")
 
         return self.metadata
 
     def generate_prompts(self) -> List[str]:
         """
         Generates AI Image Prompts based on the provided Video Script.
+        Each prompt describes a visual scene matching the corresponding sentence.
 
         Returns:
             image_prompts (List[str]): Generated List of image prompts.
@@ -231,28 +255,22 @@ class YouTube:
         n_prompts = min(max(int(len(self.script) / 50), 3), 8)
 
         prompt = f"""
-        Generate {n_prompts} Image Prompts for AI Image Generation,
-        depending on the subject of a video.
+        Generate exactly {n_prompts} detailed visual scene descriptions for AI image generation.
+        Each prompt must describe a SPECIFIC VISUAL SCENE that matches what the narrator is saying.
+
         Subject: {self.subject}
 
-        The image prompts are to be returned as
-        a JSON-Array of strings.
+        Rules:
+        - Each prompt must describe a concrete, visual scene (not abstract concepts)
+        - Use vivid, cinematic language: lighting, colors, perspective, mood
+        - Each prompt should be 10-20 words describing what we SEE, not what is being discussed
+        - Make each scene visually distinct from the others
+        - Include the main subject in each scene
 
-        Each search term should consist of a full sentence,
-        always add the main subject of the video.
+        Return ONLY a JSON array of strings, nothing else.
+        Example: ["deep blue ocean waves crashing on rocky shore at sunset", "underwater coral reef with colorful tropical fish"]
 
-        Be emotional and use interesting adjectives to make the
-        Image Prompt as detailed as possible.
-
-        YOU MUST ONLY RETURN THE JSON-ARRAY OF STRINGS.
-        YOU MUST NOT RETURN ANYTHING ELSE.
-        YOU MUST NOT RETURN THE SCRIPT.
-
-        The search terms must be related to the subject of the video.
-        Here is an example of a JSON-Array of strings:
-        ["image prompt 1", "image prompt 2", "image prompt 3"]
-
-        For context, here is the full text:
+        Video script for context:
         {self.script}
         """
 
@@ -260,30 +278,50 @@ class YouTube:
             str(self.generate_response(prompt))
             .replace("```json", "")
             .replace("```", "")
+            .strip()
         )
 
         image_prompts = []
 
-        if "image_prompts" in completion:
-            image_prompts = json.loads(completion)["image_prompts"]
-        else:
-            try:
-                image_prompts = json.loads(completion)
-                if get_verbose():
-                    info(f" => Generated Image Prompts: {image_prompts}")
-            except Exception:
-                if get_verbose():
-                    warning(
-                        "LLM returned an unformatted response. Attempting to clean..."
-                    )
+        # Try direct JSON parse first
+        try:
+            parsed = json.loads(completion)
+            if isinstance(parsed, list):
+                image_prompts = parsed
+            elif isinstance(parsed, dict) and "image_prompts" in parsed:
+                image_prompts = parsed["image_prompts"]
+        except Exception:
+            pass
 
-                # Get everything between [ and ], and turn it into a list
-                r = re.compile(r"\[.*\]")
-                image_prompts = r.findall(completion)
-                if len(image_prompts) == 0:
-                    if get_verbose():
-                        warning("Failed to generate Image Prompts. Retrying...")
-                    return self.generate_prompts()
+        # If that failed, try to extract JSON array from the response
+        if not image_prompts:
+            try:
+                r = re.compile(r"\[.*?\]", re.DOTALL)
+                matches = r.findall(completion)
+                for match in matches:
+                    try:
+                        parsed = json.loads(match)
+                        if isinstance(parsed, list) and len(parsed) > 0:
+                            image_prompts = parsed
+                            break
+                    except Exception:
+                        continue
+            except Exception:
+                pass
+
+        # Clean up prompts - remove quotes, brackets, extra whitespace
+        cleaned = []
+        for p in image_prompts:
+            if isinstance(p, str):
+                p = p.strip().strip('"').strip("'").strip("[").strip("]")
+                if len(p) > 10:
+                    cleaned.append(p)
+        image_prompts = cleaned
+
+        if not image_prompts:
+            if get_verbose():
+                warning("Failed to generate Image Prompts. Retrying...")
+            return self.generate_prompts()
 
         if len(image_prompts) > n_prompts:
             image_prompts = image_prompts[: int(n_prompts)]
@@ -381,17 +419,261 @@ class YouTube:
                 warning(f"Failed to generate image with Nano Banana 2 API: {str(e)}")
             return None
 
-    def generate_image(self, prompt: str) -> str:
+    def generate_image_pollinations(self, prompt: str) -> str:
         """
-        Generates an AI Image based on the given prompt using Nano Banana 2.
+        Generates an AI image using Pollinations.ai GET endpoint with API key.
+        Uses the simple GET /image/{prompt} endpoint which bypasses Cloudflare blocking.
+
+        Args:
+            prompt (str): Scene description for image generation
+
+        Returns:
+            path (str): The path to the generated image, or None on failure.
+        """
+        api_key = os.environ.get("POLLINATIONS_API_KEY", "")
+        if not api_key:
+            if get_verbose():
+                warning("POLLINATIONS_API_KEY not set. Skipping Pollinations.")
+            return None
+
+        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail"
+        print(f"Generating AI image via Pollinations API: {prompt[:80]}...")
+
+        try:
+            import urllib.parse
+            encoded_prompt = urllib.parse.quote(enhanced_prompt)
+            url = f"https://gen.pollinations.ai/image/{encoded_prompt}?model=flux&width=1080&height=1920&key={api_key}&nologo=true"
+
+            resp = requests.get(url, timeout=120, headers={"User-Agent": "Mozilla/5.0"})
+
+            if resp.status_code == 429:
+                if get_verbose():
+                    warning("Pollinations API rate limited (429).")
+                return None
+
+            if resp.status_code == 401 or resp.status_code == 403:
+                if get_verbose():
+                    warning(f"Pollinations API auth failed ({resp.status_code}).")
+                return None
+
+            resp.raise_for_status()
+
+            if len(resp.content) < 1000:
+                if get_verbose():
+                    warning("Pollinations image too small, likely an error.")
+                return None
+
+            return self._persist_image(resp.content, "Pollinations API")
+
+        except Exception as e:
+            if get_verbose():
+                warning(f"Pollinations image generation failed: {e}")
+            return None
+
+    def generate_image_g4f(self, prompt: str) -> str:
+        """
+        Generates an AI image using gpt4free (Pollinations/Flux).
+        Free, no API key needed. Primary image generator.
+
+        Args:
+            prompt (str): Scene description for image generation
+
+        Returns:
+            path (str): The path to the generated image, or None on failure.
+        """
+        try:
+            from g4f.client import Client
+        except ImportError:
+            if get_verbose():
+                warning("g4f not installed. Cannot use Pollinations/Flux.")
+            return None
+
+        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail"
+        print(f"Generating AI image via g4f (Pollinations/Flux): {prompt[:80]}...")
+
+        try:
+            client = Client()
+            response = client.images.generate(
+                model="flux",
+                prompt=enhanced_prompt,
+                response_format="url",
+            )
+
+            if not response or not response.data or len(response.data) == 0:
+                if get_verbose():
+                    warning("g4f returned no image data.")
+                return None
+
+            image_url = response.data[0].url
+            if not image_url:
+                if get_verbose():
+                    warning("g4f returned empty URL.")
+                return None
+
+            # Download the image
+            img_resp = requests.get(image_url, timeout=120)
+            img_resp.raise_for_status()
+
+            if len(img_resp.content) < 1000:
+                if get_verbose():
+                    warning("g4f image too small, likely an error page.")
+                return None
+
+            return self._persist_image(img_resp.content, "g4f Pollinations/Flux")
+
+        except Exception as e:
+            err_str = str(e)
+            if "quota" in err_str.lower() or "exceeded" in err_str.lower() or "429" in err_str:
+                if get_verbose():
+                    warning(f"g4f quota exhausted: {e}")
+                self._g4f_quota_exhausted = True
+            elif get_verbose():
+                warning(f"g4f image generation failed: {e}")
+            return None
+
+    def _simplify_prompt_for_pixabay(self, prompt: str) -> str:
+        """
+        Simplifies a verbose image prompt to 2-3 key nouns for better Pixabay search results.
+
+        Args:
+            prompt (str): Full image prompt
+
+        Returns:
+            query (str): Simplified search query
+        """
+        # Remove common filler words and keep key nouns
+        stop_words = {
+            "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+            "of", "in", "on", "at", "to", "for", "with", "by", "from", "as",
+            "into", "through", "during", "before", "after", "above", "below",
+            "and", "but", "or", "nor", "not", "so", "yet", "both", "either",
+            "that", "this", "these", "those", "it", "its", "showing", "depicting",
+            "featuring", "beautiful", "stunning", "amazing", "incredible", "dramatic",
+            "view", "scene", "image", "photo", "picture", "background",
+        }
+
+        words = re.sub(r"[^a-zA-Z\s]", "", prompt).split()
+        key_words = [w for w in words if w.lower() not in stop_words and len(w) > 2]
+
+        # Take first 3-4 key nouns for best Pixabay results
+        query = " ".join(key_words[:4])
+        return query if query else prompt[:50]
+
+    def generate_image_pixabay(self, prompt: str) -> str:
+        """
+        Downloads a stock photo from Pixabay matching the prompt.
+        Used as fallback when AI image generation fails.
+
+        Args:
+            prompt (str): Search query for Pixabay
+
+        Returns:
+            path (str): The path to the downloaded image, or None on failure.
+        """
+        api_key = os.environ.get("PIXABAY_API_KEY", "")
+        if not api_key:
+            if get_verbose():
+                warning("PIXABAY_API_KEY not set. Cannot use Pixabay fallback.")
+            return None
+
+        # Simplify prompt to key nouns for better Pixabay results
+        search_query = self._simplify_prompt_for_pixabay(prompt)
+
+        try:
+            params = {
+                "key": api_key,
+                "q": search_query,
+                "image_type": "photo",
+                "orientation": "vertical",
+                "per_page": 3,
+                "safesearch": "true",
+            }
+            resp = requests.get(
+                "https://pixabay.com/api/",
+                params=params,
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+            hits = data.get("hits", [])
+            if not hits:
+                if get_verbose():
+                    warning(f"Pixabay returned no results for: {search_query}")
+                return None
+
+            # Pick a random result for variety
+            hit = random.choice(hits)
+            image_url = hit.get("largeImageURL") or hit.get("webformatURL")
+            if not image_url:
+                return None
+
+            # Download the image
+            img_resp = requests.get(image_url, timeout=60)
+            img_resp.raise_for_status()
+
+            return self._persist_image(img_resp.content, "Pixabay")
+
+        except Exception as e:
+            if get_verbose():
+                warning(f"Pixabay fallback failed: {e}")
+            return None
+
+    def generate_image(self, prompt: str, delay_between: int = 30) -> str:
+        """
+        Generates an AI Image based on the given prompt.
+        Priority: Gemini -> Pollinations API -> g4f (free) -> Pixabay -> None
 
         Args:
             prompt (str): Reference for image generation
+            delay_between (int): Seconds to wait between API calls to avoid rate limits
 
         Returns:
-            path (str): The path to the generated image.
+            path (str): The path to the generated image, or None if all fail.
         """
-        return self.generate_image_nanobanana2(prompt)
+        # 1. Try Gemini - best quality, new API key
+        gemini_key = get_nanobanana2_api_key()
+        if gemini_key:
+            if get_verbose():
+                info("Trying Gemini image API (primary)...")
+            result = self.generate_image_nanobanana2(prompt)
+            if result is not None:
+                time.sleep(delay_between)
+                return result
+            if get_verbose():
+                info("Gemini failed. Trying Pollinations API...")
+
+        # 2. Try Pollinations with API key - good quality, higher quota
+        if get_verbose():
+            info("Trying Pollinations API with key...")
+        result = self.generate_image_pollinations(prompt)
+        if result is not None:
+            time.sleep(delay_between)
+            return result
+
+        # 3. Try g4f (Pollinations free) - fallback, tight quota
+        if not getattr(self, '_g4f_quota_exhausted', False):
+            if get_verbose():
+                info("Trying g4f (Pollinations/Flux free) as fallback...")
+            result = self.generate_image_g4f(prompt)
+            if result is not None:
+                time.sleep(delay_between)
+                return result
+        elif get_verbose():
+            info("g4f quota exhausted, skipping...")
+
+        # 4. Try Pixabay - stock photos matching the topic
+        if get_verbose():
+            info("AI generation failed. Trying Pixabay stock photos...")
+        result = self.generate_image_pixabay(prompt)
+        if result is not None:
+            time.sleep(5)  # Pixabay has higher rate limit
+            return result
+
+        # 5. All failed - caller will use placeholder
+        if get_verbose():
+            warning("All image generation methods failed.")
+        return None
 
     def generate_script_to_speech(self, tts_instance: TTS) -> str:
         """
@@ -613,8 +895,46 @@ class YouTube:
                     )
                 clip = clip.resize((1080, 1920))
 
-                # FX (Fade In)
-                # clip = clip.fadein(2)
+                # Ken Burns effect: slow zoom/pan over clip duration
+                # Alternate between zoom-in and zoom-out for variety
+                zoom_start = 1.0
+                zoom_end = 1.15
+                if len(clips) % 2 == 1:
+                    zoom_start, zoom_end = zoom_end, zoom_start
+
+                # Pre-scale to max zoom size, then crop a fixed-size window that moves
+                target_w, target_h = 1080, 1920
+                max_zoom = max(zoom_start, zoom_end)
+                scaled_w = int(target_w * max_zoom)
+                scaled_h = int(target_h * max_zoom)
+                clip = clip.resize((scaled_w, scaled_h))
+
+                # Time-based crop: fixed window (1080x1920) moves across the scaled image
+                import numpy as np
+
+                def ken_burns_crop(get_frame, t, dur=clip.duration, sw=scaled_w, sh=scaled_h,
+                                   tw=target_w, th=target_h, zs=zoom_start, ze=zoom_end):
+                    progress = t / dur if dur > 0 else 0
+                    # Start/end crop offsets (from center)
+                    max_ox = (sw - tw) // 2
+                    max_oy = (sh - th) // 2
+                    # Zoom direction: if ze > zs, we zoom in (crop tighter)
+                    # so offset goes from 0 to max (moving from center to edge)
+                    ox = int(max_ox * progress)
+                    oy = int(max_oy * progress)
+                    # Center the crop with offset
+                    cx = (sw - tw) // 2 - ox // 2
+                    cy = (sh - th) // 2 - oy // 2
+                    cx = max(0, min(cx, sw - tw))
+                    cy = max(0, min(cy, sh - th))
+                    frame = get_frame(t)
+                    return frame[cy:cy+th, cx:cx+tw]
+
+                clip = clip.fl(ken_burns_crop)
+
+                # Fade in/out for smooth transitions
+                clip = clip.fadein(0.5)
+                clip = clip.fadeout(0.5)
 
                 clips.append(clip)
                 tot_dur += clip.duration

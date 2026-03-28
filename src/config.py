@@ -131,7 +131,7 @@ def get_nanobanana2_model() -> str:
         model (str): Model name
     """
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("nanobanana2_model", "gemini-3.1-flash-image-preview")
+        return json.load(file).get("nanobanana2_model", "gemini-2.0-flash-exp")
 
 def get_nanobanana2_aspect_ratio() -> str:
     """
