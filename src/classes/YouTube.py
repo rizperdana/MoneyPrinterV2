@@ -217,7 +217,7 @@ class YouTube:
             ddg_url = "https://api.duckduckgo.com/"
             params = {"q": search_query, "format": "json", "no_html": 1, "skip_disambig": 1}
             resp = requests.get(ddg_url, params=params, timeout=10,
-                                headers={"User-Agent": "Mozilla/5.0"})
+                                headers={"User-Agent": "Mozilla/5.0"}, verify=False)
             if resp.status_code == 200:
                 data = resp.json()
                 related = data.get("RelatedTopics", [])
