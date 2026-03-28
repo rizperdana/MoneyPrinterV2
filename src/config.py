@@ -340,8 +340,70 @@ def get_script_sentence_length() -> int:
         else:
             return 4
 
+def get_postiz_config() -> dict:
+    """
+    Gets the Postiz configuration with safe defaults.
+
+    Returns:
+        config (dict): Sanitized Postiz configuration
+    """
+    defaults = {
+        "enabled": False,
+        "api_url": "https://api.postiz.com",
+        "api_key": "",
+        "platforms": ["youtube", "tiktok"],
+        "auto_publish": False,
+    }
+
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        config_json = json.load(file)
+
+    raw_config = config_json.get("postiz", {})
+    if not isinstance(raw_config, dict):
+        raw_config = {}
+
+    # Normalize platforms
+    raw_platforms = raw_config.get("platforms")
+    normalized_platforms = []
+    seen_platforms = set()
+
+    if raw_platforms is None:
+        normalized_platforms = defaults["platforms"].copy()
+    elif isinstance(raw_platforms, list):
+        for platform in raw_platforms:
+            normalized = str(platform).strip().lower()
+            if normalized and normalized not in seen_platforms:
+                normalized_platforms.append(normalized)
+                seen_platforms.add(normalized)
+    else:
+        normalized_platforms = []
+
+    # API key: config first, then env var
+    api_key = str(raw_config.get("api_key", "")).strip()
+    if not api_key:
+        api_key = os.environ.get("POSTIZ_API_KEY", "").strip()
+
+    # API URL: config first, then env var
+    api_url = str(raw_config.get("api_url", "")).strip()
+    if not api_url:
+        api_url = os.environ.get("POSTIZ_API_URL", "").strip()
+    if not api_url:
+        api_url = defaults["api_url"]
+
+    return {
+        "enabled": bool(raw_config.get("enabled", defaults["enabled"])),
+        "api_url": api_url,
+        "api_key": api_key,
+        "platforms": normalized_platforms,
+        "auto_publish": bool(
+            raw_config.get("auto_publish", defaults["auto_publish"])
+        ),
+    }
+
+
 def get_post_bridge_config() -> dict:
     """
+    DEPRECATED: Use get_postiz_config() instead.
     Gets the Post Bridge configuration with safe defaults.
 
     Returns:

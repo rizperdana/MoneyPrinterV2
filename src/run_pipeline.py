@@ -4,10 +4,13 @@ Runs the full YouTube Shorts pipeline end-to-end without user input.
 
 Usage:
     python src/run_pipeline.py [--niche "science facts"] [--language English] [--upload]
+    python src/run_pipeline.py [--niche "science facts"] [--postiz] [--postiz-url URL] [--postiz-key KEY]
 
 Environment:
     CLIPROXY_API_KEY  - Required for LLM text generation
     GEMINI_API_KEY    - Required for AI image generation (optional, falls back to placeholders)
+    POSTIZ_API_KEY    - Postiz API key (alternative to --postiz-key)
+    POSTIZ_API_URL    - Postiz instance URL (alternative to --postiz-url)
 """
 
 import os
@@ -31,7 +34,16 @@ from classes.YouTube import YouTube
 from classes.Tts import TTS
 
 
-def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool = True) -> dict:
+def run_pipeline(
+    niche: str,
+    language: str,
+    upload: bool = False,
+    headless: bool = True,
+    postiz_enabled: bool = False,
+    postiz_url: str = "",
+    postiz_key: str = "",
+    postiz_platforms: list = None,
+) -> dict:
     """
     Run the full video generation pipeline non-interactively.
 
@@ -40,9 +52,12 @@ def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool
         language: Content language (e.g., "English")
         upload: Whether to upload to YouTube after generation
         headless: Run Firefox in headless mode
+        postiz_url: Postiz instance URL (overrides config)
+        postiz_key: Postiz API key (overrides config)
+        postiz_platforms: Target platforms for Postiz (overrides config)
 
     Returns:
-        dict with keys: topic, title, description, video_path, uploaded
+        dict with keys: topic, title, description, video_path, uploaded, postiz
     """
     result = {
         "topic": None,
@@ -50,6 +65,7 @@ def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool
         "description": None,
         "video_path": None,
         "uploaded": False,
+        "postiz": None,
         "error": None,
     }
 
@@ -166,6 +182,50 @@ def run_pipeline(niche: str, language: str, upload: bool = False, headless: bool
                 error(f"Upload failed: {e}")
                 result["error"] = f"Upload failed: {e}"
 
+        # Postiz publishing (optional, triggered by --postiz flag or --postiz-key)
+        postiz_enabled = bool(postiz_key) or bool(os.environ.get("POSTIZ_API_KEY", ""))
+        if postiz_enabled:
+            info("Publishing via Postiz...")
+            try:
+                from classes.Postiz import Postiz, PostizClientError
+
+                url = postiz_url or os.environ.get("POSTIZ_API_URL", "https://api.postiz.com")
+                key = postiz_key or os.environ.get("POSTIZ_API_KEY", "")
+                platforms = postiz_platforms or ["youtube", "tiktok"]
+
+                client = Postiz(api_key=key, api_url=url)
+
+                # Verify integrations
+                integration_map = client.find_integrations(platforms)
+                if not integration_map:
+                    warning(f"No Postiz integrations found for: {', '.join(platforms)}")
+                    result["postiz"] = {"status": "skipped", "reason": "no integrations"}
+                else:
+                    for p, integ in integration_map.items():
+                        info(f"Postiz integration: {p} -> @{integ.get('profile', '?')}")
+
+                    desc = result.get("description") or result.get("title") or ""
+                    postiz_result = client.publish_video(
+                        video_path=youtube.video_path,
+                        title=result["title"] or "Untitled",
+                        description=desc,
+                        platforms=list(integration_map.keys()),
+                    )
+                    post_id = postiz_result.get("post", {}).get("id", "unknown")
+                    success(f"Published via Postiz (post ID: {post_id})")
+                    result["postiz"] = {
+                        "status": "published",
+                        "post_id": post_id,
+                        "platforms": list(integration_map.keys()),
+                        "skipped": postiz_result.get("skipped_platforms", []),
+                    }
+            except PostizClientError as e:
+                warning(f"Postiz publish failed: {e}")
+                result["postiz"] = {"status": "failed", "error": str(e)}
+            except Exception as e:
+                warning(f"Postiz publish error: {e}")
+                result["postiz"] = {"status": "failed", "error": str(e)}
+
     except Exception as e:
         error(f"Pipeline failed: {e}")
         result["error"] = str(e)
@@ -215,7 +275,16 @@ def main():
     parser.add_argument("--language", default="English", help="Content language")
     parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
     parser.add_argument("--no-headless", action="store_true", help="Show Firefox browser")
+    parser.add_argument("--postiz", action="store_true", help="Publish via Postiz after generation")
+    parser.add_argument("--postiz-url", default="", help="Postiz instance URL (default: https://api.postiz.com)")
+    parser.add_argument("--postiz-key", default="", help="Postiz API key (or set POSTIZ_API_KEY env var)")
+    parser.add_argument("--postiz-platforms", default="", help="Comma-separated platforms (default: youtube,tiktok)")
     args = parser.parse_args()
+
+    # Parse Postiz platforms
+    postiz_platforms = None
+    if args.postiz_platforms:
+        postiz_platforms = [p.strip() for p in args.postiz_platforms.split(",") if p.strip()]
 
     info("=" * 50)
     info("MoneyPrinterV2 - Automated Pipeline")
@@ -226,6 +295,9 @@ def main():
         language=args.language,
         upload=args.upload,
         headless=not args.no_headless,
+        postiz_url=args.postiz_url,
+        postiz_key=args.postiz_key,
+        postiz_platforms=postiz_platforms,
     )
 
     print("\n" + "=" * 50)
