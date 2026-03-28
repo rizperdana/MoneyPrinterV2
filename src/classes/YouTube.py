@@ -135,7 +135,7 @@ class YouTube:
 
     def _research_trending_topics(self) -> str:
         """
-        Researches trending topics using DuckDuckGo search and instant answers.
+        Researches trending topics from Wikipedia API and Google Trends.
         Returns raw search context to feed into the LLM for topic selection.
 
         Returns:
@@ -143,79 +143,94 @@ class YouTube:
         """
         context_parts = []
 
-        # Method 1: DuckDuckGo Instant Answer API (free, no key needed)
+        # Method 1: Wikipedia Featured Content API (today's news + trending)
         try:
-            search_query = f"{self.niche} trending 2026"
+            from datetime import datetime
+            today = datetime.now().strftime("%Y/%m/%d")
+            wiki_url = f"https://en.wikipedia.org/api/rest_v1/feed/featured/{today}"
+            resp = requests.get(wiki_url, timeout=15,
+                                headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code == 200:
+                data = resp.json()
+
+                # Today's news
+                news = data.get("news", [])
+                news_items = []
+                for item in news[:8]:
+                    story = re.sub(r'<[^>]+>', '', item.get("story", "")).strip()
+                    links = item.get("links", [])
+                    titles = [l.get("titles", {}).get("normalized", "") for l in links]
+                    if story:
+                        entry = story[:150]
+                        if titles:
+                            entry += f" ({', '.join(titles[:2])})"
+                        news_items.append(entry)
+                if news_items:
+                    context_parts.append("Wikipedia Today's News:\n" +
+                                         "\n".join(f"- {n}" for n in news_items))
+
+                # Today's featured article
+                tfa = data.get("tfa", {})
+                if tfa:
+                    title = tfa.get("titles", {}).get("normalized", "")
+                    extract = tfa.get("extract", "")[:200]
+                    if title and extract:
+                        context_parts.append(f"Wikipedia Featured Article: {title}\n{extract}")
+
+                # Most read articles
+                most_read = data.get("mostread", {}).get("articles", [])
+                if most_read:
+                    top_titles = [a.get("titles", {}).get("normalized", "") 
+                                  for a in most_read[:10] if a.get("titles")]
+                    if top_titles:
+                        context_parts.append("Wikipedia Most Read Today:\n" +
+                                             "\n".join(f"- {t}" for t in top_titles if t))
+        except Exception as e:
+            if get_verbose():
+                warning(f"Wikipedia API failed: {e}")
+
+        # Method 2: Google Trends RSS
+        try:
+            for geo in ["US", ""]:
+                trends_url = f"https://trends.google.com/trending/rss?geo={geo}"
+                resp = requests.get(trends_url, timeout=10,
+                                    headers={"User-Agent": "Mozilla/5.0"})
+                if resp.status_code == 200:
+                    titles = re.findall(r'<title>(.*?)</title>', resp.text)
+                    relevant = []
+                    for t in titles[1:20]:
+                        t_clean = re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', t).strip()
+                        if t_clean and len(t_clean) > 3:
+                            relevant.append(t_clean)
+                    if relevant:
+                        label = f"Google Trends ({geo or 'Global'})"
+                        context_parts.append(f"{label}:\n" +
+                                             "\n".join(f"- {t}" for t in relevant[:15]))
+                        break
+        except Exception as e:
+            if get_verbose():
+                warning(f"Google Trends failed: {e}")
+
+        # Method 3: DuckDuckGo for niche-specific topics
+        try:
+            search_query = f"{self.niche} latest news today"
             ddg_url = "https://api.duckduckgo.com/"
-            params = {
-                "q": search_query,
-                "format": "json",
-                "no_html": 1,
-                "skip_disambig": 1,
-            }
+            params = {"q": search_query, "format": "json", "no_html": 1, "skip_disambig": 1}
             resp = requests.get(ddg_url, params=params, timeout=10,
                                 headers={"User-Agent": "Mozilla/5.0"})
             if resp.status_code == 200:
                 data = resp.json()
-                # Extract related topics
                 related = data.get("RelatedTopics", [])
                 topics_found = []
                 for item in related[:8]:
                     if isinstance(item, dict) and item.get("Text"):
                         topics_found.append(item["Text"][:120])
                 if topics_found:
-                    context_parts.append("DuckDuckGo Related Topics:\n" +
+                    context_parts.append(f"DuckDuckGo {self.niche}:\n" +
                                          "\n".join(f"- {t}" for t in topics_found))
         except Exception as e:
             if get_verbose():
-                warning(f"DuckDuckGo instant answer failed: {e}")
-
-        # Method 2: DuckDuckGo HTML search for trending keywords
-        try:
-            search_query = f"{self.niche} latest news trends"
-            ddg_html_url = f"https://html.duckduckgo.com/html/?q={requests.utils.quote(search_query)}"
-            resp = requests.get(ddg_html_url, timeout=10,
-                                headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"})
-            if resp.status_code == 200:
-                # Extract result snippets from HTML
-                import re as _re
-                snippets = _re.findall(r'class="result__snippet"[^>]*>(.*?)</a>', resp.text, _re.DOTALL)
-                if snippets:
-                    clean_snippets = []
-                    for s in snippets[:6]:
-                        clean = _re.sub(r'<[^>]+>', '', s).strip()
-                        if clean and len(clean) > 20:
-                            clean_snippets.append(clean[:150])
-                    if clean_snippets:
-                        context_parts.append("Recent Search Results:\n" +
-                                             "\n".join(f"- {s}" for s in clean_snippets))
-        except Exception as e:
-            if get_verbose():
-                warning(f"DuckDuckGo HTML search failed: {e}")
-
-        # Method 3: Google Trends RSS (simple, no auth needed)
-        try:
-            trends_url = "https://trends.google.com/trending/rss?geo=US"
-            resp = requests.get(trends_url, timeout=10,
-                                headers={"User-Agent": "Mozilla/5.0"})
-            if resp.status_code == 200:
-                import re as _re
-                # Extract topic names from RSS
-                titles = _re.findall(r'<title>(.*?)</title>', resp.text)
-                # Filter for niche-relevant trends
-                niche_words = set(self.niche.lower().split())
-                relevant = []
-                for t in titles[1:]:  # Skip first (feed title)
-                    t_clean = _re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', t).strip()
-                    if t_clean and len(t_clean) > 3:
-                        relevant.append(t_clean)
-                if relevant:
-                    # Take top 10 trending topics for context
-                    context_parts.append("Google Trends (US) Today:\n" +
-                                         "\n".join(f"- {t}" for t in relevant[:10]))
-        except Exception as e:
-            if get_verbose():
-                warning(f"Google Trends RSS failed: {e}")
+                warning(f"DuckDuckGo failed: {e}")
 
         if context_parts:
             return "\n\n".join(context_parts)
@@ -431,8 +446,8 @@ Return ONLY the raw script text. No labels, no formatting, just the spoken words
         # Split script into sentences for scene mapping
         sentences = [s.strip() for s in re.split(r'[.!?]+', self.script) if len(s.strip()) > 10]
 
-        # Target 4-6 scenes, each with 2 images = 8-12 total
-        n_scenes = min(max(len(sentences), 4), 6)
+        # Target 4-5 scenes, 1 image each = 4-5 total
+        n_scenes = min(max(len(sentences), 3), 5)
 
         prompt = f"""You are a visual director creating a storyboard for a YouTube Short.
 
@@ -440,38 +455,35 @@ Subject: {self.subject}
 Script sentences (in order):
 {chr(10).join(str(i+1) + '. ' + s for i, s in enumerate(sentences[:n_scenes]))}
 
-For EACH sentence above, write TWO visual scene descriptions (A and B) for AI image generation.
-- Scene A: Wide/establishing shot showing the main subject
-- Scene B: Close-up or different angle of the SAME scene for visual variety
+For EACH sentence above, write ONE visual scene description for AI image generation.
 
-Requirements:
-- Each scene pair must visually represent what that sentence describes
-- Use consistent cinematic style across ALL scenes
-- Each prompt: 15-25 words, describe what we SEE (not abstract concepts)
-- Make scenes flow like a visual story (beginning to middle to end)
-- Scene B should complement Scene A (different angle, zoom level, or detail focus)
+CRITICAL RULES:
+- NO text, letters, words, numbers, signs, logos, or writing of ANY kind in the scene
+- NO close-ups of hands, fingers, or human extremities
+- Use WIDE shots, landscapes, environments, aerial views
+- Show the main subject clearly from a distance
+- Each scene: 15-25 words describing what we SEE
+- Consistent cinematic style across ALL scenes
+- Scenes flow like a visual story (beginning to middle to end)
 
-Output format: Numbered 1A, 1B, 2A, 2B, etc. One per line.
+Output format: Numbered 1 to {n_scenes}. One scene per line.
 Do NOT use JSON. Do NOT use quotes. Just numbered lines.
 
 Example:
-1A. vast blue ocean surface stretching to horizon under golden sunset light with distant waves
-1B. aerial drone view of ocean waves crashing against rocky coastline at sunset
-2A. camera plunging underwater revealing colorful coral reef teeming with tropical fish
-2B. extreme close-up of bright orange clownfish swimming through purple sea anemone
-3A. deep dark ocean trench with bioluminescent creatures glowing in the abyss
-3B. wide shot of giant squid illuminated by bioluminescent plankton in deep ocean"""
+1. vast blue ocean surface stretching to horizon under golden sunset light with distant waves
+2. aerial drone view of colorful coral reef teeming with tropical fish from above
+3. deep dark ocean trench with bioluminescent creatures glowing in the abyss"""
 
         completion = str(self.generate_response(prompt)).strip()
 
         image_prompts = []
 
-        # Parse numbered lines (1A, 1B, 2A, 2B format)
+        # Parse numbered lines (1, 2, 3 format)
         lines = completion.split('\n')
         for line in lines:
             line = line.strip()
-            # Match patterns like "1A.", "1B.", "2A.", "2B." etc.
-            match = re.match(r'^[\d]+[AB]?[\.\)\-\s]+(.+)$', line)
+            # Match patterns like "1.", "2.", "3." etc.
+            match = re.match(r'^[\d]+[\.\)\-\s]+(.+)$', line)
             if match:
                 scene = match.group(1).strip().strip('"').strip("'")
                 if len(scene) > 10:
@@ -487,20 +499,16 @@ Example:
             except Exception:
                 pass
 
-        # Fallback: generate from script sentences directly (2 per sentence)
+        # Fallback: generate from script sentences directly (1 per scene)
         if not image_prompts:
             if get_verbose():
                 warning("LLM prompt parsing failed. Generating from script sentences...")
             for sentence in sentences[:n_scenes]:
-                # Scene A: wide shot
-                visual_a = f"wide cinematic shot of {sentence.strip()[:60]}, photorealistic, dramatic lighting"
-                image_prompts.append(visual_a)
-                # Scene B: close-up
-                visual_b = f"close-up detail of {sentence.strip()[:60]}, cinematic, shallow depth of field"
-                image_prompts.append(visual_b)
+                visual = f"wide cinematic shot of {sentence.strip()[:60]}, photorealistic, dramatic lighting, no text, no hands"
+                image_prompts.append(visual)
 
-        # Ensure minimum of 8 images
-        while len(image_prompts) < 8 and sentences:
+        # Ensure minimum of 4 images
+        while len(image_prompts) < 4 and sentences:
             idx = len(image_prompts) // 2
             if idx < len(sentences):
                 variant = "wide establishing shot" if len(image_prompts) % 2 == 0 else "close-up detail view"
@@ -622,7 +630,7 @@ Example:
                 warning("POLLINATIONS_API_KEY not set. Skipping Pollinations.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail"
+        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail, no text, no letters, no words, no fingers"
         print(f"Generating AI image via Pollinations API: {prompt[:80]}...")
 
         try:
@@ -674,7 +682,7 @@ Example:
                 warning("g4f not installed. Cannot use Pollinations/Flux.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail"
+        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, high detail, no text, no letters, no words, no fingers"
         print(f"Generating AI image via g4f (Pollinations/Flux): {prompt[:80]}...")
 
         try:
@@ -817,7 +825,7 @@ Example:
                 warning("CF_WORKER_URL or CF_WORKER_API_KEY not set. Skipping Cloudflare.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, photorealistic, high detail, 4k"
+        enhanced_prompt = f"{prompt}, cinematic, photorealistic, high detail, 4k, no text, no letters, no words, no writing, no fingers, no hands close-up"
         print(f"Generating AI image via Cloudflare Workers AI (SDXL): {prompt[:80]}...")
 
         try:
