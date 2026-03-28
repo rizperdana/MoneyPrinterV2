@@ -30,6 +30,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import ROOT_DIR, get_verbose
 from status import info, success, warning, error
 
+import shutil
+
 # Default niches if no file provided
 DEFAULT_NICHES = [
     "amazing space facts",
@@ -133,6 +135,36 @@ def run_single_video(niche: str, output_dir: str, logger: logging.Logger, upload
         return {"error": str(e)}
 
 
+def cleanup_old_files(output_dir: str, max_age_days: int = 7):
+    """Remove old video files to free disk space."""
+    import glob
+    import time
+    
+    now = time.time()
+    cutoff = now - (max_age_days * 86400)
+    
+    removed = 0
+    for pattern in ["*.mp4", "*.wav", "*.png", "*.srt"]:
+        for f in glob.glob(os.path.join(output_dir, "**", pattern), recursive=True):
+            if os.path.getmtime(f) < cutoff:
+                os.remove(f)
+                removed += 1
+    
+    if removed > 0:
+        info(f"Cleaned up {removed} old files (>{max_age_days} days)")
+
+
+def check_disk_space(min_gb: float = 2.0) -> bool:
+    """Check if enough disk space is available."""
+    total, used, free = shutil.disk_usage(ROOT_DIR)
+    free_gb = free / (1024**3)
+    
+    if free_gb < min_gb:
+        warning(f"Low disk space: {free_gb:.1f} GB free (minimum: {min_gb} GB)")
+        return False
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="MoneyPrinterV2 24/7 Content Production")
     parser.add_argument("--interval", type=int, default=7200, help="Seconds between videos (default: 7200 = 2 hours)")
@@ -177,6 +209,14 @@ def main():
             logger.info(f"Video #{video_count + 1}: {niche}")
             logger.info(f"{'=' * 60}")
 
+            # Check disk space before generating
+            if not check_disk_space():
+                logger.error("Insufficient disk space. Cleaning up and waiting...")
+                cleanup_old_files(output_dir, max_age_days=1)
+                if not check_disk_space(min_gb=1.0):
+                    logger.error("Critical disk space. Stopping.")
+                    break
+
             result = run_single_video(niche, output_dir, logger, upload=args.upload)
 
             if result.get("video_path"):
@@ -184,6 +224,10 @@ def main():
                 logger.info(f"Total videos produced: {video_count}")
             else:
                 logger.warning(f"Video failed, continuing to next...")
+
+            # Cleanup old files periodically
+            if video_count % 5 == 0:
+                cleanup_old_files(output_dir)
 
             # Reshuffle niches when we've gone through all
             if niche_index >= len(niches):
