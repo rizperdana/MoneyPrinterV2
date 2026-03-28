@@ -148,7 +148,7 @@ class YouTube:
             from datetime import datetime
             today = datetime.now().strftime("%Y/%m/%d")
             wiki_url = f"https://en.wikipedia.org/api/rest_v1/feed/featured/{today}"
-            resp = requests.get(wiki_url, timeout=15,
+            resp = requests.get(wiki_url, timeout=5,
                                 headers={"User-Agent": "Mozilla/5.0"})
             if resp.status_code == 200:
                 data = resp.json()
@@ -193,7 +193,7 @@ class YouTube:
         try:
             for geo in ["US", ""]:
                 trends_url = f"https://trends.google.com/trending/rss?geo={geo}"
-                resp = requests.get(trends_url, timeout=10,
+                resp = requests.get(trends_url, timeout=5,
                                     headers={"User-Agent": "Mozilla/5.0"})
                 if resp.status_code == 200:
                     titles = re.findall(r'<title>(.*?)</title>', resp.text)
@@ -216,7 +216,7 @@ class YouTube:
             search_query = f"{self.niche} latest news today"
             ddg_url = "https://api.duckduckgo.com/"
             params = {"q": search_query, "format": "json", "no_html": 1, "skip_disambig": 1}
-            resp = requests.get(ddg_url, params=params, timeout=10,
+            resp = requests.get(ddg_url, params=params, timeout=5,
                                 headers={"User-Agent": "Mozilla/5.0"}, verify=False)
             if resp.status_code == 200:
                 data = resp.json()
