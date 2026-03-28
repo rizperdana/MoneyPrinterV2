@@ -217,13 +217,22 @@ def main():
                     logger.error("Critical disk space. Stopping.")
                     break
 
-            result = run_single_video(niche, output_dir, logger, upload=args.upload)
+            # Retry up to 3 times on failure
+            result = None
+            for attempt in range(3):
+                result = run_single_video(niche, output_dir, logger, upload=args.upload)
+                if result.get("video_path"):
+                    break
+                logger.warning(f"Attempt {attempt+1}/3 failed: {result.get('error', 'Unknown')}")
+                if attempt < 2:
+                    logger.info("Retrying in 60 seconds...")
+                    time.sleep(60)
 
             if result.get("video_path"):
                 video_count += 1
                 logger.info(f"Total videos produced: {video_count}")
             else:
-                logger.warning(f"Video failed, continuing to next...")
+                logger.error(f"Video failed after 3 attempts, skipping to next niche...")
 
             # Cleanup old files periodically
             if video_count % 5 == 0:
