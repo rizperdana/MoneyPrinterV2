@@ -90,7 +90,7 @@ def load_niches(niches_file: str = None) -> list:
     return DEFAULT_NICHES
 
 
-def run_single_video(niche: str, output_dir: str, logger: logging.Logger) -> dict:
+def run_single_video(niche: str, output_dir: str, logger: logging.Logger, upload: bool = False) -> dict:
     """Run the pipeline for a single video."""
     from run_pipeline import run_pipeline
 
@@ -101,7 +101,7 @@ def run_single_video(niche: str, output_dir: str, logger: logging.Logger) -> dic
     logger.info(f"Starting video: {niche}")
 
     try:
-        result = run_pipeline(niche=niche, language="English", upload=False)
+        result = run_pipeline(niche=niche, language="English", upload=upload)
 
         if result.get("video_path"):
             # Move video to output directory
@@ -141,6 +141,7 @@ def main():
     parser.add_argument("--max-videos", type=int, default=0, help="Max videos to produce (0 = unlimited)")
     parser.add_argument("--random-order", action="store_true", default=True, help="Randomize niche order")
     parser.add_argument("--no-random-order", action="store_true", help="Use niches in order")
+    parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
     args = parser.parse_args()
 
     output_dir = args.output_dir or os.path.join(ROOT_DIR, ".mp", "24_7")
@@ -176,7 +177,7 @@ def main():
             logger.info(f"Video #{video_count + 1}: {niche}")
             logger.info(f"{'=' * 60}")
 
-            result = run_single_video(niche, output_dir, logger)
+            result = run_single_video(niche, output_dir, logger, upload=args.upload)
 
             if result.get("video_path"):
                 video_count += 1
