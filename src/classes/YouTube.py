@@ -619,42 +619,91 @@ class YouTube:
                 warning(f"Pixabay fallback failed: {e}")
             return None
 
+    def generate_image_cloudflare(self, prompt: str) -> str:
+        """
+        Generates an AI image using Cloudflare Workers AI (SDXL).
+        Free tier: 100,000 calls/day. No rate limit issues.
+        """
+        worker_url = os.environ.get("CF_WORKER_URL", "")
+        api_key = os.environ.get("CF_WORKER_API_KEY", "")
+        if not worker_url or not api_key:
+            if get_verbose():
+                warning("CF_WORKER_URL or CF_WORKER_API_KEY not set. Skipping Cloudflare.")
+            return None
+
+        enhanced_prompt = f"{prompt}, cinematic, photorealistic, high detail, 4k"
+        print(f"Generating AI image via Cloudflare Workers AI (SDXL): {prompt[:80]}...")
+
+        try:
+            resp = requests.post(
+                worker_url,
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={"prompt": enhanced_prompt},
+                timeout=120,
+            )
+
+            if resp.status_code == 429:
+                if get_verbose():
+                    warning("Cloudflare Workers AI rate limited (429).")
+                return None
+
+            if resp.status_code in (401, 403):
+                if get_verbose():
+                    warning(f"Cloudflare Workers AI auth failed ({resp.status_code}).")
+                return None
+
+            resp.raise_for_status()
+
+            if len(resp.content) < 1000:
+                if get_verbose():
+                    warning("Cloudflare image too small, likely an error.")
+                return None
+
+            return self._persist_image(resp.content, "Cloudflare Workers AI (SDXL)")
+
+        except Exception as e:
+            if get_verbose():
+                warning(f"Cloudflare Workers AI failed: {e}")
+            return None
+
     def generate_image(self, prompt: str, delay_between: int = 30) -> str:
         """
         Generates an AI Image based on the given prompt.
-        Priority: Gemini -> Pollinations API -> g4f (free) -> Pixabay -> None
-
-        Args:
-            prompt (str): Reference for image generation
-            delay_between (int): Seconds to wait between API calls to avoid rate limits
-
-        Returns:
-            path (str): The path to the generated image, or None if all fail.
+        Priority: Cloudflare (SDXL) -> Gemini -> Pollinations -> g4f -> Pixabay
         """
-        # 1. Try Gemini - best quality, new API key
+        # 1. Try Cloudflare Workers AI (SDXL) - free, 100K/day, no rate limits
+        if get_verbose():
+            info("Trying Cloudflare Workers AI (SDXL)...")
+        result = self.generate_image_cloudflare(prompt)
+        if result is not None:
+            time.sleep(2)
+            return result
+
+        # 2. Try Gemini - best quality
         gemini_key = get_nanobanana2_api_key()
         if gemini_key:
             if get_verbose():
-                info("Trying Gemini image API (primary)...")
+                info("Cloudflare failed. Trying Gemini image API...")
             result = self.generate_image_nanobanana2(prompt)
             if result is not None:
                 time.sleep(delay_between)
                 return result
-            if get_verbose():
-                info("Gemini failed. Trying Pollinations API...")
 
-        # 2. Try Pollinations with API key - good quality, higher quota
+        # 3. Try Pollinations with API key
         if get_verbose():
-            info("Trying Pollinations API with key...")
+            info("Gemini failed. Trying Pollinations API...")
         result = self.generate_image_pollinations(prompt)
         if result is not None:
             time.sleep(delay_between)
             return result
 
-        # 3. Try g4f (Pollinations free) - fallback, tight quota
+        # 4. Try g4f (Pollinations free)
         if not getattr(self, '_g4f_quota_exhausted', False):
             if get_verbose():
-                info("Trying g4f (Pollinations/Flux free) as fallback...")
+                info("Pollinations failed. Trying g4f (free)...")
             result = self.generate_image_g4f(prompt)
             if result is not None:
                 time.sleep(delay_between)
@@ -662,12 +711,12 @@ class YouTube:
         elif get_verbose():
             info("g4f quota exhausted, skipping...")
 
-        # 4. Try Pixabay - stock photos matching the topic
+        # 5. Try Pixabay - stock photos
         if get_verbose():
-            info("AI generation failed. Trying Pixabay stock photos...")
+            info("All AI generation failed. Trying Pixabay stock photos...")
         result = self.generate_image_pixabay(prompt)
         if result is not None:
-            time.sleep(5)  # Pixabay has higher rate limit
+            time.sleep(5)
             return result
 
         # 5. All failed - caller will use placeholder
