@@ -135,21 +135,60 @@ class YouTube:
 
     def generate_topic(self) -> str:
         """
-        Generates a topic based on the YouTube Channel niche.
+        Generates a topic based on trending subjects in the niche.
+        Researches current trends to pick engaging, timely topics.
 
         Returns:
             topic (str): The generated topic.
         """
-        completion = self.generate_response(
-            f"Please generate a specific video idea that takes about the following topic: {self.niche}. Make it exactly one sentence. Only return the topic, nothing else."
-        )
+        # Research trending topics in the niche
+        trend_prompt = f"""You are a YouTube content strategist. Research what's trending right now in the niche: {self.niche}
 
-        if not completion:
+Think about:
+1. What topics are people searching for RIGHT NOW in this niche?
+2. What recent discoveries, news, or viral moments relate to this niche?
+3. What would make someone stop scrolling and watch?
+
+Generate 3 specific, engaging video topic ideas that would perform well as YouTube Shorts right now.
+Each topic should be one sentence, specific, and curiosity-driven.
+
+Output format: Just list 3 topics, one per line, numbered 1-3.
+Example:
+1. Scientists just discovered a new species of glowing shark in the deep ocean
+2. The James Webb telescope captured something that shouldn't exist
+3. Why octopuses might be smarter than we thought - new study reveals shocking results"""
+
+        completion = str(self.generate_response(trend_prompt)).strip()
+
+        # Parse numbered topics
+        topics = []
+        for line in completion.split('\n'):
+            line = line.strip()
+            match = re.match(r'^[\d]+[\.\)\-\s]+(.+)$', line)
+            if match:
+                topic = match.group(1).strip()
+                if len(topic) > 20:
+                    topics.append(topic)
+
+        # Pick the best topic (first one, usually most engaging)
+        if topics:
+            selected = topics[0]
+        else:
+            # Fallback to simple generation
+            selected = self.generate_response(
+                f"Generate one specific, engaging video topic about: {self.niche}. One sentence only."
+            )
+
+        if not selected:
             error("Failed to generate Topic.")
+            selected = f"Interesting facts about {self.niche}"
 
-        self.subject = completion
+        self.subject = selected
 
-        return completion
+        if get_verbose():
+            info(f" => Trending topic selected: {selected[:80]}...")
+
+        return selected
 
     def generate_script(self) -> str:
         """
@@ -248,83 +287,82 @@ class YouTube:
         """
         Generates AI Image Prompts based on the provided Video Script.
         Each prompt describes a visual scene matching the corresponding sentence.
+        Prompts form a visual story with consistent style.
 
         Returns:
             image_prompts (List[str]): Generated List of image prompts.
         """
         n_prompts = min(max(int(len(self.script) / 50), 3), 8)
 
-        prompt = f"""
-        Generate exactly {n_prompts} detailed visual scene descriptions for AI image generation.
-        Each prompt must describe a SPECIFIC VISUAL SCENE that matches what the narrator is saying.
+        # Split script into sentences for scene mapping
+        sentences = [s.strip() for s in re.split(r'[.!?]+', self.script) if len(s.strip()) > 10]
 
-        Subject: {self.subject}
+        prompt = f"""You are a visual director creating a storyboard for a short video.
 
-        Rules:
-        - Each prompt must describe a concrete, visual scene (not abstract concepts)
-        - Use vivid, cinematic language: lighting, colors, perspective, mood
-        - Each prompt should be 10-20 words describing what we SEE, not what is being discussed
-        - Make each scene visually distinct from the others
-        - Include the main subject in each scene
+Subject: {self.subject}
+Script sentences (in order):
+{chr(10).join(f'{i+1}. {s}' for i, s in enumerate(sentences[:n_prompts]))}
 
-        Return ONLY a JSON array of strings, nothing else.
-        Example: ["deep blue ocean waves crashing on rocky shore at sunset", "underwater coral reef with colorful tropical fish"]
+For EACH sentence above, write ONE visual scene description for AI image generation.
 
-        Video script for context:
-        {self.script}
-        """
+Requirements:
+- Each scene must visually represent what that sentence describes
+- Use consistent cinematic style: same color palette, lighting mood, camera angle style
+- Each prompt: 15-25 words, describe what we SEE (not abstract concepts)
+- Include the main subject in every scene
+- Make scenes flow like a visual story (beginning to middle to end)
 
-        completion = (
-            str(self.generate_response(prompt))
-            .replace("```json", "")
-            .replace("```", "")
-            .strip()
-        )
+Output format: Write each scene on its own line, numbered 1 to {min(len(sentences), n_prompts)}.
+Do NOT use JSON. Do NOT use quotes. Just numbered lines.
+
+Example:
+1. vast blue ocean surface stretching to horizon under golden sunset light with distant waves
+2. camera plunging underwater revealing colorful coral reef teeming with tropical fish
+3. deep dark ocean trench with bioluminescent creatures glowing in the abyss"""
+
+        completion = str(self.generate_response(prompt)).strip()
 
         image_prompts = []
 
-        # Try direct JSON parse first
-        try:
-            parsed = json.loads(completion)
-            if isinstance(parsed, list):
-                image_prompts = parsed
-            elif isinstance(parsed, dict) and "image_prompts" in parsed:
-                image_prompts = parsed["image_prompts"]
-        except Exception:
-            pass
+        # Parse numbered lines (most reliable format)
+        lines = completion.split('\n')
+        for line in lines:
+            line = line.strip()
+            match = re.match(r'^[\d]+[\.\)\-\s]+(.+)$', line)
+            if match:
+                scene = match.group(1).strip().strip('"').strip("'")
+                if len(scene) > 10:
+                    image_prompts.append(scene)
 
-        # If that failed, try to extract JSON array from the response
+        # Fallback: try JSON parse
         if not image_prompts:
+            cleaned = completion.replace("```json", "").replace("```", "").strip()
             try:
-                r = re.compile(r"\[.*?\]", re.DOTALL)
-                matches = r.findall(completion)
-                for match in matches:
-                    try:
-                        parsed = json.loads(match)
-                        if isinstance(parsed, list) and len(parsed) > 0:
-                            image_prompts = parsed
-                            break
-                    except Exception:
-                        continue
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, list):
+                    image_prompts = [p.strip() for p in parsed if isinstance(p, str) and len(p.strip()) > 10]
             except Exception:
                 pass
 
-        # Clean up prompts - remove quotes, brackets, extra whitespace
-        cleaned = []
-        for p in image_prompts:
-            if isinstance(p, str):
-                p = p.strip().strip('"').strip("'").strip("[").strip("]")
-                if len(p) > 10:
-                    cleaned.append(p)
-        image_prompts = cleaned
-
+        # Fallback: extract from script sentences directly
         if not image_prompts:
             if get_verbose():
-                warning("Failed to generate Image Prompts. Retrying...")
-            return self.generate_prompts()
+                warning("LLM prompt parsing failed. Generating from script sentences...")
+            for sentence in sentences[:n_prompts]:
+                visual = f"cinematic scene depicting: {sentence.strip()[:80]}, photorealistic, dramatic lighting"
+                image_prompts.append(visual)
 
-        if len(image_prompts) > n_prompts:
-            image_prompts = image_prompts[: int(n_prompts)]
+        # Ensure we have at least n_prompts
+        while len(image_prompts) < n_prompts and sentences:
+            idx = len(image_prompts)
+            if idx < len(sentences):
+                visual = f"visual representation of {sentences[idx].strip()[:60]}, cinematic, detailed"
+                image_prompts.append(visual)
+            else:
+                break
+
+        # Trim to max
+        image_prompts = image_prompts[:n_prompts]
 
         self.image_prompts = image_prompts
 
