@@ -177,7 +177,8 @@ def run_pipeline(
             try:
                 youtube.upload_video()
                 result["uploaded"] = True
-                success("Video uploaded successfully!")
+                result["youtube_url"] = getattr(youtube, "uploaded_video_url", None)
+                success(f"Video uploaded successfully! {result.get('youtube_url', '')}")
             except Exception as e:
                 error(f"Upload failed: {e}")
                 result["error"] = f"Upload failed: {e}"
