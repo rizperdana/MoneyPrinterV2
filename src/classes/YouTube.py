@@ -337,29 +337,23 @@ Example:
         sentence_length = get_script_sentence_length()
         prompt = f"""Write a YouTube Shorts script about: {self.subject}
 
-The script MUST follow this exact structure:
+STYLE: Engaging storytelling. The narrator is genuinely fascinated by the topic and wants to share it. Think "cool teacher explaining something amazing" energy.
 
-SECTION 1 - HOOK (1-2 sentences):
-Start with a shocking fact, bold claim, or intriguing question that grabs attention IMMEDIATELY.
-Examples: "You won't believe what scientists just found..." or "This changes everything we know about..."
-
-SECTION 2 - BODY ({sentence_length - 3} sentences):
-Present 3-4 key points, facts, or reasons that support the hook.
-Each sentence should build on the previous one. Keep it punchy and engaging.
-Use transitions like "But here's the thing..." or "What's even crazier..."
-
-SECTION 3 - CALL TO ACTION (1-2 sentences):
-End with a compelling CTA. Ask viewers to like, subscribe, or comment.
-Examples: "Follow for more mind-blowing facts!" or "Drop a comment if this blew your mind!"
+STRUCTURE:
+- HOOK (1-2 sentences): Start with a compelling fact or question that grabs attention. "Here's something most people don't know." or "This fact changed how I see the world." or "Let me tell you about something incredible."
+- BODY ({sentence_length - 1} sentences): Tell the story naturally, like explaining to a friend. Each sentence builds on the last. Use transitions like "Here's what's interesting..." or "And then something amazing happened..." or "The best part is..."
+- NO CTA. NO "like and subscribe". NO "follow for more". End on the most interesting fact or a thought-provoking question.
 
 RULES:
-- Total: {sentence_length} SHORT sentences maximum
+- Total: {sentence_length} sentences maximum
 - NO markdown, NO formatting, NO titles, NO section labels
 - NO "welcome to this video" or "in this video"
+- NO "like, subscribe, comment" or ANY call to action
 - NO narrator/voiceover indicators
 - Write in {self.language}
-- Get straight to the point
-- Each sentence should be punchy (under 15 words when possible)
+- Each sentence punchy (under 15 words)
+- Sound like you're genuinely excited to share this knowledge
+- Warm, engaging tone — not deadpan or conspiratorial
 
 Subject: {self.subject}
 Language: {self.language}
