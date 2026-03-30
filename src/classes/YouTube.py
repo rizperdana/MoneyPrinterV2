@@ -4,8 +4,10 @@ import json
 import time
 import os
 import random
+import numpy as np
 import requests
 import assemblyai as aai
+from PIL import Image
 
 from utils import *
 from cache import *
@@ -337,28 +339,29 @@ Example:
         sentence_length = get_script_sentence_length()
         prompt = f"""Write a YouTube Shorts script about: {self.subject}
 
-STYLE: Engaging storytelling. The narrator is genuinely fascinated by the topic and wants to share it. Think "cool teacher explaining something amazing" energy.
+STYLE: Warm, engaging storytelling. Like a friendly teacher sharing something cool. Natural, conversational tone.
 
 STRUCTURE:
-- HOOK (1-2 sentences): Start with a compelling fact or question that grabs attention. "Here's something most people don't know." or "This fact changed how I see the world." or "Let me tell you about something incredible."
-- BODY ({sentence_length - 1} sentences): Tell the story naturally, like explaining to a friend. Each sentence builds on the last. Use transitions like "Here's what's interesting..." or "And then something amazing happened..." or "The best part is..."
-- NO CTA. NO "like and subscribe". NO "follow for more". End on the most interesting fact or a thought-provoking question.
+- FIRST SENTENCE must be a SHORT TITLE (5-8 words max, readable by kids and elderly). Example: "Octopuses Have Three Hearts" or "Honey Never Goes Bad"
+- Then tell the story naturally, each sentence describing what we SEE on screen
+- Each sentence should match a visual scene — describe the image being shown
+- NO CTA. NO "like and subscribe". End on the most interesting fact.
 
 RULES:
 - Total: {sentence_length} sentences maximum
-- NO markdown, NO formatting, NO titles, NO section labels
+- First sentence = short title (5-8 words, simple language)
+- Each subsequent sentence describes a visual scene
+- NO markdown, NO formatting, NO section labels
 - NO "welcome to this video" or "in this video"
-- NO "like, subscribe, comment" or ANY call to action
-- NO narrator/voiceover indicators
+- NO call to action
 - Write in {self.language}
 - Each sentence punchy (under 15 words)
-- Sound like you're genuinely excited to share this knowledge
-- Warm, engaging tone — not deadpan or conspiratorial
+- Simple words that kids and elderly can understand
 
 Subject: {self.subject}
 Language: {self.language}
 
-Return ONLY the raw script text. No labels, no formatting, just the spoken words."""
+Return ONLY the raw script text. First line = title, then story sentences."""
 
         completion = self.generate_response(prompt)
 
@@ -624,7 +627,7 @@ Example:
                 warning("POLLINATIONS_API_KEY not set. Skipping Pollinations.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, ultra detailed, dramatic lighting, depth of field, no text, no letters, no words, no fingers, no hands, wide shot"
+        enhanced_prompt = f"{prompt}, Ghibli watercolor"
         print(f"Generating AI image via Pollinations API: {prompt[:80]}...")
 
         try:
@@ -676,7 +679,7 @@ Example:
                 warning("g4f not installed. Cannot use Pollinations/Flux.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, vertical 9:16, photorealistic, ultra detailed, dramatic lighting, depth of field, no text, no letters, no words, no fingers, no hands, wide shot"
+        enhanced_prompt = f"{prompt}, Ghibli watercolor"
         print(f"Generating AI image via g4f (Pollinations/Flux): {prompt[:80]}...")
 
         try:
@@ -819,7 +822,7 @@ Example:
                 warning("CF_WORKER_URL or CF_WORKER_API_KEY not set. Skipping Cloudflare.")
             return None
 
-        enhanced_prompt = f"{prompt}, cinematic, photorealistic, 4k, ultra detailed, dramatic lighting, depth of field, no text, no letters, no words, no writing, no fingers, no hands, no people close-up, wide shot, landscape"
+        enhanced_prompt = f"{prompt}, Ghibli watercolor"
         print(f"Generating AI image via Cloudflare Workers AI (SDXL): {prompt[:80]}...")
 
         try:
@@ -1099,84 +1102,117 @@ Example:
 
         print(colored("[+] Combining images...", "blue"))
 
-        clips = []
+        # ── Ken Burns effect (pan + zoom) ──────────────────────────────────
+        # Load images at higher resolution so zoom-out has pixels to work with.
+        # We crop a 1080x1920 window from the larger source each frame.
+        OUTPUT_W, OUTPUT_H = 1080, 1920
+        # Source resolution: 25% larger than output so zoom-out stays sharp
+        SRC_W = int(OUTPUT_W * 1.25)   # 1350
+        SRC_H = int(OUTPUT_H * 1.25)   # 2400
+
+        # Pre-load source images at the larger resolution
+        source_images = [
+            Image.open(p).convert("RGB").resize((SRC_W, SRC_H), Image.LANCZOS)
+            for p in self.images
+        ]
+
+        # Build a list of (source_image_index, duration) for each segment
+        segments = []  # (source_images index, duration)
         tot_dur = 0
-        # Add downloaded clips over and over until the duration of the audio (max_duration) has been reached
         while tot_dur < max_duration:
-            for image_path in self.images:
-                clip = ImageClip(image_path)
-                clip.duration = req_dur
-                clip = clip.set_fps(30)
+            for img_idx in range(len(source_images)):
+                segments.append((img_idx, req_dur))
+                tot_dur += req_dur
+                if tot_dur >= max_duration:
+                    break
 
-                # Not all images are same size,
-                # so we need to resize them
-                if round((clip.w / clip.h), 4) < 0.5625:
-                    if get_verbose():
-                        info(f" => Resizing Image: {image_path} to 1080x1920")
-                    clip = crop(
-                        clip,
-                        width=clip.w,
-                        height=round(clip.w / 0.5625),
-                        x_center=clip.w / 2,
-                        y_center=clip.h / 2,
+        num_segments = len(segments)
+        total_dur = num_segments * req_dur
+
+        # Pre-compute Ken Burns parameters for each segment.
+        # Each segment gets a random zoom direction (in/out) and pan direction.
+        # Zoom: start at 1.0x, end at 1.0 +/- 0.12x (12% change — subtle Ken Burns)
+        # Pan: shift crop window by up to +/-8% of source dimensions.
+        ken_burns_params = []
+        for seg_idx in range(num_segments):
+            zoom_start = 1.0
+            # Random zoom: 88% to 112% of source (always within source bounds)
+            zoom_end = random.uniform(0.88, 1.12)
+            # Random pan offsets (fraction of source dimensions)
+            pan_x_start = random.uniform(-0.05, 0.05)
+            pan_y_start = random.uniform(-0.05, 0.05)
+            pan_x_end = random.uniform(-0.08, 0.08)
+            pan_y_end = random.uniform(-0.08, 0.08)
+            ken_burns_params.append({
+                "zoom_start": zoom_start,
+                "zoom_end": zoom_end,
+                "pan_x_start": pan_x_start,
+                "pan_y_start": pan_y_start,
+                "pan_x_end": pan_x_end,
+                "pan_y_end": pan_y_end,
+            })
+
+        # Draw title on first source image using PIL (avoids TextClip/CompositeVideoClip bugs)
+        if self.metadata and self.metadata.get("title"):
+            title_text = self.metadata["title"]
+            title_clean = re.sub(r'#\w+', '', title_text).strip()
+            title_clean = re.sub(r'[|🌟🌊🔥💡✨🎯🚀]', '', title_clean).strip()
+            if len(title_clean) > 60:
+                title_clean = title_clean[:57] + "..."
+            try:
+                from PIL import ImageDraw, ImageFont
+                draw = ImageDraw.Draw(source_images[0])
+                try:
+                    title_font = ImageFont.truetype(
+                        os.path.join(get_fonts_dir(), get_font()), 56
                     )
-                else:
-                    if get_verbose():
-                        info(f" => Resizing Image: {image_path} to 1920x1080")
-                    clip = crop(
-                        clip,
-                        width=round(0.5625 * clip.h),
-                        height=clip.h,
-                        x_center=clip.w / 2,
-                        y_center=clip.h / 2,
-                    )
-                clip = clip.resize((1080, 1920))
+                except Exception:
+                    title_font = ImageFont.load_default()
+                # Draw with stroke (black outline + white text)
+                for dx in range(-3, 4):
+                    for dy in range(-3, 4):
+                        if dx*dx + dy*dy <= 9:
+                            draw.text((60 + dx, 40 + dy), title_clean, fill="black", font=title_font)
+                draw.text((60, 40), title_clean, fill="white", font=title_font)
+            except Exception as e:
+                warning(f"Failed to draw title overlay: {e}")
 
-                # Ken Burns effect: slow zoom/pan over clip duration
-                # Alternate between zoom-in and zoom-out for variety
-                zoom_start = 1.0
-                zoom_end = 1.15
-                if len(clips) % 2 == 1:
-                    zoom_start, zoom_end = zoom_end, zoom_start
+        def make_frame(t):
+            """Render a frame with Ken Burns pan+zoom effect."""
+            # Determine which segment we're in
+            seg_idx = max(0, min(int(t / req_dur), num_segments - 1))
+            img_idx, seg_dur = segments[seg_idx]
+            kb = ken_burns_params[seg_idx]
 
-                # Pre-scale to max zoom size, then crop a fixed-size window that moves
-                target_w, target_h = 1080, 1920
-                max_zoom = max(zoom_start, zoom_end)
-                scaled_w = int(target_w * max_zoom)
-                scaled_h = int(target_h * max_zoom)
-                clip = clip.resize((scaled_w, scaled_h))
+            # Local time within this segment [0, 1]
+            seg_start = seg_idx * req_dur
+            local_t = (t - seg_start) / seg_dur if seg_dur > 0 else 0
+            local_t = max(0.0, min(1.0, local_t))
 
-                # Time-based crop: fixed window (1080x1920) moves across the scaled image
-                import numpy as np
+            # Interpolate zoom and pan
+            zoom = kb["zoom_start"] + (kb["zoom_end"] - kb["zoom_start"]) * local_t
+            pan_x = kb["pan_x_start"] + (kb["pan_x_end"] - kb["pan_x_start"]) * local_t
+            pan_y = kb["pan_y_start"] + (kb["pan_y_end"] - kb["pan_y_start"]) * local_t
 
-                def ken_burns_crop(get_frame, t, dur=clip.duration, sw=scaled_w, sh=scaled_h,
-                                   tw=target_w, th=target_h, zs=zoom_start, ze=zoom_end):
-                    progress = t / dur if dur > 0 else 0
-                    # Start/end crop offsets (from center)
-                    max_ox = (sw - tw) // 2
-                    max_oy = (sh - th) // 2
-                    # Zoom direction: if ze > zs, we zoom in (crop tighter)
-                    # so offset goes from 0 to max (moving from center to edge)
-                    ox = int(max_ox * progress)
-                    oy = int(max_oy * progress)
-                    # Center the crop with offset
-                    cx = (sw - tw) // 2 - ox // 2
-                    cy = (sh - th) // 2 - oy // 2
-                    cx = max(0, min(cx, sw - tw))
-                    cy = max(0, min(cy, sh - th))
-                    frame = get_frame(t)
-                    return frame[cy:cy+th, cx:cx+tw]
+            # Crop window size (inverse of zoom: larger zoom = smaller crop)
+            crop_w = int(SRC_W / zoom)
+            crop_h = int(SRC_H / zoom)
+            crop_w = min(crop_w, SRC_W)
+            crop_h = min(crop_h, SRC_H)
 
-                clip = clip.fl(ken_burns_crop)
+            # Crop position: center + pan offset
+            cx = (SRC_W - crop_w) // 2 + int(pan_x * SRC_W)
+            cy = (SRC_H - crop_h) // 2 + int(pan_y * SRC_H)
+            # Clamp to valid range
+            cx = max(0, min(cx, SRC_W - crop_w))
+            cy = max(0, min(cy, SRC_H - crop_h))
 
-                # Fade in/out for smooth transitions
-                clip = clip.fadein(0.5)
-                clip = clip.fadeout(0.5)
+            # Crop from source, then resize to output resolution
+            cropped = source_images[img_idx].crop((cx, cy, cx + crop_w, cy + crop_h))
+            frame = cropped.resize((OUTPUT_W, OUTPUT_H), Image.LANCZOS)
+            return np.array(frame)
 
-                clips.append(clip)
-                tot_dur += clip.duration
-
-        final_clip = concatenate_videoclips(clips)
+        final_clip = VideoClip(make_frame, duration=total_dur)
         final_clip = final_clip.set_fps(30)
         random_song = choose_random_song()
 
@@ -1196,7 +1232,9 @@ Example:
         comp_audio = CompositeAudioClip([tts_clip.set_fps(44100), random_song_clip])
 
         final_clip = final_clip.set_audio(comp_audio)
-        final_clip = final_clip.set_duration(tts_clip.duration)
+        # Use total_dur (matches frame buffer exactly) instead of tts_clip.duration
+        # to avoid black frames when TTS is slightly longer than the frame coverage.
+        final_clip = final_clip.set_duration(total_dur)
 
         if subtitles is not None:
             final_clip = CompositeVideoClip([final_clip, subtitles])
