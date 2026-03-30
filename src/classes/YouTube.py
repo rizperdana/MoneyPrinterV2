@@ -1152,30 +1152,7 @@ Example:
                 "pan_y_end": pan_y_end,
             })
 
-        # Draw title on first source image using PIL (avoids TextClip/CompositeVideoClip bugs)
-        if self.metadata and self.metadata.get("title"):
-            title_text = self.metadata["title"]
-            title_clean = re.sub(r'#\w+', '', title_text).strip()
-            title_clean = re.sub(r'[|🌟🌊🔥💡✨🎯🚀]', '', title_clean).strip()
-            if len(title_clean) > 60:
-                title_clean = title_clean[:57] + "..."
-            try:
-                from PIL import ImageDraw, ImageFont
-                draw = ImageDraw.Draw(source_images[0])
-                try:
-                    title_font = ImageFont.truetype(
-                        os.path.join(get_fonts_dir(), get_font()), 56
-                    )
-                except Exception:
-                    title_font = ImageFont.load_default()
-                # Draw with stroke (black outline + white text)
-                for dx in range(-3, 4):
-                    for dy in range(-3, 4):
-                        if dx*dx + dy*dy <= 9:
-                            draw.text((60 + dx, 40 + dy), title_clean, fill="black", font=title_font)
-                draw.text((60, 40), title_clean, fill="white", font=title_font)
-            except Exception as e:
-                warning(f"Failed to draw title overlay: {e}")
+
 
         def make_frame(t):
             """Render a frame with Ken Burns pan+zoom effect."""
