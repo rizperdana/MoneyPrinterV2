@@ -18,6 +18,7 @@ from classes.YouTube import YouTube
 from prettytable import PrettyTable
 from classes.Outreach import Outreach
 from classes.AFM import AffiliateMarketing
+from classes.Reddit import Reddit
 from llm_provider import list_models, select_model, get_active_model
 from post_bridge_integration import maybe_crosspost_youtube_short
 
@@ -176,6 +177,19 @@ def main():
                     tts = TTS()
 
                     if user_input == 1:
+                        # Generate Video (Preview) - no upload
+                        youtube.generate_video(tts)
+                        # Copy to visible output folder
+                        import shutil
+                        output_dir = os.path.join(ROOT_DIR, "output")
+                        os.makedirs(output_dir, exist_ok=True)
+                        video_name = os.path.basename(youtube.video_path)
+                        output_path = os.path.join(output_dir, video_name)
+                        shutil.copy2(youtube.video_path, output_path)
+                        success(f"Video saved to: {output_path}")
+                        info("Review the video. Use 'Upload Short' to publish when ready.")
+                    elif user_input == 2:
+                        # Generate + Upload
                         youtube.generate_video(tts)
                         upload_to_yt = question("Do you want to upload this video to YouTube? (Yes/No): ")
                         if upload_to_yt.lower() == "yes":
@@ -188,7 +202,7 @@ def main():
                                 )
                             else:
                                 warning("YouTube upload failed. Skipping Post Bridge cross-post.")
-                    elif user_input == 2:
+                    elif user_input == 3:
                         videos = youtube.get_videos()
 
                         if len(videos) > 0:
@@ -205,7 +219,7 @@ def main():
                             print(videos_table)
                         else:
                             warning(" No videos found.")
-                    elif user_input == 3:
+                    elif user_input == 4:
                         info("How often do you want to upload?")
 
                         info("\n============ OPTIONS ============", False)
@@ -233,7 +247,7 @@ def main():
                             success("Set up CRON Job.")
                         else:
                             break
-                    elif user_input == 4:
+                    elif user_input == 5:
                         if get_verbose():
                             info(" => Climbing Options Ladder...", False)
                         break
@@ -375,6 +389,246 @@ def main():
                             info(" => Climbing Options Ladder...", False)
                         break
     elif user_input == 3:
+        info("Starting Reddit to Twitter...")
+        
+        # Get Twitter account (cached or prompt to create)
+        cached_accounts = get_accounts("twitter")
+
+        if len(cached_accounts) == 0:
+            warning("No Twitter accounts found. Create one first.")
+            user_input = question("Yes/No: ")
+
+            if user_input.lower() == "yes":
+                generated_uuid = str(uuid4())
+
+                success(f" => Generated ID: {generated_uuid}")
+                nickname = question(" => Enter a nickname for this account: ")
+                fp_profile = question(" => Enter the path to the Firefox profile: ")
+                topic = question(" => Enter the account topic (e.g. memes): ")
+
+                add_account("twitter", {
+                    "id": generated_uuid,
+                    "nickname": nickname,
+                    "firefox_profile": fp_profile,
+                    "topic": topic,
+                    "posts": []
+                })
+                
+                success("Account configured successfully!")
+            else:
+                error("Need a Twitter account to post to Twitter.")
+                main()
+        
+        # Show Reddit to Twitter options
+        while True:
+            info("\n============ REDDIT TO TWITTER ===========", False)
+
+            for idx, option in enumerate(REDDIT_TWITTER_OPTIONS):
+                print(colored(f" {idx + 1}. {option}", "cyan"))
+
+            info("============================================\n", False)
+
+            user_input = int(question("Select an option: "))
+
+            if user_input == 1:
+                # Fetch & Post Best Meme
+                info("Fetching best meme from Reddit...")
+                
+                # Get or create Twitter account
+                if len(cached_accounts) == 0:
+                    error("No Twitter account available.")
+                    break
+                    
+                selected_account = cached_accounts[0]
+                
+                # Create Twitter instance
+                twitter = Twitter(
+                    selected_account["id"],
+                    selected_account["nickname"],
+                    selected_account["firefox_profile"],
+                    selected_account["topic"]
+                )
+                
+                # Create Reddit instance to fetch from r/memes, r/dankmemes, r/ProgrammerHumor
+                reddit = Reddit(
+                    subreddits=["memes", "dankmemes", "ProgrammerHumor"],
+                    limit=25,
+                    min_score=500
+                )
+                
+                # Fetch trending posts
+                info("Fetching posts from subreddits...")
+                posts = reddit.fetch_trending_posts()
+                
+                if not posts:
+                    warning("No posts with media found. Try lowering min_score.")
+                    continue
+                
+                # Get the best post
+                best_post = reddit.get_best_post()
+                
+                if not best_post:
+                    warning("No suitable post found.")
+                    continue
+                
+                # Display the best post
+                info(f"Best post: {best_post.get('title', '')[:60]}...")
+                info(f"Score: {best_post.get('score', 0):,} | r/{best_post.get('subreddit')}")
+                
+                confirm = question("Post this to Twitter? (Yes/No): ")
+                if confirm.lower() != "yes":
+                    warning("Canceled.")
+                    continue
+                
+                # Download the media
+                info("Downloading media...")
+                media_path = reddit.download_media(best_post)
+                
+                if not media_path:
+                    error("Failed to download media.")
+                    continue
+                
+                # Generate caption
+                caption = twitter.generate_caption_from_reddit(best_post)
+                
+                # Post to Twitter with caption
+                success("Posting to Twitter...")
+                result = twitter.post_with_media(caption, media_path)
+                
+                if result:
+                    success("Posted to Twitter successfully!")
+                else:
+                    error("Failed to post to Twitter.")
+                
+                # Cleanup temp files
+                reddit.cleanup()
+                
+            elif user_input == 2:
+                # Select from Top Posts
+                info("Fetching top posts from subreddits...")
+                
+                if len(cached_accounts) == 0:
+                    error("No Twitter account available.")
+                    break
+                    
+                selected_account = cached_accounts[0]
+                
+                twitter = Twitter(
+                    selected_account["id"],
+                    selected_account["nickname"],
+                    selected_account["firefox_profile"],
+                    selected_account["topic"]
+                )
+                
+                reddit = Reddit(
+                    subreddits=["memes", "dankmemes", "ProgrammerHumor"],
+                    limit=25,
+                    min_score=100
+                )
+                
+                posts = reddit.fetch_trending_posts()
+                
+                if not posts:
+                    warning("No posts found.")
+                    continue
+                
+                # Display posts
+                reddit.display_posts()
+                
+                selected_idx = question("Select a post to post (number): ")
+                try:
+                    selected_post = reddit.select_post(int(selected_idx))
+                    if not selected_post:
+                        error("Invalid selection.")
+                        continue
+                except (ValueError, IndexError):
+                    error("Invalid selection.")
+                    continue
+                
+                # Download media
+                media_path = reddit.download_media(selected_post)
+                
+                if not media_path:
+                    error("Failed to download media.")
+                    continue
+                
+                # Generate and post caption
+                caption = twitter.generate_caption_from_reddit(selected_post)
+                result = twitter.post_with_media(caption, media_path)
+                
+                if result:
+                    success("Posted to Twitter successfully!")
+                else:
+                    error("Failed to post to Twitter.")
+                
+                reddit.cleanup()
+                
+            elif user_input == 3:
+                # Choose Subreddit
+                custom_sub = question("Enter subreddit name (without r/): ").strip()
+                if not custom_sub:
+                    error("Invalid subreddit.")
+                    continue
+                
+                if len(cached_accounts) == 0:
+                    error("No Twitter account available.")
+                    break
+                    
+                selected_account = cached_accounts[0]
+                
+                twitter = Twitter(
+                    selected_account["id"],
+                    selected_account["nickname"],
+                    selected_account["firefox_profile"],
+                    selected_account["topic"]
+                )
+                
+                reddit = Reddit(
+                    subreddits=[custom_sub],
+                    limit=25,
+                    min_score=100
+                )
+                
+                posts = reddit.fetch_hot_posts(custom_sub)
+                
+                if not posts:
+                    warning(f"No posts with media found in r/{custom_sub}.")
+                    continue
+                
+                # Get best post from this subreddit
+                best_post = posts[0] if posts else None
+                
+                if not best_post:
+                    warning("No suitable post found.")
+                    continue
+                
+                info(f"Best post: {best_post.get('title', '')[:60]}...")
+                info(f"Score: {best_post.get('score', 0):,}")
+                
+                confirm = question("Post this to Twitter? (Yes/No): ")
+                if confirm.lower() != "yes":
+                    continue
+                
+                media_path = reddit.download_media(best_post)
+                if not media_path:
+                    error("Failed to download media.")
+                    continue
+                
+                caption = twitter.generate_caption_from_reddit(best_post)
+                result = twitter.post_with_media(caption, media_path)
+                
+                if result:
+                    success("Posted to Twitter successfully!")
+                else:
+                    error("Failed to post to Twitter.")
+                
+                reddit.cleanup()
+                
+            elif user_input == 4:
+                if get_verbose():
+                    info(" => Climbing Options Ladder...", False)
+                break
+    elif user_input == 4:
         info("Starting Affiliate Marketing...")
 
         cached_products = get_products()
@@ -435,13 +689,13 @@ def main():
                 afm.generate_pitch()
                 afm.share_pitch("twitter")
 
-    elif user_input == 4:
+    elif user_input == 5:
         info("Starting Outreach...")
 
         outreach = Outreach()
 
         outreach.start()
-    elif user_input == 5:
+    elif user_input == 6:
         if get_verbose():
             print(colored(" => Quitting...", "blue"))
         sys.exit(0)

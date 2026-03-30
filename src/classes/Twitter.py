@@ -3,6 +3,8 @@ import sys
 import time
 import os
 import json
+import shutil
+import tempfile
 
 from cache import *
 from config import *
@@ -19,6 +21,8 @@ from selenium.webdriver.firefox.options import Options
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from typing import List, Optional
+from urllib.parse import quote
 
 
 class Twitter:
@@ -57,9 +61,17 @@ class Twitter:
                 f"Firefox profile path does not exist or is not a directory: {fp_profile_path}"
             )
 
-        # Set the profile path
+        # Copy profile to temp dir so we don't conflict with a running Firefox
+        self._temp_profile_dir = tempfile.mkdtemp(prefix="mp2_ff_tw_")
+
+        def _ignore_locks(dir, files):
+            return [f for f in files if f in (".parentlock", "parent.lock", "lock")]
+
+        temp_profile = os.path.join(self._temp_profile_dir, "profile")
+        shutil.copytree(fp_profile_path, temp_profile, ignore=_ignore_locks)
+
         self.options.add_argument("-profile")
-        self.options.add_argument(fp_profile_path)
+        self.options.add_argument(temp_profile)
 
         # Set the service
         self.service: Service = Service(GeckoDriverManager().install())
@@ -223,3 +235,191 @@ class Twitter:
             return completion[:257].rsplit(" ", 1)[0] + "..."
 
         return completion
+
+    def post_with_media(self, text: str, media_path: str = None) -> bool:
+        """
+        Posts a tweet with optional media (image/video) attachment.
+        
+        This method handles cross-posting Reddit content to Twitter with
+        images or videos and a caption.
+
+        Args:
+            text (str): The tweet text/caption
+            media_path (str): Optional path to image/video file to attach
+
+        Returns:
+            success (bool): Whether the post was successful
+        """
+        bot: webdriver.Firefox = self.browser
+        verbose: bool = get_verbose()
+
+        try:
+            # Navigate to X compose page
+            bot.get("https://x.com/compose/post")
+            time.sleep(2)
+
+            print(colored(" => Posting to Twitter with media:", "blue"), text[:50] + "...")
+
+            # Fill in the text first
+            text_box = None
+            text_box_selectors = [
+                (By.CSS_SELECTOR, "div[data-testid='tweetTextarea_0'][role='textbox']"),
+                (By.XPATH, "//div[@data-testid='tweetTextarea_0']//div[@role='textbox']"),
+                (By.XPATH, "//div[@role='textbox']"),
+            ]
+
+            for selector in text_box_selectors:
+                try:
+                    text_box = self.wait.until(EC.element_to_be_clickable(selector))
+                    text_box.click()
+                    text_box.send_keys(text)
+                    break
+                except Exception:
+                    continue
+
+            if text_box is None:
+                raise RuntimeError(
+                    "Could not find tweet text box. Ensure you are logged into X in this Firefox profile."
+                )
+
+            # Upload media if provided
+            if media_path and os.path.isfile(media_path):
+                if verbose:
+                    info(f" => Uploading media: {media_path}")
+                
+                # Find the media upload button
+                media_button_selectors = [
+                    (By.XPATH, "//input[@type='file']"),
+                    (By.CSS_SELECTOR, "input[type='file']"),
+                    (By.XPATH, "//button[@data-testid='addFileButton']"),
+                    (By.XPATH, "//button[contains(@aria-label, 'Add media')]"),
+                ]
+                
+                media_input = None
+                for selector in media_button_selectors:
+                    try:
+                        media_input = bot.find_element(*selector)
+                        if media_input:
+                            break
+                    except Exception:
+                        continue
+                
+                if media_input:
+                    # Send the file path to the input
+                    media_input.send_keys(media_path)
+                    
+                    # Wait for media to upload
+                    time.sleep(3)
+                    
+                    if verbose:
+                        info(" => Media uploaded successfully")
+                else:
+                    if verbose:
+                        warning("Could not find media upload button, posting text only")
+
+            # Click the post button
+            post_button = None
+            post_button_selectors = [
+                (By.XPATH, "//button[@data-testid='tweetButtonInline']"),
+                (By.XPATH, "//button[@data-testid='tweetButton']"),
+                (By.XPATH, "//span[text()='Post']/ancestor::button"),
+            ]
+
+            for selector in post_button_selectors:
+                try:
+                    post_button = self.wait.until(EC.element_to_be_clickable(selector))
+                    post_button.click()
+                    break
+                except Exception:
+                    continue
+
+            if post_button is None:
+                raise RuntimeError("Could not find the Post button on X compose screen.")
+
+            if verbose:
+                print(colored(" => Pressed Post Button on Twitter..", "blue"))
+            
+            time.sleep(2)
+
+            # Add the post to the cache
+            now = datetime.now()
+            self.add_post({
+                "content": text, 
+                "media_path": media_path,
+                "date": now.strftime("%m/%d/%Y, %H:%M:%S")
+            })
+
+            success("Posted to Twitter with media successfully!")
+            return True
+
+        except Exception as e:
+            error(f"Failed to post with media: {e}")
+            return False
+
+    def post_reddit_content(self, reddit_post: dict, media_path: str = None) -> bool:
+        """
+        Posts Reddit content to Twitter with automatic caption generation.
+        
+        Convenience method that takes a Reddit post dict and optional media path,
+        then posts to Twitter.
+
+        Args:
+            reddit_post (dict): The Reddit post dictionary (from Reddit.py)
+            media_path (str): Optional path to downloaded media file
+
+        Returns:
+            success (bool): Whether the post was successful
+        """
+        # Generate caption from Reddit post
+        caption = self._generate_reddit_caption(reddit_post)
+        
+        return self.post_with_media(caption, media_path)
+
+    def _generate_reddit_caption(self, reddit_post: dict, max_length: int = 280) -> str:
+        """
+        Generates a Twitter caption from a Reddit post.
+
+        Args:
+            reddit_post (dict): The Reddit post dictionary
+            max_length (int): Maximum caption length
+
+        Returns:
+            caption (str): Generated caption
+        """
+        title = reddit_post.get("title", "")
+        subreddit = reddit_post.get("subreddit", "")
+        score = reddit_post.get("score", 0)
+        url = reddit_post.get("url", "")
+        
+        # Clean up title
+        title = re.sub(r"\[.*?\]\(.*?\)", "", title)
+        title = re.sub(r"http\S+", "", title)
+        title = title.strip()
+        
+        # Build caption
+        caption = f"🔥 {title}\n\n"
+        caption += f"r/{subreddit} • {score:,} upvotes"
+        
+        # Add URL if there's room
+        if len(caption) + len(url) + 1 <= max_length:
+            caption += f"\n{url}"
+        elif len(caption) > max_length:
+            caption = caption[:max_length - 3] + "..."
+        
+        return caption
+
+    def generate_caption_from_reddit(self, reddit_post: dict) -> str:
+        """
+        Generates a Twitter caption from a Reddit post (public method).
+        
+        This is a public wrapper around _generate_reddit_caption that provides
+        a clean interface for generating captions from Reddit posts.
+
+        Args:
+            reddit_post (dict): The Reddit post dictionary containing at least
+                                'title', 'subreddit', 'score', and 'url' keys
+
+        Returns:
+            caption (str): Generated Twitter-ready caption
+        """
+        return self._generate_reddit_caption(reddit_post)

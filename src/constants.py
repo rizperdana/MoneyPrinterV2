@@ -8,6 +8,7 @@ TWITTER_POST_BUTTON_XPATH = "/html/body/div[1]/div/div/div[2]/main/div/div/div/d
 OPTIONS = [
     "YouTube Shorts Automation",
     "Twitter Bot",
+    "Reddit to Twitter",
     "Affiliate Marketing",
     "Outreach",
     "Quit"
@@ -20,6 +21,13 @@ TWITTER_OPTIONS = [
     "Quit"
 ]
 
+REDDIT_TWITTER_OPTIONS = [
+    "Fetch & Post Best Meme",
+    "Select from Top Posts",
+    "Choose Subreddit",
+    "Quit"
+]
+
 TWITTER_CRON_OPTIONS = [
     "Once a day",
     "Twice a day",
@@ -28,6 +36,7 @@ TWITTER_CRON_OPTIONS = [
 ]
 
 YOUTUBE_OPTIONS = [
+    "Generate Video (Preview)",
     "Upload Short",
     "Show all Shorts",
     "Setup CRON Job",
