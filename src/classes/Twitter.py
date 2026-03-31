@@ -378,6 +378,7 @@ class Twitter:
     def _generate_reddit_caption(self, reddit_post: dict, max_length: int = 280) -> str:
         """
         Generates a Twitter caption from a Reddit post.
+        Uses LLM for witty, engaging copy with trending hashtags.
 
         Args:
             reddit_post (dict): The Reddit post dictionary
@@ -386,40 +387,124 @@ class Twitter:
         Returns:
             caption (str): Generated caption
         """
+        # Try LLM-powered caption first
+        try:
+            caption = self.generate_caption_from_reddit(reddit_post)
+            if caption and len(caption) <= max_length:
+                return caption
+        except Exception:
+            pass
+
+        # Fallback: simple caption from title
         title = reddit_post.get("title", "")
         subreddit = reddit_post.get("subreddit", "")
         score = reddit_post.get("score", 0)
         url = reddit_post.get("url", "")
-        
+
         # Clean up title
         title = re.sub(r"\[.*?\]\(.*?\)", "", title)
         title = re.sub(r"http\S+", "", title)
         title = title.strip()
-        
+
+        # Trending hashtag sets by subreddit
+        trending_tags = {
+            "memes": "#memes #viral #trending #lol",
+            "dankmemes": "#dankmemes #dank #viral #edgy",
+            "ProgrammerHumor": "#ProgrammerHumor #coding #devlife #tech",
+            "me_irl": "#meirl #relatable #mood #viral",
+            "wholesomememes": "#wholesome #goodvibes #positive #love",
+            "funny": "#funny #humor #comedy #viral",
+            "gaming": "#gaming #gamer #videogames #esports",
+        }
+        hashtags = trending_tags.get(subreddit, f"#{subreddit} #reddit #viral")
+
         # Build caption
         caption = f"🔥 {title}\n\n"
-        caption += f"r/{subreddit} • {score:,} upvotes"
-        
+        caption += f"r/{subreddit} • {score:,} upvotes\n"
+        caption += hashtags
+
         # Add URL if there's room
-        if len(caption) + len(url) + 1 <= max_length:
+        if len(caption) + len(url) + 2 <= max_length:
             caption += f"\n{url}"
         elif len(caption) > max_length:
             caption = caption[:max_length - 3] + "..."
-        
+
         return caption
 
     def generate_caption_from_reddit(self, reddit_post: dict) -> str:
         """
-        Generates a Twitter caption from a Reddit post (public method).
-        
-        This is a public wrapper around _generate_reddit_caption that provides
-        a clean interface for generating captions from Reddit posts.
+        Generates a witty, LLM-powered Twitter caption from a Reddit post.
+
+        Uses the configured LLM to create short, punchy, meme-style captions
+        with trending hashtags. Falls back to a simple title-based caption
+        if the LLM is unavailable.
 
         Args:
             reddit_post (dict): The Reddit post dictionary containing at least
                                 'title', 'subreddit', 'score', and 'url' keys
 
         Returns:
-            caption (str): Generated Twitter-ready caption
+            caption (str): Generated Twitter-ready caption (≤ 280 chars)
         """
-        return self._generate_reddit_caption(reddit_post)
+        title = reddit_post.get("title", "")
+        subreddit = reddit_post.get("subreddit", "memes")
+        score = reddit_post.get("score", 0)
+
+        # Subreddit → trending hashtag mapping
+        subreddit_hashtags = {
+            "memes": "#memes #funny #lol #viral #trending",
+            "dankmemes": "#dankmemes #dank #edgymemes #darkhumor #viral",
+            "ProgrammerHumor": "#ProgrammerHumor #coding #devlife #techmemes #geek",
+            "me_irl": "#meirl #relatable #mood #toomeirlformeirl",
+            "wholesomememes": "#wholesome #wholesomememes #goodvibes #positivity",
+            "funny": "#funny #humor #comedy #laughing #viral",
+            "MemeEconomy": "#MemeEconomy #stonks #invest #mememarket",
+            "gaming": "#gaming #gamer #videogames #gamermemes #esports",
+            "HistoryMemes": "#HistoryMemes #history #educational #memes",
+            "PrequelMemes": "#PrequelMemes #StarWars #prequelmemes",
+        }
+
+        hashtags = subreddit_hashtags.get(subreddit, f"#{subreddit} #memes #reddit #viral")
+
+        prompt = (
+            f"You are a viral social media copywriter specializing in meme content. "
+            f"Given this Reddit post from r/{subreddit} with {score:,} upvotes:\n\n"
+            f'Title: "{title}"\n\n'
+            f"Write a short, punchy, funny Twitter caption (max 200 characters). "
+            f"Make it witty, meme-style, and engaging — NOT a copy of the title. "
+            f"Add your own joke, spin, or hot take. Use internet humor. "
+            f"Do NOT include hashtags (added separately). "
+            f"Do NOT use quotes around the output. "
+            f"Output ONLY the caption text."
+        )
+
+        try:
+            raw = generate_text(prompt)
+            if not raw:
+                return self._generate_reddit_caption(reddit_post)
+
+            # Clean up LLM output
+            caption_text = raw.strip().strip('"').strip("'")
+            caption_text = re.sub(r"\*{1,3}", "", caption_text)
+            # Strip any hashtags the LLM may have added
+            caption_text = re.sub(r"#\w+", "", caption_text).strip()
+
+            # Build final caption: text + hashtags
+            hashtag_block = f"\n\n{hashtags}"
+            max_text_len = 280 - len(hashtag_block)
+
+            if len(caption_text) > max_text_len:
+                caption_text = caption_text[:max_text_len - 3].rsplit(" ", 1)[0] + "..."
+
+            final_caption = f"{caption_text}{hashtag_block}"
+
+            # Enforce Twitter's 280-char hard limit
+            if len(final_caption) > 280:
+                final_caption = final_caption[:277] + "..."
+
+            return final_caption
+
+        except Exception as e:
+            if get_verbose():
+                warning(f"LLM caption generation failed, using fallback: {e}")
+            return self._generate_reddit_caption(reddit_post)

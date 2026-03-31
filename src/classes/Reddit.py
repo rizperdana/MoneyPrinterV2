@@ -289,6 +289,7 @@ class Reddit:
     def get_post_caption(self, post: Dict, max_length: int = 280) -> str:
         """
         Generates a caption for a Reddit post suitable for Twitter.
+        Uses LLM to create witty, engaging captions with relevant hashtags.
 
         Args:
             post (dict): The post dictionary
@@ -297,29 +298,118 @@ class Reddit:
         Returns:
             caption (str): Generated caption
         """
+        # Try LLM-powered caption first, fall back to simple caption
+        try:
+            caption = self.generate_meme_caption(post)
+            if caption and len(caption) <= max_length:
+                return caption
+        except Exception:
+            pass  # Fall through to simple caption
+
+        # Fallback: simple caption from title
         title = post.get("title", "")
         subreddit = post.get("subreddit", "")
         score = post.get("score", 0)
-        
+
         # Clean up title (remove markdown, links)
         title = re.sub(r"\[.*?\]\(.*?\)", "", title)  # Remove markdown links
         title = re.sub(r"http\S+", "", title)  # Remove URLs
         title = title.strip()
-        
+
         # Truncate if needed
         if len(title) > max_length - 50:
             title = title[:max_length - 53].rsplit(" ", 1)[0] + "..."
-        
+
+        # Generate hashtag from subreddit
+        hashtag = f"#{subreddit}" if subreddit else "#memes"
+
         # Create caption
         caption = f"🔥 {title}\n\n"
         caption += f"r/{subreddit} • {score:,} upvotes\n"
-        caption += f"{post.get('url', '')}"
-        
+        caption += f"{hashtag} #reddit #viral"
+
         # Final check and truncate
         if len(caption) > max_length:
             caption = caption[:max_length - 3] + "..."
-        
+
         return caption
+
+    def generate_meme_caption(self, post: Dict) -> str:
+        """
+        Uses LLM to generate a witty, meme-style caption for a Reddit post.
+
+        Produces short, punchy, funny captions with relevant hashtags —
+        not just a copy of the Reddit title.
+
+        Args:
+            post (dict): The post dictionary with 'title', 'subreddit', 'score'
+
+        Returns:
+            caption (str): LLM-generated meme caption (≤ 280 chars)
+        """
+        title = post.get("title", "")
+        subreddit = post.get("subreddit", "memes")
+        score = post.get("score", 0)
+
+        # Subreddit-to-hashtag mapping for trending/relevant tags
+        subreddit_hashtags = {
+            "memes": "#memes #funny #lol #relatable",
+            "dankmemes": "#dankmemes #dank #edgymemes #darkhumor",
+            "ProgrammerHumor": "#ProgrammerHumor #coding #devlife #techmemes",
+            "me_irl": "#meirl #relatable #mood #toomeirlformeirl",
+            "wholesomememes": "#wholesome #wholesomememes #goodvibes #positivity",
+            "funny": "#funny #humor #comedy #laughing",
+            "MemeEconomy": "#MemeEconomy #stonks #invest #mememarket",
+            "PrequelMemes": "#PrequelMemes #StarWars #prequelmemes",
+            "HistoryMemes": "#HistoryMemes #history #educational",
+            "gaming": "#gaming #gamer #videogames #gamermemes",
+        }
+
+        hashtags = subreddit_hashtags.get(subreddit, f"#{subreddit} #memes #viral")
+
+        prompt = (
+            f"You are a viral meme social media copywriter. "
+            f"Given this Reddit post from r/{subreddit} with {score:,} upvotes:\n\n"
+            f'Title: "{title}"\n\n'
+            f"Write a short, punchy, funny Twitter caption (max 200 characters, NOT the title). "
+            f"Make it witty, meme-style, and engaging. Use internet humor. "
+            f"Do NOT just repeat the title — add your own spin or joke. "
+            f"Do NOT include hashtags (they will be added separately). "
+            f"Output ONLY the caption text, nothing else."
+        )
+
+        try:
+            raw = generate_text(prompt)
+            if not raw:
+                return ""
+
+            # Clean up LLM output
+            caption_text = raw.strip().strip('"').strip("'")
+            # Remove any markdown bold/italic markers
+            caption_text = re.sub(r"\*{1,3}", "", caption_text)
+            # Remove any hashtags the LLM might have added anyway
+            caption_text = re.sub(r"#\w+", "", caption_text).strip()
+
+            # Build final caption with hashtags
+            # Reserve space for hashtags + newlines
+            hashtag_block = f"\n\n{hashtags}"
+            max_text_len = 280 - len(hashtag_block)
+
+            if len(caption_text) > max_text_len:
+                caption_text = caption_text[:max_text_len - 3].rsplit(" ", 1)[0] + "..."
+
+            final_caption = f"{caption_text}{hashtag_block}"
+
+            # Absolute safety: enforce 280-char Twitter limit
+            if len(final_caption) > 280:
+                final_caption = final_caption[:277] + "..."
+
+            return final_caption
+
+        except Exception as e:
+            if get_verbose():
+                warning(f"LLM caption generation failed: {e}")
+            return ""
 
     def select_post(self, index: int) -> Optional[Dict]:
         """

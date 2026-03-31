@@ -25,6 +25,15 @@ REDDIT_TWITTER_OPTIONS = [
     "Fetch & Post Best Meme",
     "Select from Top Posts",
     "Choose Subreddit",
+    "Setup CRON Job",
+    "Quit"
+]
+
+REDDIT_TWITTER_CRON_OPTIONS = [
+    "Every hour",
+    "Every 6 hours",
+    "Every 12 hours",
+    "Once a day",
     "Quit"
 ]
 

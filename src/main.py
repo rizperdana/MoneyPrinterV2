@@ -625,6 +625,51 @@ def main():
                 reddit.cleanup()
                 
             elif user_input == 4:
+                # Setup CRON Job for Reddit-to-Twitter
+                info("How often do you want to auto-post Reddit memes to Twitter?")
+
+                info("\n============ OPTIONS ============", False)
+                for idx, cron_option in enumerate(REDDIT_TWITTER_CRON_OPTIONS):
+                    print(colored(f" {idx + 1}. {cron_option}", "cyan"))
+
+                info("=================================\n", False)
+
+                cron_input = int(question("Select an Option: "))
+
+                cron_script_path = os.path.join(ROOT_DIR, "src", "reddit_twitter_cron.py")
+                model = get_active_model()
+
+                # Get the first Twitter account for the cron job
+                if len(cached_accounts) == 0:
+                    error("No Twitter account available.")
+                    continue
+
+                account_id = cached_accounts[0]["id"]
+                command = ["python", cron_script_path, account_id, model]
+
+                def job():
+                    subprocess.run(command)
+
+                if cron_input == 1:
+                    # Every hour
+                    schedule.every(1).hours.do(job)
+                    success("Set up CRON Job: every hour.")
+                elif cron_input == 2:
+                    # Every 6 hours
+                    schedule.every(6).hours.do(job)
+                    success("Set up CRON Job: every 6 hours.")
+                elif cron_input == 3:
+                    # Every 12 hours
+                    schedule.every(12).hours.do(job)
+                    success("Set up CRON Job: every 12 hours.")
+                elif cron_input == 4:
+                    # Once a day
+                    schedule.every(1).day.do(job)
+                    success("Set up CRON Job: once a day.")
+                else:
+                    warning("Invalid option, skipping.")
+
+            elif user_input == 5:
                 if get_verbose():
                     info(" => Climbing Options Ladder...", False)
                 break
