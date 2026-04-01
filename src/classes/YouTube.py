@@ -4,6 +4,8 @@ import json
 import time
 import os
 import random
+import shutil
+import tempfile
 import numpy as np
 import requests
 import assemblyai as aai
@@ -25,6 +27,7 @@ from selenium import webdriver
 from moviepy.video.fx.all import crop
 from moviepy.config import change_settings
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from moviepy.video.tools.subtitles import SubtitlesClip
@@ -92,8 +95,17 @@ class YouTube:
                 f"Firefox profile path does not exist or is not a directory: {self._fp_profile_path}"
             )
 
+        # Copy profile to temp dir so we don't conflict with a running Firefox
+        self._temp_profile_dir = tempfile.mkdtemp(prefix="mp2_ff_")
+        temp_profile = os.path.join(self._temp_profile_dir, "profile")
+
+        def _ignore_locks(dir, files):
+            return [f for f in files if f in (".parentlock", "parent.lock", "lock")]
+
+        shutil.copytree(self._fp_profile_path, temp_profile, ignore=_ignore_locks)
+
         self.options.add_argument("-profile")
-        self.options.add_argument(self._fp_profile_path)
+        self.options.add_argument(temp_profile)
 
         # Set the service
         self.service: Service = Service(GeckoDriverManager().install())
@@ -254,43 +266,47 @@ class YouTube:
                 info(f" => Research context ({len(research_context)} chars) gathered from web search")
 
             # Feed real research data into the LLM
-            trend_prompt = f"""You are a YouTube content strategist. Based on the following REAL-TIME research data, pick the best trending topic for a YouTube Short in the niche: {self.niche}
+            trend_prompt = f"""You are a YouTube content strategist. Your ONLY job is to generate topics STRICTLY about: {self.niche}
 
-=== RESEARCH DATA ===
+=== RESEARCH DATA (for inspiration only) ===
 {research_context}
 === END RESEARCH DATA ===
 
-Based on the research above, generate 3 specific, engaging video topic ideas that:
-1. Are related to what's ACTUALLY trending right now (from the data above)
+⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY about "{self.niche}". Do NOT pick general news, history, or unrelated trending topics. If the research data doesn't contain niche-relevant content, IGNORE it and generate topics from your own knowledge about "{self.niche}".
+
+Generate 3 specific, engaging video topic ideas that:
+1. Are STRICTLY and EXCLUSIVELY about: {self.niche}
 2. Would perform well as YouTube Shorts (curiosity-driven, visual, surprising)
 3. Are specific enough to make a 45-60 second video about
 
 Each topic should be one sentence, specific, and curiosity-driven.
 
 Output format: Just list 3 topics, one per line, numbered 1-3.
-Example:
-1. Scientists just discovered a new species of glowing shark in the deep ocean
-2. The James Webb telescope captured something that shouldn't exist
-3. Why octopuses might be smarter than we thought - new study reveals shocking results"""
+Example (if niche is "cool animal facts"):
+1. The mantis shrimp can punch so fast it boils the water around it
+2. Tardigrades can survive in the vacuum of outer space
+3. Octopuses have three hearts and blue blood"""
         else:
             # Fallback: no web research available, use LLM knowledge
             if get_verbose():
                 warning("Web research unavailable. Using LLM knowledge for topic generation.")
-            trend_prompt = f"""You are a YouTube content strategist. Think about what's trending RIGHT NOW in the niche: {self.niche}
+            trend_prompt = f"""You are a YouTube content strategist. Your ONLY job is to generate topics STRICTLY about: {self.niche}
+
+⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY and EXCLUSIVELY about "{self.niche}". Do NOT drift into general knowledge, history, or unrelated subjects.
 
 Consider:
-1. What topics are people searching for RIGHT NOW in this niche?
-2. What recent discoveries, news, or viral moments relate to this niche?
-3. What would make someone stop scrolling and watch?
+1. What surprising or little-known facts exist about {self.niche}?
+2. What recent discoveries or viral moments relate to {self.niche}?
+3. What would make someone stop scrolling and watch about {self.niche}?
 
-Generate 3 specific, engaging video topic ideas that would perform well as YouTube Shorts right now.
+Generate 3 specific, engaging video topic ideas that would perform well as YouTube Shorts.
 Each topic should be one sentence, specific, and curiosity-driven.
 
 Output format: Just list 3 topics, one per line, numbered 1-3.
-Example:
-1. Scientists just discovered a new species of glowing shark in the deep ocean
-2. The James Webb telescope captured something that shouldn't exist
-3. Why octopuses might be smarter than we thought - new study reveals shocking results"""
+Example (if niche is "cool animal facts"):
+1. The mantis shrimp can punch so fast it boils the water around it
+2. Tardigrades can survive in the vacuum of outer space
+3. Octopuses have three hearts and blue blood"""
 
         completion = str(self.generate_response(trend_prompt)).strip()
 
@@ -812,7 +828,8 @@ Example:
 
     def generate_image_cloudflare(self, prompt: str) -> str:
         """
-        Generates an AI image using Cloudflare Workers AI (SDXL).
+        Generates an AI image using Cloudflare Workers AI.
+        Model priority: Leonardo Phoenix > Flux Schnell > Flux Klein > Flux Dev > SDXL
         Free tier: 100,000 calls/day. No rate limit issues.
         """
         worker_url = os.environ.get("CF_WORKER_URL", "")
@@ -822,9 +839,74 @@ Example:
                 warning("CF_WORKER_URL or CF_WORKER_API_KEY not set. Skipping Cloudflare.")
             return None
 
-        enhanced_prompt = f"{prompt}, Ghibli watercolor"
-        print(f"Generating AI image via Cloudflare Workers AI (SDXL): {prompt[:80]}...")
+        enhanced_prompt = f"{prompt}, Ghibli watercolor, high quality, detailed"
 
+        # Model fallback chain: Leonardo Phoenix > Flux Schnell > Flux Klein > Flux Dev > SDXL
+        models = [
+            ("phoenix-1.0", "Leonardo Phoenix 1.0"),
+            ("flux-1-schnell", "FLUX.1 Schnell"),
+            ("flux-2-klein-4b", "FLUX.2 Klein 4B"),
+            ("flux-2-dev", "FLUX.2 Dev"),
+            ("sdxl", "Stable Diffusion v1.5"),
+        ]
+
+        for model_id, model_label in models:
+            print(f"Generating AI image via Cloudflare ({model_label}): {prompt[:80]}...")
+            try:
+                resp = requests.post(
+                    worker_url,
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={"prompt": enhanced_prompt, "model": model_id},
+                    timeout=120,
+                )
+
+                if resp.status_code == 429:
+                    if get_verbose():
+                        warning(f"Cloudflare {model_label} rate limited (429). Trying next model...")
+                    continue
+
+                if resp.status_code in (401, 403):
+                    if get_verbose():
+                        warning(f"Cloudflare auth failed ({resp.status_code}).")
+                    return None
+
+                if resp.status_code >= 500:
+                    # Log the actual error body for debugging
+                    try:
+                        error_body = resp.json()
+                    except Exception:
+                        error_body = resp.text[:500]
+                    if get_verbose():
+                        warning(f"Cloudflare {model_label} server error ({resp.status_code}): {error_body}")
+                    continue
+
+                if resp.status_code != 200:
+                    try:
+                        error_body = resp.json()
+                    except Exception:
+                        error_body = resp.text[:500]
+                    if get_verbose():
+                        warning(f"Cloudflare {model_label} returned {resp.status_code}: {error_body}")
+                    continue
+
+                if len(resp.content) < 1000:
+                    if get_verbose():
+                        warning(f"Cloudflare {model_label} returned too small response. Trying next...")
+                    continue
+
+                return self._persist_image(resp.content, f"Cloudflare ({model_label})")
+
+            except Exception as e:
+                if get_verbose():
+                    warning(f"Cloudflare {model_label} failed: {e}. Trying next model...")
+                continue
+
+        # All models with model param failed — try old worker (no model param, SDXL only)
+        if get_verbose():
+            info("All models with model param failed. Trying legacy worker (SDXL, no model param)...")
         try:
             resp = requests.post(
                 worker_url,
@@ -836,62 +918,37 @@ Example:
                 timeout=120,
             )
 
-            if resp.status_code == 429:
-                if get_verbose():
-                    warning("Cloudflare Workers AI rate limited (429).")
-                return None
+            if resp.status_code == 200 and len(resp.content) >= 1000:
+                return self._persist_image(resp.content, "Cloudflare (Legacy SDXL)")
 
-            if resp.status_code in (401, 403):
-                if get_verbose():
-                    warning(f"Cloudflare Workers AI auth failed ({resp.status_code}).")
-                return None
-
-            resp.raise_for_status()
-
-            if len(resp.content) < 1000:
-                if get_verbose():
-                    warning("Cloudflare image too small, likely an error.")
-                return None
-
-            return self._persist_image(resp.content, "Cloudflare Workers AI (SDXL)")
-
+            try:
+                error_body = resp.json()
+            except Exception:
+                error_body = resp.text[:500]
+            if get_verbose():
+                warning(f"Legacy worker also failed ({resp.status_code}): {error_body}")
         except Exception as e:
             if get_verbose():
-                warning(f"Cloudflare Workers AI failed: {e}")
-            return None
+                warning(f"Legacy worker failed: {e}")
+
+        if get_verbose():
+            warning("All Cloudflare methods failed.")
+        return None
 
     def generate_image(self, prompt: str, delay_between: int = 30) -> str:
         """
         Generates an AI Image based on the given prompt.
-        Priority: Cloudflare (SDXL) -> Gemini -> Pollinations -> g4f -> Pixabay
+        Priority: Pollinations (paid) -> g4f (free) -> Cloudflare Workers AI -> Pixabay
         """
-        # 1. Try Cloudflare Workers AI (SDXL) - free, 100K/day, no rate limits
+        # 1. Try Pollinations with API key (fastest, most reliable)
         if get_verbose():
-            info("Trying Cloudflare Workers AI (SDXL)...")
-        result = self.generate_image_cloudflare(prompt)
-        if result is not None:
-            time.sleep(2)
-            return result
-
-        # 2. Try Gemini - best quality
-        gemini_key = get_nanobanana2_api_key()
-        if gemini_key:
-            if get_verbose():
-                info("Cloudflare failed. Trying Gemini image API...")
-            result = self.generate_image_nanobanana2(prompt)
-            if result is not None:
-                time.sleep(delay_between)
-                return result
-
-        # 3. Try Pollinations with API key
-        if get_verbose():
-            info("Gemini failed. Trying Pollinations API...")
+            info("Trying Pollinations API...")
         result = self.generate_image_pollinations(prompt)
         if result is not None:
             time.sleep(delay_between)
             return result
 
-        # 4. Try g4f (Pollinations free)
+        # 2. Try g4f (Pollinations free)
         if not getattr(self, '_g4f_quota_exhausted', False):
             if get_verbose():
                 info("Pollinations failed. Trying g4f (free)...")
@@ -902,7 +959,15 @@ Example:
         elif get_verbose():
             info("g4f quota exhausted, skipping...")
 
-        # 5. Try Pixabay - stock photos
+        # 3. Try Cloudflare Workers AI (SDXL) - may be rate limited
+        if get_verbose():
+            info("Trying Cloudflare Workers AI (SDXL)...")
+        result = self.generate_image_cloudflare(prompt)
+        if result is not None:
+            time.sleep(2)
+            return result
+
+        # 4. Try Pixabay - stock photos
         if get_verbose():
             info("All AI generation failed. Trying Pixabay stock photos...")
         result = self.generate_image_pixabay(prompt)
@@ -910,7 +975,7 @@ Example:
             time.sleep(5)
             return result
 
-        # 5. All failed - caller will use placeholder
+        # All failed - caller will use placeholder
         if get_verbose():
             warning("All image generation methods failed.")
         return None
@@ -1313,7 +1378,12 @@ Example:
 
             title_el.click()
             time.sleep(1)
-            title_el.clear()
+            # Triple-click to select all text in contenteditable, then type over
+            from selenium.webdriver.common.action_chains import ActionChains
+            ActionChains(driver).double_click(title_el).click(title_el).perform()
+            time.sleep(0.3)
+            title_el.send_keys(Keys.CONTROL + "a")
+            time.sleep(0.2)
             title_el.send_keys(self.metadata["title"])
 
             if verbose:
@@ -1323,7 +1393,8 @@ Example:
             time.sleep(10)
             description_el.click()
             time.sleep(0.5)
-            description_el.clear()
+            description_el.send_keys(Keys.CONTROL + "a")
+            time.sleep(0.2)
             description_el.send_keys(self.metadata["description"])
 
             time.sleep(0.5)
@@ -1424,8 +1495,14 @@ Example:
             driver.quit()
 
             return True
-        except:
-            self.browser.quit()
+        except Exception as e:
+            error(f"Upload failed: {e}")
+            import traceback
+            error(traceback.format_exc())
+            try:
+                self.browser.quit()
+            except Exception:
+                pass
             return False
 
     def get_videos(self) -> List[dict]:
@@ -1452,3 +1529,15 @@ Example:
                     videos = account["videos"]
 
         return videos
+
+    def cleanup(self) -> None:
+        """Closes the browser and removes the temp profile copy."""
+        try:
+            self.browser.quit()
+        except Exception:
+            pass
+        if hasattr(self, '_temp_profile_dir') and os.path.isdir(self._temp_profile_dir):
+            shutil.rmtree(self._temp_profile_dir, ignore_errors=True)
+
+    def __del__(self) -> None:
+        self.cleanup()
