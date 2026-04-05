@@ -2611,10 +2611,10 @@ Example:
                     info("\t=> Waiting for TikTok upload to complete...")
 
                 # Wait longer for upload to process
-                time.sleep(15)
+                time.sleep(20)
 
                 # Wait for success message or redirect
-                for wait_cycle in range(30):
+                for wait_cycle in range(40):
                     time.sleep(2)
                     current_url = browser.current_url
 
@@ -2632,7 +2632,7 @@ Example:
                             info("\t=> TikTok upload confirmed")
 
                         # Wait for page to stabilize
-                        time.sleep(5)
+                        time.sleep(8)
 
                         # Try to click "View video" or similar button to get to video page
                         try:
@@ -2649,7 +2649,7 @@ Example:
                                     )
                                     time.sleep(0.5)
                                     btn.click()
-                                    time.sleep(5)
+                                    time.sleep(8)
                                     new_url = browser.current_url
                                     if "/video/" in new_url and "tiktok.com" in new_url:
                                         tt_url = new_url
