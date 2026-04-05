@@ -2465,32 +2465,57 @@ Example:
                 tt_url = ""
                 if verbose:
                     info("\t=> Clicking Post...")
+                time.sleep(3)
+
                 post_selectors = [
                     (By.CSS_SELECTOR, 'button[data-e2e="post-button"]'),
                     (By.XPATH, "//button[contains(text(), 'Post')]"),
                     (By.XPATH, "//button[contains(text(), 'Schedule')]"),
+                    (By.CSS_SELECTOR, 'button[class*="postButton"]'),
+                    (By.CSS_SELECTOR, 'button[class*="PostButton"]'),
+                    (By.XPATH, "//button[.//span[contains(text(), 'Post')]]"),
                 ]
                 for by, selector in post_selectors:
                     try:
-                        post_btn = wait.until(
-                            EC.element_to_be_clickable((by, selector))
-                        )
-                        post_btn.click()
-                        time.sleep(5)
-                        if verbose:
-                            info(f"\t=> Post button clicked: {selector}")
-                        # Try to extract the video URL
-                        try:
-                            current_url = browser.current_url
-                            if "/video/" in current_url:
-                                tt_url = current_url
-                            else:
+                        post_btn = browser.find_element(by, selector)
+                        if post_btn.is_displayed():
+                            browser.execute_script(
+                                "arguments[0].scrollIntoView();", post_btn
+                            )
+                            time.sleep(0.5)
+                            browser.execute_script("arguments[0].click();", post_btn)
+                            time.sleep(5)
+                            if verbose:
+                                info(f"\t=> Post button clicked: {selector}")
+                            # Try to extract the video URL
+                            try:
+                                current_url = browser.current_url
+                                if "/video/" in current_url:
+                                    tt_url = current_url
+                                else:
+                                    tt_url = "https://www.tiktok.com"
+                            except Exception:
                                 tt_url = "https://www.tiktok.com"
-                        except Exception:
-                            tt_url = "https://www.tiktok.com"
-                        return (True, tt_url)
+                            return (True, tt_url)
                     except Exception:
                         continue
+
+                # Last resort: try to find any button with "Post" text
+                try:
+                    all_buttons = browser.find_elements(By.TAG_NAME, "button")
+                    for btn in all_buttons:
+                        if "post" in btn.text.lower() and btn.is_displayed():
+                            browser.execute_script(
+                                "arguments[0].scrollIntoView();", btn
+                            )
+                            time.sleep(0.5)
+                            browser.execute_script("arguments[0].click();", btn)
+                            time.sleep(5)
+                            if verbose:
+                                info("\t=> Post button clicked (fallback)")
+                            return (True, "https://www.tiktok.com")
+                except Exception:
+                    pass
 
                 if verbose:
                     warning("\t=> Post button not found, but file was uploaded")
