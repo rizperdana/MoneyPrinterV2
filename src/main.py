@@ -248,6 +248,50 @@ def main():
                         else:
                             break
                     elif user_input == 5:
+                        # Upload to All Platforms
+                        if not TTS_AVAILABLE:
+                            error("TTS not available - install edge-tts")
+                            break
+                        tts = TTS()
+                        youtube.generate_video(tts)
+                        # Copy to visible output folder
+                        import shutil
+                        output_dir = os.path.join(ROOT_DIR, "output")
+                        os.makedirs(output_dir, exist_ok=True)
+                        video_name = os.path.basename(youtube.video_path)
+                        output_path = os.path.join(output_dir, video_name)
+                        shutil.copy2(youtube.video_path, output_path)
+                        success(f"Video saved to: {output_path}")
+                        info("Uploading to all platforms...")
+                        results = youtube.upload_to_all_platforms()
+                        for platform, (success_flag, result) in results.items():
+                            if success_flag:
+                                success(f"  {platform}: {result}")
+                            else:
+                                warning(f"  {platform}: {result}")
+                    elif user_input == 6:
+                        # Upload to Facebook only
+                        if not hasattr(youtube, 'video_path') or not youtube.video_path:
+                            error("No video generated yet. Use 'Generate Video' first.")
+                            break
+                        info("Uploading to Facebook...")
+                        fb_result = youtube.upload_to_facebook()
+                        if fb_result:
+                            success("Facebook upload successful!")
+                        else:
+                            warning("Facebook upload failed.")
+                    elif user_input == 7:
+                        # Upload to TikTok only
+                        if not hasattr(youtube, 'video_path') or not youtube.video_path:
+                            error("No video generated yet. Use 'Generate Video' first.")
+                            break
+                        info("Uploading to TikTok...")
+                        tt_result = youtube.upload_to_tiktok()
+                        if tt_result:
+                            success("TikTok upload successful!")
+                        else:
+                            warning("TikTok upload failed.")
+                    elif user_input == 8:
                         if get_verbose():
                             info(" => Climbing Options Ladder...", False)
                         break
@@ -767,7 +811,7 @@ if __name__ == "__main__":
     # Fetch MP3 Files
     fetch_songs()
 
-    # Select Ollama model — use config value if set, otherwise pick interactively
+    # Select LLM model — use cliproxyapi free model
     configured_model = get_ollama_model()
     if configured_model:
         select_model(configured_model)
@@ -776,16 +820,21 @@ if __name__ == "__main__":
         try:
             models = list_models()
         except Exception as e:
-            error(f"Could not connect to Ollama: {e}")
+            error(f"Could not connect to LLM provider: {e}")
             sys.exit(1)
 
         if not models:
-            error("No models found on Ollama. Pull a model first (e.g. 'ollama pull llama3.2:3b').")
+            error("No models found. Check your LLM provider configuration.")
             sys.exit(1)
 
-        info("\n========== OLLAMA MODELS =========", False)
-        for idx, model_name in enumerate(models):
-            print(colored(f" {idx + 1}. {model_name}", "cyan"))
+        # Prefer free models
+        free_models = [m for m in models if ":free" in m or "free" in m.lower()]
+        display_models = free_models if free_models else models
+
+        info("\n========== AVAILABLE MODELS =========", False)
+        for idx, model_name in enumerate(display_models):
+            tag = " [FREE]" if model_name in free_models else ""
+            print(colored(f" {idx + 1}. {model_name}{tag}", "cyan"))
         info("==================================\n", False)
 
         model_choice = None
@@ -793,8 +842,8 @@ if __name__ == "__main__":
             raw = input(colored("Select a model: ", "magenta")).strip()
             try:
                 choice_idx = int(raw) - 1
-                if 0 <= choice_idx < len(models):
-                    model_choice = models[choice_idx]
+                if 0 <= choice_idx < len(display_models):
+                    model_choice = display_models[choice_idx]
                 else:
                     warning("Invalid selection. Try again.")
             except ValueError:

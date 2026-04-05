@@ -48,6 +48,7 @@ def build_url(youtube_video_id: str) -> str:
 def rem_temp_files() -> None:
     """
     Removes temporary files in the `.mp` directory.
+    Preserves .json and .mp4 files (generated videos).
 
     Returns:
         None
@@ -58,8 +59,10 @@ def rem_temp_files() -> None:
     files = os.listdir(mp_dir)
 
     for file in files:
-        if not file.endswith(".json"):
-            os.remove(os.path.join(mp_dir, file))
+        file_path = os.path.join(mp_dir, file)
+        # Only remove files, not directories
+        if os.path.isfile(file_path) and not file.endswith((".json", ".mp4")):
+            os.remove(file_path)
 
 
 def fetch_songs() -> None:
@@ -93,7 +96,9 @@ def fetch_songs() -> None:
 
         # Skip if no URLs configured
         if not download_urls or (len(download_urls) == 1 and not download_urls[0]):
-            info(f" => No song archive URL configured - skipping. Add your own MP3/WAV to Songs/ folder")
+            info(
+                f" => No song archive URL configured - skipping. Add your own MP3/WAV to Songs/ folder"
+            )
             return
 
         archive_path = os.path.join(files_dir, "songs.zip")
@@ -111,7 +116,9 @@ def fetch_songs() -> None:
                 with zipfile.ZipFile(archive_path, "r") as zf:
                     for member in zf.namelist():
                         basename = os.path.basename(member)
-                        if not basename or not basename.lower().endswith(SAFE_EXTENSIONS):
+                        if not basename or not basename.lower().endswith(
+                            SAFE_EXTENSIONS
+                        ):
                             warning(f"Skipping non-audio file in archive: {member}")
                             continue
                         if ".." in member or member.startswith("/"):

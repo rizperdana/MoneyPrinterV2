@@ -2,9 +2,7 @@ import os
 import sys
 import types
 import unittest
-from unittest.mock import Mock
-from unittest.mock import patch
-
+from unittest.mock import Mock, patch
 
 ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
 SRC_DIR = os.path.join(ROOT_DIR, "src")
@@ -66,22 +64,30 @@ class CronPostBridgeTests(unittest.TestCase):
             }
         ]
         youtube_instance = youtube_cls_mock.return_value
-        youtube_instance.upload_video.return_value = False
+        youtube_instance.upload_video.return_value = (False, "Upload failed")
         youtube_instance.video_path = "/tmp/video.mp4"
         youtube_instance.metadata = {"title": "Title"}
+        youtube_instance.subject = "Test Topic"
+        from tracker import is_topic_used
 
-        with patch.object(
-            sys,
-            "argv",
-            ["cron.py", "youtube", "yt-1", "llama3.2:3b"],
-        ):
-            cron.main()
+        is_topic_used_mock = Mock(return_value=False)
+        with patch("cron.is_topic_used", is_topic_used_mock):
+            with patch.object(
+                sys,
+                "argv",
+                ["cron.py", "youtube", "yt-1", "llama3.2:3b"],
+            ):
+                cron.main()
 
         select_model_mock.assert_called_once_with("llama3.2:3b")
         tts_cls_mock.assert_called_once()
-        youtube_instance.generate_video.assert_called_once()
-        youtube_instance.upload_video.assert_called_once()
+        youtube_cls_mock.return_value.generate_video.assert_called_once()
+        youtube_cls_mock.return_value.upload_video.assert_called_once()
         crosspost_mock.assert_not_called()
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 
 if __name__ == "__main__":

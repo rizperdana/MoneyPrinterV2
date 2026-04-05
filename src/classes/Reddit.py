@@ -20,12 +20,15 @@ from constants import *
 class Reddit:
     """
     Class for fetching trending posts from Reddit and downloading media.
-    
+
     Features:
     - Fetch trending posts from specified subreddits
     - Download images/videos from Reddit posts
     - Filter by post score (upvotes) for quality content
     - Support multiple subreddits (r/memes, r/dankmemes, r/ProgrammerHumor)
+
+    Uses PRAW when REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET env vars are set,
+    otherwise falls back to raw HTTP requests against the public Reddit API.
     """
 
     def __init__(
@@ -34,32 +37,158 @@ class Reddit:
         limit: int = 10,
         min_score: int = 100,
     ) -> None:
-        """
-        Initializes the Reddit bot.
-
-        Args:
-            subreddits (List[str]): List of subreddit names to fetch from (without 'r/')
-            limit (int): Maximum number of posts to fetch per subreddit
-            min_score (int): Minimum post score to consider
-
-        Returns:
-            None
-        """
         self.subreddits = subreddits or ["memes", "dankmemes", "ProgrammerHumor"]
         self.limit = limit
         self.min_score = min_score
         self.posts: List[Dict] = []
         self.downloaded_media: List[str] = []
-        
-        # Create temp directory for downloads
+
         self.temp_dir = tempfile.mkdtemp(prefix="mp2_reddit_")
 
+        # --- PRAW initialisation (preferred) ---
+        self.reddit = None  # type: ignore
+        client_id = os.environ.get("REDDIT_CLIENT_ID")
+        client_secret = os.environ.get("REDDIT_CLIENT_SECRET")
+        user_agent = os.environ.get("REDDIT_USER_AGENT", "MoneyPrinterV2/1.0")
+
+        if client_id and client_secret:
+            try:
+                import praw
+
+                self.reddit = praw.Reddit(
+                    client_id=client_id,
+                    client_secret=client_secret,
+                    user_agent=user_agent,
+                )
+                if get_verbose():
+                    info(" => Reddit: using PRAW (authenticated)")
+            except Exception as e:
+                if get_verbose():
+                    warning(f" => Reddit: PRAW init failed, falling back to raw requests: {e}")
+        else:
+            if get_verbose():
+                info(" => Reddit: no credentials, using raw requests")
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
     def _get_headers(self) -> dict:
-        """Get headers for Reddit API requests."""
+        """Get headers for Reddit API requests (raw-requests fallback)."""
         return {
             "User-Agent": "MoneyPrinterV2/1.0 (Reddit to Twitter Bot)",
             "Accept": "application/json",
         }
+
+    def _post_info_from_praw(self, submission) -> Optional[Dict]:
+        """Convert a PRAW Submission to the standard post dict."""
+        if submission.score < self.min_score:
+            return None
+        if submission.is_self:
+            return None
+
+        media_url = None
+        media_type = None
+
+        # Check for video first
+        if getattr(submission, "is_video", False):
+            try:
+                media_url = submission.media["reddit_video"]["fallback_url"]
+                media_type = "video"
+            except (KeyError, TypeError):
+                pass
+
+        # Check for crosspost
+        if media_url is None and hasattr(submission, "crosspost_parent"):
+            parent = submission.crosspost_parent
+            if parent:
+                if getattr(parent, "is_video", False):
+                    try:
+                        media_url = parent.media["reddit_video"]["fallback_url"]
+                        media_type = "video"
+                    except (KeyError, TypeError):
+                        pass
+
+        # Try preview images (fallback for images / thumbnails)
+        if media_url is None:
+            try:
+                preview_url = submission.preview["images"][0]["source"]["url"]
+                media_url = preview_url
+                media_type = "image"
+            except (KeyError, AttributeError, TypeError):
+                pass
+
+        if media_url is None:
+            return None
+
+        return {
+            "id": submission.id,
+            "subreddit": str(submission.subreddit),
+            "title": submission.title,
+            "author": str(submission.author),
+            "score": submission.score,
+            "url": f"https://reddit.com{submission.permalink}",
+            "media_url": media_url,
+            "media_type": media_type,
+            "created_utc": int(submission.created_utc),
+            "num_comments": submission.num_comments,
+        }
+
+    def _post_info_from_raw(self, post_data: Dict) -> Optional[Dict]:
+        """Convert a raw JSON post dict to the standard post dict."""
+        if post_data.get("score", 0) < self.min_score:
+            return None
+        if post_data.get("is_self", True):
+            return None
+
+        preview = post_data.get("preview", {})
+        images = preview.get("images", [])
+
+        media_url = None
+        media_type = None
+
+        if images:
+            source = images[0].get("source", {})
+            media_url = source.get("url")
+            if media_url:
+                media_type = "image"
+
+        if post_data.get("is_video", False):
+            media_url = post_data.get("media", {}).get("reddit_video", {}).get("fallback_url")
+            if media_url:
+                media_type = "video"
+        elif post_data.get("crosspost_parent_list"):
+            parent = post_data["crosspost_parent_list"][0]
+            if parent.get("is_video", False):
+                media_url = parent.get("media", {}).get("reddit_video", {}).get("fallback_url")
+                if media_url:
+                    media_type = "video"
+            else:
+                parent_images = parent.get("preview", {}).get("images", [])
+                if parent_images:
+                    media_url = parent_images[0].get("source", {}).get("url")
+                    if media_url:
+                        media_type = "image"
+
+        if not media_url:
+            return None
+
+        return {
+            "id": post_data.get("id"),
+            "subreddit": post_data.get("subreddit"),
+            "title": post_data.get("title"),
+            "author": post_data.get("author"),
+            "score": post_data.get("score"),
+            "url": f"https://reddit.com{post_data.get('permalink')}",
+            "media_url": media_url,
+            "media_type": media_type,
+            "created_utc": post_data.get("created_utc"),
+            "num_comments": post_data.get("num_comments"),
+        }
+
+    # ------------------------------------------------------------------
+    # Public API — same surface as before
+    # ------------------------------------------------------------------
 
     def fetch_hot_posts(self, subreddit: str) -> List[Dict]:
         """
@@ -71,89 +200,83 @@ class Reddit:
         Returns:
             posts (List[dict]): List of post dictionaries
         """
+        if self.reddit:
+            return self._fetch_praw(subreddit)
+        return self._fetch_raw(subreddit)
+
+    def _fetch_praw(self, subreddit: str) -> List[Dict]:
+        """Fetch hot posts via PRAW."""
+        try:
+            posts: List[Dict] = []
+            for submission in self.reddit.subreddit(subreddit).hot(limit=self.limit):
+                post_info = self._post_info_from_praw(submission)
+                if post_info:
+                    posts.append(post_info)
+
+            if get_verbose():
+                info(f" => Fetched {len(posts)} posts from r/{subreddit}")
+            return posts
+        except Exception as e:
+            if get_verbose():
+                warning(f"Failed to fetch posts from r/{subreddit}: {e}")
+            return []
+
+    def _fetch_raw(self, subreddit: str) -> List[Dict]:
+        """Fetch hot posts via raw HTTP requests (legacy fallback)."""
         url = f"https://www.reddit.com/r/{subreddit}/hot.json"
         params = {"limit": self.limit, "raw_json": 1}
-        
+
         try:
             response = requests.get(
-                url, 
-                params=params, 
+                url,
+                params=params,
                 headers=self._get_headers(),
-                timeout=30
+                timeout=30,
+                verify=True,
             )
             response.raise_for_status()
             data = response.json()
-            
+
             posts = []
-            children = data.get("data", {}).get("children", [])
-            
-            for child in children:
-                post_data = child.get("data", {})
-                
-                # Filter by minimum score
-                if post_data.get("score", 0) < self.min_score:
-                    continue
-                
-                # Skip self posts (text only)
-                if post_data.get("is_self", True):
-                    continue
-                
-                # Get media URL
-                preview = post_data.get("preview", {})
-                images = preview.get("images", [])
-                
-                media_url = None
-                media_type = None
-                
-                # Try to get media from preview images
-                if images:
-                    source = images[0].get("source", {})
-                    media_url = source.get("url")
-                    if media_url:
-                        media_type = "image"
-                
-                # Check for video/gallery
-                if post_data.get("is_video", False):
-                    media_url = post_data.get("media", {}).get("reddit_video", {}).get("fallback_url")
-                    if media_url:
-                        media_type = "video"
-                elif post_data.get("crosspost_parent_list"):
-                    # Handle crossposts
-                    parent = post_data["crosspost_parent_list"][0]
-                    if parent.get("is_video", False):
-                        media_url = parent.get("media", {}).get("reddit_video", {}).get("fallback_url")
-                        if media_url:
-                            media_type = "video"
-                    else:
-                        images = parent.get("preview", {}).get("images", [])
-                        if images:
-                            media_url = images[0].get("source", {}).get("url")
-                            if media_url:
-                                media_type = "image"
-                
-                # Skip if no media found
-                if not media_url:
-                    continue
-                
-                post_info = {
-                    "id": post_data.get("id"),
-                    "subreddit": post_data.get("subreddit"),
-                    "title": post_data.get("title"),
-                    "author": post_data.get("author"),
-                    "score": post_data.get("score"),
-                    "url": f"https://reddit.com{post_data.get('permalink')}",
-                    "media_url": media_url,
-                    "media_type": media_type,
-                    "created_utc": post_data.get("created_utc"),
-                    "num_comments": post_data.get("num_comments"),
-                }
-                posts.append(post_info)
-            
+            for child in data.get("data", {}).get("children", []):
+                post_info = self._post_info_from_raw(child.get("data", {}))
+                if post_info:
+                    posts.append(post_info)
+
             if get_verbose():
                 info(f" => Fetched {len(posts)} posts from r/{subreddit}")
-            
             return posts
-            
+
+        except requests.exceptions.SSLError as e:
+            if get_verbose():
+                warning(f"SSL error fetching r/{subreddit}, retrying without verify: {e}")
+            # Retry without SSL verification as fallback
+            try:
+                import urllib3
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+                response = requests.get(
+                    url,
+                    params=params,
+                    headers=self._get_headers(),
+                    timeout=30,
+                    verify=False,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                posts = []
+                for child in data.get("data", {}).get("children", []):
+                    post_info = self._post_info_from_raw(child.get("data", {}))
+                    if post_info:
+                        posts.append(post_info)
+
+                if get_verbose():
+                    info(f" => Fetched {len(posts)} posts from r/{subreddit} (no SSL verify)")
+                return posts
+            except Exception as e2:
+                if get_verbose():
+                    warning(f"Failed to fetch posts from r/{subreddit} (retry): {e2}")
+                return []
         except Exception as e:
             if get_verbose():
                 warning(f"Failed to fetch posts from r/{subreddit}: {e}")
@@ -224,7 +347,7 @@ class Reddit:
                     # Try to get the full resolution
                     media_url = media_url.replace("/preview/", "/")
             
-            response = requests.get(media_url, timeout=60, headers=self._get_headers())
+            response = requests.get(media_url, timeout=60, headers=self._get_headers(), verify=True)
             response.raise_for_status()
             
             # Check content type if available

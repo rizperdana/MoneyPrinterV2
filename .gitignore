@@ -15,3 +15,4 @@ auto.sh
 *.mp4
 kittentts_pkg/
 .tool-versions
+geckodriver.log

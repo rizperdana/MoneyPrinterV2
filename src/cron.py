@@ -1,5 +1,11 @@
 # RUN THIS N AMOUNT OF TIMES
 import sys
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env so CLIPROXY_API_KEY and other vars are available in subprocess
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 from status import *
 from cache import get_accounts
@@ -8,13 +14,23 @@ from classes.Twitter import Twitter
 from classes.YouTube import YouTube
 from llm_provider import select_model
 from post_bridge_integration import maybe_crosspost_youtube_short
+from tracker import (
+    record_attempt,
+    record_uploading,
+    record_success,
+    record_failure,
+    is_topic_used,
+    get_recent_topics,
+)
 
 try:
     from classes.Tts import TTS
+
     TTS_AVAILABLE = True
 except ImportError:
     TTS_AVAILABLE = False
     TTS = None
+
 
 def main():
     """Main function to post content to Twitter or upload videos to YouTube.
@@ -57,10 +73,7 @@ def main():
                 if verbose:
                     info("Initializing Twitter...")
                 twitter = Twitter(
-                    acc["id"],
-                    acc["nickname"],
-                    acc["firefox_profile"],
-                    acc["topic"]
+                    acc["id"], acc["nickname"], acc["firefox_profile"], acc["topic"]
                 )
                 twitter.post()
                 if verbose:
@@ -87,24 +100,77 @@ def main():
                     acc["nickname"],
                     acc["firefox_profile"],
                     acc["niche"],
-                    acc["language"]
+                    acc["language"],
                 )
+
+                # Get recent topics for LLM dedup context
+                recent_topics = get_recent_topics(acc["id"], limit=20)
+                if recent_topics and verbose:
+                    info(
+                        f" => {len(recent_topics)} recent topics loaded for dedup context"
+                    )
+
+                # Generate the video (topic generation happens inside)
                 youtube.generate_video(tts)
-                upload_success = youtube.upload_video()
+
+                # Check if the generated topic is a duplicate
+                if hasattr(youtube, "subject") and is_topic_used(
+                    acc["id"], youtube.subject
+                ):
+                    warning(
+                        f"Generated topic is a duplicate: {youtube.subject[:60]}..."
+                    )
+                    warning("Skipping this run. Try again later.")
+                    sys.exit(0)
+
+                # Record attempt in tracker
+                upload_id = record_attempt(
+                    account_id=acc["id"],
+                    account_name=acc["nickname"],
+                    niche=acc["niche"],
+                    topic=youtube.subject if hasattr(youtube, "subject") else "",
+                    title=youtube.metadata.get("title", "")
+                    if hasattr(youtube, "metadata")
+                    else "",
+                    description=youtube.metadata.get("description", "")
+                    if hasattr(youtube, "metadata")
+                    else "",
+                    tags=youtube.metadata.get("tags", [])
+                    if hasattr(youtube, "metadata")
+                    else [],
+                    video_path=youtube.video_path
+                    if hasattr(youtube, "video_path")
+                    else "",
+                )
+
+                # Mark as uploading
+                record_uploading(upload_id)
+
+                # Upload (returns tuple)
+                upload_success, upload_result = youtube.upload_video(
+                    upload_id=upload_id
+                )
+
                 if upload_success:
+                    # Record success
+                    record_success(upload_id, upload_result)
                     if verbose:
-                        success("Uploaded Short.")
+                        success(f"Uploaded Short: {upload_result}")
                     maybe_crosspost_youtube_short(
                         video_path=youtube.video_path,
                         title=youtube.metadata.get("title", ""),
                         interactive=False,
                     )
                 else:
-                    warning("YouTube upload failed. Skipping Post Bridge cross-post.")
+                    # Record failure
+                    record_failure(upload_id, upload_result)
+                    warning(f"YouTube upload failed: {upload_result}")
+                    warning("Skipping Post Bridge cross-post.")
                 break
     else:
         error("Invalid Purpose, exiting...")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

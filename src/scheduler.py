@@ -64,6 +64,19 @@ REDDIT_TWITTER_TIMES = ["09:00", "13:00", "17:00", "21:00", "00:00", "04:00"]
 # YouTube Shorts: 3/day (EU evening, US morning, US evening)
 YOUTUBE_TIMES = ["17:00", "21:00", "04:00"]
 
+# Per-account schedule — staggered across peak windows to avoid simultaneous uploads.
+# Slot 1 (17:00 UTC+7): SEA peak
+# Slot 2 (21:00 UTC+7): EU peak
+# Slot 3 (04:00 UTC+7): US East peak
+YOUTUBE_ACCOUNT_TIMES = {
+    "awoogle":   ["17:00", "21:00", "04:00"],
+    "TechArch":  ["17:10", "21:10", "04:10"],
+    "MegaBuild": ["17:20", "21:20", "04:20"],
+    "GoldSci":   ["17:30", "21:30", "04:30"],
+    "SciFiLore": ["17:40", "21:40", "04:40"],
+    "BrainRot":  ["17:50", "21:50", "04:50"],
+}
+
 # Twitter text posts: 3/day (morning waves)
 TWITTER_TIMES = ["09:00", "17:00", "21:00"]
 
@@ -265,8 +278,11 @@ def main_loop(logger: logging.Logger):
     logger.info(f"Peak regions: SEA → Middle East → EU → US East → US West")
     logger.info("=" * 60)
 
-    # Calculate initial next runs
-    yt_next = {acc["id"]: get_next_run(YOUTUBE_TIMES) for acc in yt_accounts}
+    # Calculate initial next runs (per-account staggered times)
+    yt_next = {}
+    for acc in yt_accounts:
+        acc_times = YOUTUBE_ACCOUNT_TIMES.get(acc["nickname"], YOUTUBE_TIMES)
+        yt_next[acc["id"]] = get_next_run(acc_times)
     tw_next = {acc["id"]: get_next_run(TWITTER_TIMES) for acc in tw_accounts}
     rt_next = {acc["id"]: get_next_run(REDDIT_TWITTER_TIMES) for acc in tw_accounts}
 
@@ -292,11 +308,12 @@ def main_loop(logger: logging.Logger):
         # Check YouTube jobs
         for acc in yt_accounts:
             acc_id = acc["id"]
+            acc_times = YOUTUBE_ACCOUNT_TIMES.get(acc["nickname"], YOUTUBE_TIMES)
             if now >= yt_next[acc_id]:
                 success = run_youtube_job(acc_id, model, logger)
                 state["last_runs"][f"youtube_{acc_id}"] = now.isoformat()
                 save_state(state)
-                yt_next[acc_id] = get_next_run(YOUTUBE_TIMES, last_run=now.isoformat())
+                yt_next[acc_id] = get_next_run(acc_times, last_run=now.isoformat())
                 logger.info(f"[YouTube] {acc['nickname']}: next run at {yt_next[acc_id].strftime('%Y-%m-%d %H:%M')}")
 
         # Check Twitter text jobs

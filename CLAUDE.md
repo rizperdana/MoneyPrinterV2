@@ -74,8 +74,8 @@ Uses Python's `schedule` library (in-process, not OS cron). The scheduled job sp
 All config lives in `config.json` at the project root. See `config.example.json` for the full template and `docs/Configuration.md` for reference. Key external dependencies to configure:
 - **ImageMagick** — required for MoviePy subtitle rendering (`imagemagick_path`)
 - **Firefox profile** — must be pre-logged-in to target platforms (`firefox_profile`)
-- **Ollama** — for LLM text generation (via `ollama` Python SDK)
-- **Nano Banana 2** — for image generation (Gemini image API)
+- **Cliproxyapi** — for LLM text generation
+- **Cloudflare Ai image Model** — for image generation
 - **Go** — only needed for Outreach (Google Maps scraper)
 
 ## Contributing
