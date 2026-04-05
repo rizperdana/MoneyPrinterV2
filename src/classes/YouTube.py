@@ -2581,7 +2581,34 @@ Example:
                     try:
                         if verbose:
                             info("\t=> Trying to extract URL from profile...")
-                        # Look for any video link in the current page
+                        # Navigate to TikTok profile to find latest video
+                        browser.get("https://www.tiktok.com")
+                        time.sleep(5)
+                        # Look for profile link and click it
+                        try:
+                            profile_links = browser.find_elements(
+                                By.CSS_SELECTOR, 'a[href*="@"]'
+                            )
+                            if profile_links:
+                                profile_links[0].click()
+                                time.sleep(5)
+                                # Now look for the first video
+                                video_links = browser.find_elements(
+                                    By.CSS_SELECTOR, 'a[href*="/video/"]'
+                                )
+                                for link in video_links:
+                                    href = link.get_attribute("href")
+                                    if href and "/video/" in href:
+                                        tt_url = href
+                                        if verbose:
+                                            info(
+                                                f"\t=> TikTok video URL from profile: {tt_url}"
+                                            )
+                                        return (True, tt_url)
+                        except Exception:
+                            pass
+
+                        # Fallback: look for any video link in the current page
                         all_links = browser.find_elements(By.TAG_NAME, "a")
                         for link in all_links:
                             href = link.get_attribute("href")
