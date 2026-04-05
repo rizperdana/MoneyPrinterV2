@@ -2777,24 +2777,39 @@ Example:
                         except Exception:
                             pass
 
-                        # Strategy 3: Use JavaScript to find any video data in the page
+                        # Strategy 3: Use JavaScript to extract video data from page state
                         try:
+                            # Try to extract video data from TikTok's internal state
                             video_data = browser.execute_script("""
+                                // Try to find video data in page scripts
                                 var scripts = document.querySelectorAll('script');
                                 for (var i = 0; i < scripts.length; i++) {
                                     var content = scripts[i].innerHTML;
-                                    if (content.includes('/video/')) {
-                                        var match = content.match(/https?:\\/\\/www\\.tiktok\\.com\\/@[\\w.-]+\\/video\\/\\d+/);
-                                        if (match) return match[0];
+                                    // Look for video URLs in script content
+                                    var match = content.match(/https?:\\/\\/www\\.tiktok\\.com\\/@[\\w.-]+\\/video\\/(\\d+)/);
+                                    if (match) return match[0];
+                                }
+                                
+                                // Try to find video data in window object
+                                if (window.RENDER_DATA) {
+                                    var renderData = window.RENDER_DATA;
+                                    if (renderData && renderData.itemList) {
+                                        for (var i = 0; i < renderData.itemList.length; i++) {
+                                            var item = renderData.itemList[i];
+                                            if (item && item.video && item.video.id) {
+                                                return 'https://www.tiktok.com/@user/video/' + item.video.id;
+                                            }
+                                        }
                                     }
                                 }
+                                
                                 return null;
                             """)
                             if video_data:
                                 tt_url = video_data
                                 if verbose:
                                     info(
-                                        f"\t=> TikTok video URL from script tag: {tt_url}"
+                                        f"\t=> TikTok video URL from page state: {tt_url}"
                                     )
                                 return (True, tt_url)
                         except Exception:
