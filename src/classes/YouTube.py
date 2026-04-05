@@ -2541,6 +2541,9 @@ Example:
                 if verbose:
                     info("\t=> Waiting for TikTok upload to complete...")
 
+                # Wait longer for upload to process
+                time.sleep(10)
+
                 # Wait for success message or redirect
                 for wait_cycle in range(30):
                     time.sleep(2)
@@ -2560,7 +2563,7 @@ Example:
                             info("\t=> TikTok upload confirmed")
 
                         # Wait a bit more for page to stabilize
-                        time.sleep(3)
+                        time.sleep(5)
 
                         # Try multiple strategies to find video URL
                         # Strategy 1: Look for canonical URL meta tag
@@ -2605,6 +2608,26 @@ Example:
                                     if verbose:
                                         info(f"\t=> TikTok video URL found: {tt_url}")
                                     return (True, tt_url)
+                        except Exception:
+                            pass
+
+                        # Strategy 4: Try to extract video ID from page source
+                        try:
+                            import re
+
+                            video_id_match = re.search(
+                                r"/video/(\d+)", browser.page_source
+                            )
+                            if video_id_match:
+                                video_id = video_id_match.group(1)
+                                tt_url = (
+                                    f"https://www.tiktok.com/@user/video/{video_id}"
+                                )
+                                if verbose:
+                                    info(
+                                        f"\t=> TikTok video URL from page source: {tt_url}"
+                                    )
+                                return (True, tt_url)
                         except Exception:
                             pass
                         break
