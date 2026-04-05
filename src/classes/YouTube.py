@@ -2745,6 +2745,23 @@ Example:
                             browser.get("https://www.tiktok.com/tiktokstudio/content")
                             time.sleep(15)
 
+                            # Try to extract URLs from page source using regex
+                            import re
+
+                            page_source = browser.page_source
+                            video_matches = re.findall(
+                                r"https?://www\.tiktok\.com/@[\w.-]+/video/\d+",
+                                page_source,
+                            )
+                            if video_matches:
+                                tt_url = video_matches[0]
+                                if verbose:
+                                    info(
+                                        f"\t=> TikTok video URL from page source: {tt_url}"
+                                    )
+                                return (True, tt_url)
+
+                            # Try to find video links in the DOM
                             video_links = browser.find_elements(
                                 By.CSS_SELECTOR, 'a[href*="/video/"]'
                             )
