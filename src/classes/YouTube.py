@@ -2630,6 +2630,40 @@ Example:
                                 return (True, tt_url)
                         except Exception:
                             pass
+
+                        # Strategy 5: Use JavaScript to extract URL from window.location or app state
+                        try:
+                            # Try to get the current URL from JavaScript
+                            js_url = browser.execute_script(
+                                "return window.location.href;"
+                            )
+                            if (
+                                js_url
+                                and "/video/" in js_url
+                                and "tiktok.com" in js_url
+                            ):
+                                tt_url = js_url
+                                if verbose:
+                                    info(f"\t=> TikTok video URL from JS: {tt_url}")
+                                return (True, tt_url)
+                        except Exception:
+                            pass
+
+                        # Strategy 6: Check for any href with video pattern in the DOM
+                        try:
+                            all_hrefs = browser.execute_script(
+                                "return Array.from(document.querySelectorAll('a[href]')).map(a => a.href);"
+                            )
+                            for href in all_hrefs:
+                                if href and "/video/" in href and "tiktok.com" in href:
+                                    tt_url = href
+                                    if verbose:
+                                        info(
+                                            f"\t=> TikTok video URL from DOM: {tt_url}"
+                                        )
+                                    return (True, tt_url)
+                        except Exception:
+                            pass
                         break
 
                 # If still no URL, try to navigate to profile to find latest video
