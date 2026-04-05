@@ -2345,16 +2345,13 @@ Example:
                     if "published" in content.lower() or "success" in content.lower():
                         if verbose:
                             success("\t=> Facebook upload confirmed")
-                        # Try to extract the actual post/reel URL
                         try:
                             current_url = browser.current_url
-                            # Check if we're on a post/reel page
                             if "/reel/" in current_url or "/video/" in current_url:
                                 fb_url = current_url
                             elif "/post/" in current_url:
                                 fb_url = current_url
                             else:
-                                # Try to find the post link on the page
                                 try:
                                     post_links = browser.find_elements(
                                         By.CSS_SELECTOR,
@@ -2545,9 +2542,10 @@ Example:
                     info("\t=> Waiting for TikTok upload to complete...")
 
                 # Wait for success message or redirect
-                for _ in range(30):
+                for wait_cycle in range(30):
                     time.sleep(2)
                     current_url = browser.current_url
+
                     # Check if redirected to video page
                     if "/video/" in current_url and "tiktok.com" in current_url:
                         tt_url = current_url
@@ -2560,14 +2558,49 @@ Example:
                     if "posted" in page_content or "success" in page_content:
                         if verbose:
                             info("\t=> TikTok upload confirmed")
-                        # Try to find the video link on success page
+
+                        # Wait a bit more for page to stabilize
+                        time.sleep(3)
+
+                        # Try multiple strategies to find video URL
+                        # Strategy 1: Look for canonical URL meta tag
+                        try:
+                            canonical = browser.find_element(
+                                By.CSS_SELECTOR, 'link[rel="canonical"]'
+                            )
+                            canonical_href = canonical.get_attribute("href")
+                            if canonical_href and "/video/" in canonical_href:
+                                tt_url = canonical_href
+                                if verbose:
+                                    info(
+                                        f"\t=> TikTok video URL from canonical: {tt_url}"
+                                    )
+                                return (True, tt_url)
+                        except Exception:
+                            pass
+
+                        # Strategy 2: Look for og:url meta tag
+                        try:
+                            og_url = browser.find_element(
+                                By.CSS_SELECTOR, 'meta[property="og:url"]'
+                            )
+                            og_url_value = og_url.get_attribute("content")
+                            if og_url_value and "/video/" in og_url_value:
+                                tt_url = og_url_value
+                                if verbose:
+                                    info(f"\t=> TikTok video URL from og:url: {tt_url}")
+                                return (True, tt_url)
+                        except Exception:
+                            pass
+
+                        # Strategy 3: Look for video links in page
                         try:
                             video_links = browser.find_elements(
                                 By.CSS_SELECTOR, 'a[href*="/video/"]'
                             )
                             for link in video_links:
                                 href = link.get_attribute("href")
-                                if href and "tiktok.com" in href:
+                                if href and "tiktok.com" in href and "/video/" in href:
                                     tt_url = href
                                     if verbose:
                                         info(f"\t=> TikTok video URL found: {tt_url}")
@@ -2581,10 +2614,11 @@ Example:
                     try:
                         if verbose:
                             info("\t=> Trying to extract URL from profile...")
-                        # Navigate to TikTok profile to find latest video
+                        # Navigate to TikTok homepage to find profile
                         browser.get("https://www.tiktok.com")
                         time.sleep(5)
-                        # Look for profile link and click it
+
+                        # Look for profile link (usually contains @username)
                         try:
                             profile_links = browser.find_elements(
                                 By.CSS_SELECTOR, 'a[href*="@"]'
@@ -2592,7 +2626,7 @@ Example:
                             if profile_links:
                                 profile_links[0].click()
                                 time.sleep(5)
-                                # Now look for the first video
+                                # Now look for the first video on profile
                                 video_links = browser.find_elements(
                                     By.CSS_SELECTOR, 'a[href*="/video/"]'
                                 )
