@@ -2681,9 +2681,9 @@ Example:
                         if verbose:
                             info("\t=> Trying to extract URL from profile...")
 
-                        # Navigate to TikTok creator center to find recent uploads
+                        # Strategy 1: Navigate to TikTok creator center to find recent uploads
                         browser.get("https://www.tiktok.com/tiktokstudio/content")
-                        time.sleep(8)
+                        time.sleep(10)
 
                         # Look for video links in the creator studio
                         try:
@@ -2702,14 +2702,12 @@ Example:
                         except Exception:
                             pass
 
-                        # Try to find username and navigate to profile
+                        # Strategy 2: Try to find username and navigate to profile
                         try:
-                            # Look for any profile link to get username
                             profile_links = browser.find_elements(
                                 By.CSS_SELECTOR, 'a[href*="@"]'
                             )
                             if profile_links:
-                                # Extract username from href
                                 profile_href = profile_links[0].get_attribute("href")
                                 import re
 
@@ -2719,11 +2717,9 @@ Example:
                                     if verbose:
                                         info(f"\t=> Found TikTok username: {username}")
 
-                                    # Navigate to user profile
                                     browser.get(f"https://www.tiktok.com/@{username}")
-                                    time.sleep(8)
+                                    time.sleep(10)
 
-                                    # Find first video
                                     video_links = browser.find_elements(
                                         By.CSS_SELECTOR, 'a[href*="/video/"]'
                                     )
@@ -2739,6 +2735,29 @@ Example:
                         except Exception as e:
                             if verbose:
                                 warning(f"\t=> Profile navigation failed: {e}")
+                            pass
+
+                        # Strategy 3: Use JavaScript to find any video data in the page
+                        try:
+                            video_data = browser.execute_script("""
+                                var scripts = document.querySelectorAll('script');
+                                for (var i = 0; i < scripts.length; i++) {
+                                    var content = scripts[i].innerHTML;
+                                    if (content.includes('/video/')) {
+                                        var match = content.match(/https?:\\/\\/www\\.tiktok\\.com\\/@[\\w.-]+\\/video\\/\\d+/);
+                                        if (match) return match[0];
+                                    }
+                                }
+                                return null;
+                            """)
+                            if video_data:
+                                tt_url = video_data
+                                if verbose:
+                                    info(
+                                        f"\t=> TikTok video URL from script tag: {tt_url}"
+                                    )
+                                return (True, tt_url)
+                        except Exception:
                             pass
 
                         # Fallback: look for any video link in the current page
