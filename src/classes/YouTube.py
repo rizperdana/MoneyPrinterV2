@@ -2507,36 +2507,21 @@ Example:
             return (False, str(e))
 
     def upload_to_all_platforms(self) -> dict:
-        """
-        Uploads the video to YouTube, Facebook, and TikTok sequentially.
-
-        Returns:
-            dict: Results for each platform {platform: (success, result)}
-        """
         results = {}
 
         try:
-            # YouTube
+            info("Uploading to TikTok...")
+            tt_success, tt_result = self.upload_to_tiktok()
+            results["tiktok"] = (tt_success, tt_result)
+
+            info("Uploading to Facebook...")
+            fb_success, fb_result = self.upload_to_facebook()
+            results["facebook"] = (fb_success, fb_result)
+
             info("Uploading to YouTube...")
             yt_success, yt_result = self.upload_video()
             results["youtube"] = (yt_success, yt_result)
-
-            if yt_success:
-                # Facebook
-                info("Uploading to Facebook...")
-                fb_success, fb_result = self.upload_to_facebook()
-                results["facebook"] = (fb_success, fb_result)
-
-                # TikTok
-                info("Uploading to TikTok...")
-                tt_success, tt_result = self.upload_to_tiktok()
-                results["tiktok"] = (tt_success, tt_result)
-            else:
-                warning("YouTube upload failed, skipping Facebook and TikTok.")
-                results["facebook"] = (False, "Skipped")
-                results["tiktok"] = (False, "Skipped")
         finally:
-            # Always cleanup browser and temp files
             info("Cleaning up...")
             self.cleanup()
             self._cleanup_temp_files()
