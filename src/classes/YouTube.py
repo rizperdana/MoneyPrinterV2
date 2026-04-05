@@ -2681,28 +2681,11 @@ Example:
                         if verbose:
                             info("\t=> Trying to extract URL from profile...")
 
-                        # Strategy 1: Navigate to TikTok creator center to find recent uploads
-                        browser.get("https://www.tiktok.com/tiktokstudio/content")
-                        time.sleep(15)
+                        # Strategy 1: Navigate to TikTok homepage to find profile link
+                        browser.get("https://www.tiktok.com")
+                        time.sleep(10)
 
-                        # Look for video links in the creator studio
-                        try:
-                            video_links = browser.find_elements(
-                                By.CSS_SELECTOR, 'a[href*="/video/"]'
-                            )
-                            for link in video_links:
-                                href = link.get_attribute("href")
-                                if href and "/video/" in href and "tiktok.com" in href:
-                                    tt_url = href
-                                    if verbose:
-                                        info(
-                                            f"\t=> TikTok video URL from creator studio: {tt_url}"
-                                        )
-                                    return (True, tt_url)
-                        except Exception:
-                            pass
-
-                        # Strategy 2: Try to find username and navigate to profile
+                        # Try to find profile link and extract username
                         try:
                             profile_links = browser.find_elements(
                                 By.CSS_SELECTOR, 'a[href*="@"]'
@@ -2717,27 +2700,64 @@ Example:
                                     if verbose:
                                         info(f"\t=> Found TikTok username: {username}")
 
+                                    # Navigate to user profile
                                     browser.get(f"https://www.tiktok.com/@{username}")
-                                    time.sleep(15)
+                                    time.sleep(10)
 
-                                    # Poll for video elements to appear
-                                    for poll in range(20):
-                                        time.sleep(3)
-                                        video_links = browser.find_elements(
-                                            By.CSS_SELECTOR, 'a[href*="/video/"]'
+                                    # Scroll to trigger lazy loading of video elements
+                                    for scroll in range(15):
+                                        browser.execute_script(
+                                            "window.scrollBy(0, 800);"
                                         )
-                                        for link in video_links:
-                                            href = link.get_attribute("href")
-                                            if href and "/video/" in href:
-                                                tt_url = href
-                                                if verbose:
-                                                    info(
-                                                        f"\t=> TikTok video URL from profile: {tt_url}"
-                                                    )
-                                                return (True, tt_url)
+                                        time.sleep(2)
+
+                                        # Try multiple selectors
+                                        selectors = [
+                                            'a[href*="/video/"]',
+                                            'a[data-e2e="user-post-item"]',
+                                            'div[data-e2e="user-post-item"] a',
+                                            'a[class*="video-link"]',
+                                        ]
+                                        for selector in selectors:
+                                            video_links = browser.find_elements(
+                                                By.CSS_SELECTOR, selector
+                                            )
+                                            for link in video_links:
+                                                href = link.get_attribute("href")
+                                                if (
+                                                    href
+                                                    and "/video/" in href
+                                                    and "tiktok.com" in href
+                                                ):
+                                                    tt_url = href
+                                                    if verbose:
+                                                        info(
+                                                            f"\t=> TikTok video URL from profile: {tt_url}"
+                                                        )
+                                                    return (True, tt_url)
                         except Exception as e:
                             if verbose:
                                 warning(f"\t=> Profile navigation failed: {e}")
+                            pass
+
+                        # Strategy 2: Navigate to creator center
+                        try:
+                            browser.get("https://www.tiktok.com/tiktokstudio/content")
+                            time.sleep(15)
+
+                            video_links = browser.find_elements(
+                                By.CSS_SELECTOR, 'a[href*="/video/"]'
+                            )
+                            for link in video_links:
+                                href = link.get_attribute("href")
+                                if href and "/video/" in href and "tiktok.com" in href:
+                                    tt_url = href
+                                    if verbose:
+                                        info(
+                                            f"\t=> TikTok video URL from creator studio: {tt_url}"
+                                        )
+                                    return (True, tt_url)
+                        except Exception:
                             pass
 
                         # Strategy 3: Use JavaScript to find any video data in the page
