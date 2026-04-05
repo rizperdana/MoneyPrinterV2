@@ -2683,7 +2683,7 @@ Example:
 
                         # Strategy 1: Navigate to TikTok creator center to find recent uploads
                         browser.get("https://www.tiktok.com/tiktokstudio/content")
-                        time.sleep(10)
+                        time.sleep(15)
 
                         # Look for video links in the creator studio
                         try:
@@ -2718,20 +2718,23 @@ Example:
                                         info(f"\t=> Found TikTok username: {username}")
 
                                     browser.get(f"https://www.tiktok.com/@{username}")
-                                    time.sleep(10)
+                                    time.sleep(15)
 
-                                    video_links = browser.find_elements(
-                                        By.CSS_SELECTOR, 'a[href*="/video/"]'
-                                    )
-                                    for link in video_links:
-                                        href = link.get_attribute("href")
-                                        if href and "/video/" in href:
-                                            tt_url = href
-                                            if verbose:
-                                                info(
-                                                    f"\t=> TikTok video URL from profile: {tt_url}"
-                                                )
-                                            return (True, tt_url)
+                                    # Poll for video elements to appear
+                                    for poll in range(20):
+                                        time.sleep(3)
+                                        video_links = browser.find_elements(
+                                            By.CSS_SELECTOR, 'a[href*="/video/"]'
+                                        )
+                                        for link in video_links:
+                                            href = link.get_attribute("href")
+                                            if href and "/video/" in href:
+                                                tt_url = href
+                                                if verbose:
+                                                    info(
+                                                        f"\t=> TikTok video URL from profile: {tt_url}"
+                                                    )
+                                                return (True, tt_url)
                         except Exception as e:
                             if verbose:
                                 warning(f"\t=> Profile navigation failed: {e}")
