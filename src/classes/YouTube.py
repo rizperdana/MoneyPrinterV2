@@ -2345,14 +2345,39 @@ Example:
                     if "published" in content.lower() or "success" in content.lower():
                         if verbose:
                             success("\t=> Facebook upload confirmed")
-                        # Try to extract the post URL
+                        # Try to extract the actual post/reel URL
                         try:
-                            post_url = browser.current_url
-                            fb_url = (
-                                post_url
-                                if post_url and "facebook.com" in post_url
-                                else "https://www.facebook.com"
-                            )
+                            current_url = browser.current_url
+                            # Check if we're on a post/reel page
+                            if "/reel/" in current_url or "/video/" in current_url:
+                                fb_url = current_url
+                            elif "/post/" in current_url:
+                                fb_url = current_url
+                            else:
+                                # Try to find the post link on the page
+                                try:
+                                    post_links = browser.find_elements(
+                                        By.CSS_SELECTOR,
+                                        'a[href*="/reel/"], a[href*="/video/"], a[href*="/posts/"]',
+                                    )
+                                    for link in post_links:
+                                        href = link.get_attribute("href")
+                                        if (
+                                            href
+                                            and "facebook.com" in href
+                                            and ("/reel/" in href or "/video/" in href)
+                                        ):
+                                            fb_url = href
+                                            break
+                                except Exception:
+                                    pass
+
+                            if not fb_url:
+                                fb_url = (
+                                    current_url
+                                    if current_url and "facebook.com" in current_url
+                                    else "https://www.facebook.com"
+                                )
                         except Exception:
                             fb_url = "https://www.facebook.com"
                         return (True, fb_url)
@@ -2475,6 +2500,7 @@ Example:
                     (By.CSS_SELECTOR, 'button[class*="PostButton"]'),
                     (By.XPATH, "//button[.//span[contains(text(), 'Post')]]"),
                 ]
+                post_clicked = False
                 for by, selector in post_selectors:
                     try:
                         post_btn = browser.find_element(by, selector)
@@ -2484,42 +2510,94 @@ Example:
                             )
                             time.sleep(0.5)
                             browser.execute_script("arguments[0].click();", post_btn)
-                            time.sleep(5)
+                            post_clicked = True
                             if verbose:
                                 info(f"\t=> Post button clicked: {selector}")
-                            # Try to extract the video URL
-                            try:
-                                current_url = browser.current_url
-                                if "/video/" in current_url:
-                                    tt_url = current_url
-                                else:
-                                    tt_url = "https://www.tiktok.com"
-                            except Exception:
-                                tt_url = "https://www.tiktok.com"
-                            return (True, tt_url)
+                            break
                     except Exception:
                         continue
 
                 # Last resort: try to find any button with "Post" text
-                try:
-                    all_buttons = browser.find_elements(By.TAG_NAME, "button")
-                    for btn in all_buttons:
-                        if "post" in btn.text.lower() and btn.is_displayed():
-                            browser.execute_script(
-                                "arguments[0].scrollIntoView();", btn
-                            )
-                            time.sleep(0.5)
-                            browser.execute_script("arguments[0].click();", btn)
-                            time.sleep(5)
-                            if verbose:
-                                info("\t=> Post button clicked (fallback)")
-                            return (True, "https://www.tiktok.com")
-                except Exception:
-                    pass
+                if not post_clicked:
+                    try:
+                        all_buttons = browser.find_elements(By.TAG_NAME, "button")
+                        for btn in all_buttons:
+                            if "post" in btn.text.lower() and btn.is_displayed():
+                                browser.execute_script(
+                                    "arguments[0].scrollIntoView();", btn
+                                )
+                                time.sleep(0.5)
+                                browser.execute_script("arguments[0].click();", btn)
+                                post_clicked = True
+                                if verbose:
+                                    info("\t=> Post button clicked (fallback)")
+                                break
+                    except Exception:
+                        pass
 
+                if not post_clicked:
+                    if verbose:
+                        warning("\t=> Post button not found, but file was uploaded")
+                    return (True, "https://www.tiktok.com")
+
+                # Wait for upload to complete and try to extract video URL
                 if verbose:
-                    warning("\t=> Post button not found, but file was uploaded")
-                return (True, "https://www.tiktok.com")
+                    info("\t=> Waiting for TikTok upload to complete...")
+
+                # Wait for success message or redirect
+                for _ in range(30):
+                    time.sleep(2)
+                    current_url = browser.current_url
+                    # Check if redirected to video page
+                    if "/video/" in current_url and "tiktok.com" in current_url:
+                        tt_url = current_url
+                        if verbose:
+                            info(f"\t=> TikTok video URL extracted: {tt_url}")
+                        return (True, tt_url)
+
+                    # Check for success message in page
+                    page_content = browser.page_source.lower()
+                    if "posted" in page_content or "success" in page_content:
+                        if verbose:
+                            info("\t=> TikTok upload confirmed")
+                        # Try to find the video link on success page
+                        try:
+                            video_links = browser.find_elements(
+                                By.CSS_SELECTOR, 'a[href*="/video/"]'
+                            )
+                            for link in video_links:
+                                href = link.get_attribute("href")
+                                if href and "tiktok.com" in href:
+                                    tt_url = href
+                                    if verbose:
+                                        info(f"\t=> TikTok video URL found: {tt_url}")
+                                    return (True, tt_url)
+                        except Exception:
+                            pass
+                        break
+
+                # If still no URL, try to navigate to profile to find latest video
+                if not tt_url:
+                    try:
+                        if verbose:
+                            info("\t=> Trying to extract URL from profile...")
+                        # Look for any video link in the current page
+                        all_links = browser.find_elements(By.TAG_NAME, "a")
+                        for link in all_links:
+                            href = link.get_attribute("href")
+                            if href and "/video/" in href and "tiktok.com" in href:
+                                tt_url = href
+                                if verbose:
+                                    info(f"\t=> TikTok video URL from page: {tt_url}")
+                                return (True, tt_url)
+                    except Exception:
+                        pass
+
+                if not tt_url:
+                    tt_url = "https://www.tiktok.com"
+                    if verbose:
+                        warning("\t=> Could not extract TikTok video URL")
+                return (True, tt_url)
 
             return (False, "Could not find file input for upload")
 
