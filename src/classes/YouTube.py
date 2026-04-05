@@ -2369,6 +2369,75 @@ Example:
                                 except Exception:
                                     pass
 
+                            # If still no URL, try to navigate to profile/page to find latest reel
+                            if not fb_url:
+                                try:
+                                    if verbose:
+                                        info(
+                                            "\t=> Trying to extract Facebook reel URL from profile..."
+                                        )
+                                    # Navigate to Facebook homepage to find profile
+                                    browser.get("https://www.facebook.com")
+                                    time.sleep(5)
+
+                                    # Look for profile link
+                                    try:
+                                        profile_links = browser.find_elements(
+                                            By.CSS_SELECTOR,
+                                            'a[href*="/profile.php"], a[href*="/people/"]',
+                                        )
+                                        if profile_links:
+                                            profile_links[0].click()
+                                            time.sleep(5)
+
+                                            # Look for reels/videos on profile
+                                            reel_links = browser.find_elements(
+                                                By.CSS_SELECTOR,
+                                                'a[href*="/reel/"], a[href*="/watch/"], a[href*="/video/"]',
+                                            )
+                                            for link in reel_links:
+                                                href = link.get_attribute("href")
+                                                if (
+                                                    href
+                                                    and "facebook.com" in href
+                                                    and (
+                                                        "/reel/" in href
+                                                        or "/video/" in href
+                                                    )
+                                                ):
+                                                    fb_url = href
+                                                    if verbose:
+                                                        info(
+                                                            f"\t=> Facebook reel URL from profile: {fb_url}"
+                                                        )
+                                                    break
+                                    except Exception:
+                                        pass
+
+                                    # Fallback: search for any reel/video link on current page
+                                    if not fb_url:
+                                        all_links = browser.find_elements(
+                                            By.TAG_NAME, "a"
+                                        )
+                                        for link in all_links:
+                                            href = link.get_attribute("href")
+                                            if (
+                                                href
+                                                and "facebook.com" in href
+                                                and (
+                                                    "/reel/" in href
+                                                    or "/video/" in href
+                                                )
+                                            ):
+                                                fb_url = href
+                                                if verbose:
+                                                    info(
+                                                        f"\t=> Facebook reel URL from page: {fb_url}"
+                                                    )
+                                                break
+                                except Exception:
+                                    pass
+
                             if not fb_url:
                                 fb_url = (
                                     current_url
@@ -2671,32 +2740,65 @@ Example:
                     try:
                         if verbose:
                             info("\t=> Trying to extract URL from profile...")
-                        # Navigate to TikTok homepage to find profile
-                        browser.get("https://www.tiktok.com")
-                        time.sleep(5)
 
-                        # Look for profile link (usually contains @username)
+                        # Strategy: Navigate to TikTok creator center to find recent uploads
+                        browser.get("https://www.tiktok.com/tiktokstudio/content")
+                        time.sleep(8)
+
+                        # Look for video links in the creator studio
                         try:
+                            video_links = browser.find_elements(
+                                By.CSS_SELECTOR, 'a[href*="/video/"]'
+                            )
+                            for link in video_links:
+                                href = link.get_attribute("href")
+                                if href and "/video/" in href and "tiktok.com" in href:
+                                    tt_url = href
+                                    if verbose:
+                                        info(
+                                            f"\t=> TikTok video URL from creator studio: {tt_url}"
+                                        )
+                                    return (True, tt_url)
+                        except Exception:
+                            pass
+
+                        # Try to find username and navigate to profile
+                        try:
+                            # Look for any profile link to get username
                             profile_links = browser.find_elements(
                                 By.CSS_SELECTOR, 'a[href*="@"]'
                             )
                             if profile_links:
-                                profile_links[0].click()
-                                time.sleep(5)
-                                # Now look for the first video on profile
-                                video_links = browser.find_elements(
-                                    By.CSS_SELECTOR, 'a[href*="/video/"]'
-                                )
-                                for link in video_links:
-                                    href = link.get_attribute("href")
-                                    if href and "/video/" in href:
-                                        tt_url = href
-                                        if verbose:
-                                            info(
-                                                f"\t=> TikTok video URL from profile: {tt_url}"
-                                            )
-                                        return (True, tt_url)
-                        except Exception:
+                                # Extract username from href
+                                profile_href = profile_links[0].get_attribute("href")
+                                import re
+
+                                username_match = re.search(r"@([\w.-]+)", profile_href)
+                                if username_match:
+                                    username = username_match.group(1)
+                                    if verbose:
+                                        info(f"\t=> Found TikTok username: {username}")
+
+                                    # Navigate to user profile
+                                    browser.get(f"https://www.tiktok.com/@{username}")
+                                    time.sleep(8)
+
+                                    # Find first video
+                                    video_links = browser.find_elements(
+                                        By.CSS_SELECTOR, 'a[href*="/video/"]'
+                                    )
+                                    for link in video_links:
+                                        href = link.get_attribute("href")
+                                        if href and "/video/" in href:
+                                            tt_url = href
+                                            if verbose:
+                                                info(
+                                                    f"\t=> TikTok video URL from profile: {tt_url}"
+                                                )
+                                            return (True, tt_url)
+                        except Exception as e:
+                            if verbose:
+                                warning(f"\t=> Profile navigation failed: {e}")
                             pass
 
                         # Fallback: look for any video link in the current page
@@ -2708,7 +2810,9 @@ Example:
                                 if verbose:
                                     info(f"\t=> TikTok video URL from page: {tt_url}")
                                 return (True, tt_url)
-                    except Exception:
+                    except Exception as e:
+                        if verbose:
+                            warning(f"\t=> URL extraction failed: {e}")
                         pass
 
                 if not tt_url:
