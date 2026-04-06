@@ -2339,9 +2339,32 @@ Example:
                 fb_url = ""
                 if verbose:
                     info("\t=> Waiting for Facebook upload...")
+
+                # Wait for redirect to the posted reel/video page
+                time.sleep(5)
+
+                # Try to get URL immediately after post
+                current_url = browser.current_url
+                if "/reel/" in current_url or "/video/" in current_url:
+                    fb_url = current_url
+                    if verbose:
+                        info(f"\t=> Got Facebook URL directly: {fb_url}")
+                    return (True, fb_url)
+
+                # Check URL after post button click
                 for _ in range(30):
                     time.sleep(2)
                     content = browser.page_source
+                    current_url = browser.current_url
+
+                    # Check if we're already on a reel/video page
+                    if "/reel/" in current_url or "/video/" in current_url:
+                        fb_url = current_url
+                        if verbose:
+                            info(f"\t=> Got Facebook URL from redirect: {fb_url}")
+                        return (True, fb_url)
+
+                    # Check for success indicators
                     if "published" in content.lower() or "success" in content.lower():
                         if verbose:
                             success("\t=> Facebook upload confirmed")
@@ -2603,8 +2626,11 @@ Example:
 
                 if not post_clicked:
                     if verbose:
-                        warning("\t=> Post button not found, but file was uploaded")
-                    return (True, "https://www.tiktok.com")
+                        warning(
+                            "\t=> Post button not detected as clicked, but file may have been uploaded"
+                        )
+                    # Don't return early - continue to try to extract the URL from the page
+                    # The URL extraction logic below will handle finding the actual video URL
 
                 # Wait for upload to complete and try to extract video URL
                 if verbose:
@@ -2830,10 +2856,14 @@ Example:
                         pass
 
                 if not tt_url:
-                    tt_url = "https://www.tiktok.com"
                     if verbose:
-                        warning("\t=> Could not extract TikTok video URL")
-                return (True, tt_url)
+                        warning(
+                            "\t=> Could not extract TikTok video URL - upload may have failed"
+                        )
+                    return (
+                        False,
+                        "Could not extract TikTok video URL - upload may have failed or timed out",
+                    )
 
             return (False, "Could not find file input for upload")
 

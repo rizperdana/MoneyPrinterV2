@@ -1,0 +1,32 @@
+{
+  "iterations": [
+    {
+      "iteration": 1,
+      "startedAt": "2026-04-06T23:14:20.469Z",
+      "endedAt": "2026-04-06T23:17:54.002Z",
+      "durationMs": 213474,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/classes/YouTube.py",
+        ".ralph/"
+      ],
+      "exitCode": 0,
+      "completionDetected": false,
+      "errors": [
+        "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md",
+        "warning(f\"\\t=> URL extraction failed: {e}\")"
+      ]
+    }
+  ],
+  "totalDurationMs": 213474,
+  "struggleIndicators": {
+    "repeatedErrors": {
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md": 1,
+      "warning(f\"\\t=> URL extraction failed: {e}\")": 1
+    },
+    "noProgressIterations": 0,
+    "shortIterations": 0
+  }
+}
