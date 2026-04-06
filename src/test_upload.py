@@ -5,6 +5,8 @@ Quick upload test script - uses existing video file in .mp directory
 
 import os
 import sys
+import json
+from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
@@ -55,6 +57,44 @@ results = youtube.upload_to_all_platforms()
 print("\n=== UPLOAD RESULTS ===")
 for platform, (success, result) in results.items():
     print(f"{platform}: {'SUCCESS' if success else 'FAILED'} - {result}")
+
+# Save results to JSON file for external consumption
+result_data = {
+    "timestamp": datetime.now().isoformat(),
+    "youtube": {
+        "success": results.get("youtube", (False, ""))[0],
+        "url": results.get("youtube", (False, ""))[1]
+        if results.get("youtube", (False, ""))[0]
+        else None,
+        "error": results.get("youtube", (False, ""))[1]
+        if not results.get("youtube", (False, ""))[0]
+        else None,
+    },
+    "tiktok": {
+        "success": results.get("tiktok", (False, ""))[0],
+        "url": results.get("tiktok", (False, ""))[1]
+        if results.get("tiktok", (False, ""))[0]
+        else None,
+        "error": results.get("tiktok", (False, ""))[1]
+        if not results.get("tiktok", (False, ""))[0]
+        else None,
+    },
+    "facebook": {
+        "success": results.get("facebook", (False, ""))[0],
+        "url": results.get("facebook", (False, ""))[1]
+        if results.get("facebook", (False, ""))[0]
+        else None,
+        "error": results.get("facebook", (False, ""))[1]
+        if not results.get("facebook", (False, ""))[0]
+        else None,
+    },
+}
+
+result_path = os.path.join(ROOT_DIR, "upload_results.json")
+with open(result_path, "w") as f:
+    json.dump(result_data, f, indent=2)
+
+print(f"\nResults saved to: {result_path}")
 
 # Check final .mp directory state
 remaining = os.listdir(mp_dir)

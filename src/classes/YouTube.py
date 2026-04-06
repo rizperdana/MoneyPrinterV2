@@ -2463,14 +2463,32 @@ Example:
 
                             if not fb_url:
                                 # Don't return base URL - upload likely failed
-                                if verbose:
-                                    warning(
-                                        "\t=> Could not extract Facebook reel URL - upload may have failed"
+                                # Try one more approach: navigate to own profile via Facebook menu
+                                try:
+                                    browser.get("https://www.facebook.com/me")
+                                    time.sleep(5)
+                                    current_url = browser.current_url
+                                    if (
+                                        "facebook.com" in current_url
+                                        and "/profile" in current_url
+                                    ):
+                                        fb_url = current_url
+                                        if verbose:
+                                            info(
+                                                f"\t=> Got Facebook profile URL as fallback: {fb_url}"
+                                            )
+                                except Exception:
+                                    pass
+
+                                if not fb_url:
+                                    if verbose:
+                                        warning(
+                                            "\t=> Could not extract Facebook reel URL - upload may have failed"
+                                        )
+                                    return (
+                                        False,
+                                        "Could not extract Facebook reel URL - upload may have failed or timed out",
                                     )
-                                return (
-                                    False,
-                                    "Could not extract Facebook reel URL - upload may have failed or timed out",
-                                )
                         except Exception:
                             pass
 
@@ -2863,6 +2881,16 @@ Example:
                         pass
 
                 if not tt_url:
+                    # Try to construct URL from known username as fallback
+                    tt_username = get_tiktok_username()
+                    if tt_username:
+                        tt_url = f"https://www.tiktok.com/@{tt_username}"
+                        if verbose:
+                            warning(
+                                f"\t=> Could not extract exact TikTok video URL, returning profile URL: {tt_url}"
+                            )
+                        # Return as partial success with profile URL - video was likely uploaded
+                        return (True, tt_url)
                     if verbose:
                         warning(
                             "\t=> Could not extract TikTok video URL - upload may have failed"

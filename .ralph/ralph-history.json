@@ -38,17 +38,46 @@
         "SyntaxError: expected 'except' or 'finally' block",
         "+        except Exception:"
       ]
+    },
+    {
+      "iteration": 3,
+      "startedAt": "2026-04-06T23:21:29.139Z",
+      "endedAt": "2026-04-06T23:31:04.479Z",
+      "durationMs": 575288,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/classes/YouTube.py",
+        "src/config.py",
+        "src/main.py",
+        "src/test_upload.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md",
+        "warning(f\"\\t=> URL extraction failed: {e}\")",
+        "+        except Exception:",
+        "except Exception:",
+        "except ImportError:",
+        "+                            warning(f\"Facebook upload failed: {fb_url}\")",
+        "+        warning(f\"TikTok upload failed: {tt_url}\")"
+      ]
     }
   ],
-  "totalDurationMs": 426380,
+  "totalDurationMs": 1001668,
   "struggleIndicators": {
     "repeatedErrors": {
-      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md": 1,
-      "warning(f\"\\t=> URL extraction failed: {e}\")": 1,
-      "except Exception:": 1,
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md": 2,
+      "warning(f\"\\t=> URL extraction failed: {e}\")": 2,
+      "except Exception:": 2,
       "-    except Exception:": 1,
       "SyntaxError: expected 'except' or 'finally' block": 1,
-      "+        except Exception:": 1
+      "+        except Exception:": 2,
+      "except ImportError:": 1,
+      "+                            warning(f\"Facebook upload failed: {fb_url}\")": 1,
+      "+        warning(f\"TikTok upload failed: {tt_url}\")": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0

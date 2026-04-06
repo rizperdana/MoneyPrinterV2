@@ -3,7 +3,10 @@ import schedule
 import subprocess
 
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
+
+load_dotenv(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+)
 
 from art import *
 from cache import *
@@ -24,26 +27,28 @@ from post_bridge_integration import maybe_crosspost_youtube_short
 
 try:
     from classes.Tts import TTS
+
     TTS_AVAILABLE = True
 except ImportError:
     TTS_AVAILABLE = False
     TTS = None
+
 
 def main():
     """Main entry point for the application, providing a menu-driven interface
     to manage YouTube, Twitter bots, Affiliate Marketing, and Outreach tasks.
 
     This function allows users to:
-    1. Start the YouTube Shorts Automater to manage YouTube accounts, 
+    1. Start the YouTube Shorts Automater to manage YouTube accounts,
        generate and upload videos, and set up CRON jobs.
-    2. Start a Twitter Bot to manage Twitter accounts, post tweets, and 
+    2. Start a Twitter Bot to manage Twitter accounts, post tweets, and
        schedule posts using CRON jobs.
-    3. Manage Affiliate Marketing by creating pitches and sharing them via 
+    3. Manage Affiliate Marketing by creating pitches and sharing them via
        Twitter accounts.
     4. Initiate an Outreach process for engagement and promotion tasks.
     5. Exit the application.
 
-    The function continuously prompts users for input, validates it, and 
+    The function continuously prompts users for input, validates it, and
     executes the selected option until the user chooses to quit.
 
     Args:
@@ -57,7 +62,7 @@ def main():
     valid_input = False
     while not valid_input:
         try:
-    # Show user options
+            # Show user options
             info("\n============ OPTIONS ============", False)
 
             for idx, option in enumerate(OPTIONS):
@@ -65,7 +70,7 @@ def main():
 
             info("=================================\n", False)
             user_input = input("Select an option: ").strip()
-            if user_input == '':
+            if user_input == "":
                 print("\n" * 100)
                 raise ValueError("Empty input is not allowed.")
             user_input = int(user_input)
@@ -73,7 +78,6 @@ def main():
         except ValueError as e:
             print("\n" * 100)
             print(f"Invalid input: {e}")
-
 
     # Start the selected option
     if user_input == 1:
@@ -111,12 +115,21 @@ def main():
             table.field_names = ["ID", "UUID", "Nickname", "Niche"]
 
             for account in cached_accounts:
-                table.add_row([cached_accounts.index(account) + 1, colored(account["id"], "cyan"), colored(account["nickname"], "blue"), colored(account["niche"], "green")])
+                table.add_row(
+                    [
+                        cached_accounts.index(account) + 1,
+                        colored(account["id"], "cyan"),
+                        colored(account["nickname"], "blue"),
+                        colored(account["niche"], "green"),
+                    ]
+                )
 
             print(table)
             info("Type 'd' to delete an account.", False)
 
-            user_input = question("Select an account to start (or 'd' to delete): ").strip()
+            user_input = question(
+                "Select an account to start (or 'd' to delete): "
+            ).strip()
 
             if user_input.lower() == "d":
                 delete_input = question("Enter account number to delete: ").strip()
@@ -130,7 +143,13 @@ def main():
                 if account_to_delete is None:
                     error("Invalid account selected. Please try again.", "red")
                 else:
-                    confirm = question(f"Are you sure you want to delete '{account_to_delete['nickname']}'? (Yes/No): ").strip().lower()
+                    confirm = (
+                        question(
+                            f"Are you sure you want to delete '{account_to_delete['nickname']}'? (Yes/No): "
+                        )
+                        .strip()
+                        .lower()
+                    )
 
                     if confirm == "yes":
                         remove_account("youtube", account_to_delete["id"])
@@ -155,7 +174,7 @@ def main():
                     selected_account["nickname"],
                     selected_account["firefox_profile"],
                     selected_account["niche"],
-                    selected_account["language"]
+                    selected_account["language"],
                 )
 
                 while True:
@@ -181,17 +200,22 @@ def main():
                         youtube.generate_video(tts)
                         # Copy to visible output folder
                         import shutil
+
                         output_dir = os.path.join(ROOT_DIR, "output")
                         os.makedirs(output_dir, exist_ok=True)
                         video_name = os.path.basename(youtube.video_path)
                         output_path = os.path.join(output_dir, video_name)
                         shutil.copy2(youtube.video_path, output_path)
                         success(f"Video saved to: {output_path}")
-                        info("Review the video. Use 'Upload Short' to publish when ready.")
+                        info(
+                            "Review the video. Use 'Upload Short' to publish when ready."
+                        )
                     elif user_input == 2:
                         # Generate + Upload
                         youtube.generate_video(tts)
-                        upload_to_yt = question("Do you want to upload this video to YouTube? (Yes/No): ")
+                        upload_to_yt = question(
+                            "Do you want to upload this video to YouTube? (Yes/No): "
+                        )
                         if upload_to_yt.lower() == "yes":
                             upload_success = youtube.upload_video()
                             if upload_success:
@@ -201,7 +225,9 @@ def main():
                                     interactive=True,
                                 )
                             else:
-                                warning("YouTube upload failed. Skipping Post Bridge cross-post.")
+                                warning(
+                                    "YouTube upload failed. Skipping Post Bridge cross-post."
+                                )
                     elif user_input == 3:
                         videos = youtube.get_videos()
 
@@ -210,11 +236,13 @@ def main():
                             videos_table.field_names = ["ID", "Date", "Title"]
 
                             for video in videos:
-                                videos_table.add_row([
-                                    videos.index(video) + 1,
-                                    colored(video["date"], "blue"),
-                                    colored(video["title"][:60] + "...", "green")
-                                ])
+                                videos_table.add_row(
+                                    [
+                                        videos.index(video) + 1,
+                                        colored(video["date"], "blue"),
+                                        colored(video["title"][:60] + "...", "green"),
+                                    ]
+                                )
 
                             print(videos_table)
                         else:
@@ -231,7 +259,13 @@ def main():
                         user_input = int(question("Select an Option: "))
 
                         cron_script_path = os.path.join(ROOT_DIR, "src", "cron.py")
-                        command = ["python", cron_script_path, "youtube", selected_account['id'], get_active_model()]
+                        command = [
+                            "python",
+                            cron_script_path,
+                            "youtube",
+                            selected_account["id"],
+                            get_active_model(),
+                        ]
 
                         def job():
                             subprocess.run(command)
@@ -256,6 +290,7 @@ def main():
                         youtube.generate_video(tts)
                         # Copy to visible output folder
                         import shutil
+
                         output_dir = os.path.join(ROOT_DIR, "output")
                         os.makedirs(output_dir, exist_ok=True)
                         video_name = os.path.basename(youtube.video_path)
@@ -269,28 +304,57 @@ def main():
                                 success(f"  {platform}: {result}")
                             else:
                                 warning(f"  {platform}: {result}")
+                        # Save results to JSON
+                        import json
+                        from datetime import datetime
+
+                        result_data = {
+                            "timestamp": datetime.now().isoformat(),
+                            "youtube": {
+                                "success": results.get("youtube", (False, ""))[0],
+                                "url": results.get("youtube", (False, ""))[1]
+                                if results.get("youtube", (False, ""))[0]
+                                else None,
+                            },
+                            "tiktok": {
+                                "success": results.get("tiktok", (False, ""))[0],
+                                "url": results.get("tiktok", (False, ""))[1]
+                                if results.get("tiktok", (False, ""))[0]
+                                else None,
+                            },
+                            "facebook": {
+                                "success": results.get("facebook", (False, ""))[0],
+                                "url": results.get("facebook", (False, ""))[1]
+                                if results.get("facebook", (False, ""))[0]
+                                else None,
+                            },
+                        }
+                        result_path = os.path.join(ROOT_DIR, "upload_results.json")
+                        with open(result_path, "w") as f:
+                            json.dump(result_data, f, indent=2)
+                        info(f"Results saved to: {result_path}")
                     elif user_input == 6:
                         # Upload to Facebook only
-                        if not hasattr(youtube, 'video_path') or not youtube.video_path:
+                        if not hasattr(youtube, "video_path") or not youtube.video_path:
                             error("No video generated yet. Use 'Generate Video' first.")
                             break
                         info("Uploading to Facebook...")
-                        fb_result = youtube.upload_to_facebook()
-                        if fb_result:
-                            success("Facebook upload successful!")
+                        fb_success, fb_url = youtube.upload_to_facebook()
+                        if fb_success:
+                            success(f"Facebook upload successful! URL: {fb_url}")
                         else:
-                            warning("Facebook upload failed.")
+                            warning(f"Facebook upload failed: {fb_url}")
                     elif user_input == 7:
                         # Upload to TikTok only
-                        if not hasattr(youtube, 'video_path') or not youtube.video_path:
+                        if not hasattr(youtube, "video_path") or not youtube.video_path:
                             error("No video generated yet. Use 'Generate Video' first.")
                             break
                         info("Uploading to TikTok...")
-                        tt_result = youtube.upload_to_tiktok()
-                        if tt_result:
-                            success("TikTok upload successful!")
+                        tt_success, tt_url = youtube.upload_to_tiktok()
+                        if tt_success:
+                            success(f"TikTok upload successful! URL: {tt_url}")
                         else:
-                            warning("TikTok upload failed.")
+                            warning(f"TikTok upload failed: {tt_url}")
                     elif user_input == 8:
                         if get_verbose():
                             info(" => Climbing Options Ladder...", False)
@@ -312,24 +376,36 @@ def main():
                 fp_profile = question(" => Enter the path to the Firefox profile: ")
                 topic = question(" => Enter the account topic: ")
 
-                add_account("twitter", {
-                    "id": generated_uuid,
-                    "nickname": nickname,
-                    "firefox_profile": fp_profile,
-                    "topic": topic,
-                    "posts": []
-                })
+                add_account(
+                    "twitter",
+                    {
+                        "id": generated_uuid,
+                        "nickname": nickname,
+                        "firefox_profile": fp_profile,
+                        "topic": topic,
+                        "posts": [],
+                    },
+                )
         else:
             table = PrettyTable()
             table.field_names = ["ID", "UUID", "Nickname", "Account Topic"]
 
             for account in cached_accounts:
-                table.add_row([cached_accounts.index(account) + 1, colored(account["id"], "cyan"), colored(account["nickname"], "blue"), colored(account["topic"], "green")])
+                table.add_row(
+                    [
+                        cached_accounts.index(account) + 1,
+                        colored(account["id"], "cyan"),
+                        colored(account["nickname"], "blue"),
+                        colored(account["topic"], "green"),
+                    ]
+                )
 
             print(table)
             info("Type 'd' to delete an account.", False)
 
-            user_input = question("Select an account to start (or 'd' to delete): ").strip()
+            user_input = question(
+                "Select an account to start (or 'd' to delete): "
+            ).strip()
 
             if user_input.lower() == "d":
                 delete_input = question("Enter account number to delete: ").strip()
@@ -343,7 +419,13 @@ def main():
                 if account_to_delete is None:
                     error("Invalid account selected. Please try again.", "red")
                 else:
-                    confirm = question(f"Are you sure you want to delete '{account_to_delete['nickname']}'? (Yes/No): ").strip().lower()
+                    confirm = (
+                        question(
+                            f"Are you sure you want to delete '{account_to_delete['nickname']}'? (Yes/No): "
+                        )
+                        .strip()
+                        .lower()
+                    )
 
                     if confirm == "yes":
                         remove_account("twitter", account_to_delete["id"])
@@ -363,10 +445,14 @@ def main():
                 error("Invalid account selected. Please try again.", "red")
                 main()
             else:
-                twitter = Twitter(selected_account["id"], selected_account["nickname"], selected_account["firefox_profile"], selected_account["topic"])
+                twitter = Twitter(
+                    selected_account["id"],
+                    selected_account["nickname"],
+                    selected_account["firefox_profile"],
+                    selected_account["topic"],
+                )
 
                 while True:
-                    
                     info("\n============ OPTIONS ============", False)
 
                     for idx, twitter_option in enumerate(TWITTER_OPTIONS):
@@ -387,11 +473,13 @@ def main():
                         posts_table.field_names = ["ID", "Date", "Content"]
 
                         for post in posts:
-                            posts_table.add_row([
-                                posts.index(post) + 1,
-                                colored(post["date"], "blue"),
-                                colored(post["content"][:60] + "...", "green")
-                            ])
+                            posts_table.add_row(
+                                [
+                                    posts.index(post) + 1,
+                                    colored(post["date"], "blue"),
+                                    colored(post["content"][:60] + "...", "green"),
+                                ]
+                            )
 
                         print(posts_table)
                     elif user_input == 3:
@@ -406,7 +494,13 @@ def main():
                         user_input = int(question("Select an Option: "))
 
                         cron_script_path = os.path.join(ROOT_DIR, "src", "cron.py")
-                        command = ["python", cron_script_path, "twitter", selected_account['id'], get_active_model()]
+                        command = [
+                            "python",
+                            cron_script_path,
+                            "twitter",
+                            selected_account["id"],
+                            get_active_model(),
+                        ]
 
                         def job():
                             subprocess.run(command)
@@ -434,7 +528,7 @@ def main():
                         break
     elif user_input == 3:
         info("Starting Reddit to Twitter...")
-        
+
         # Get Twitter account (cached or prompt to create)
         cached_accounts = get_accounts("twitter")
 
@@ -450,19 +544,22 @@ def main():
                 fp_profile = question(" => Enter the path to the Firefox profile: ")
                 topic = question(" => Enter the account topic (e.g. memes): ")
 
-                add_account("twitter", {
-                    "id": generated_uuid,
-                    "nickname": nickname,
-                    "firefox_profile": fp_profile,
-                    "topic": topic,
-                    "posts": []
-                })
-                
+                add_account(
+                    "twitter",
+                    {
+                        "id": generated_uuid,
+                        "nickname": nickname,
+                        "firefox_profile": fp_profile,
+                        "topic": topic,
+                        "posts": [],
+                    },
+                )
+
                 success("Account configured successfully!")
             else:
                 error("Need a Twitter account to post to Twitter.")
                 main()
-        
+
         # Show Reddit to Twitter options
         while True:
             info("\n============ REDDIT TO TWITTER ===========", False)
@@ -477,108 +574,110 @@ def main():
             if user_input == 1:
                 # Fetch & Post Best Meme
                 info("Fetching best meme from Reddit...")
-                
+
                 # Get or create Twitter account
                 if len(cached_accounts) == 0:
                     error("No Twitter account available.")
                     break
-                    
+
                 selected_account = cached_accounts[0]
-                
+
                 # Create Twitter instance
                 twitter = Twitter(
                     selected_account["id"],
                     selected_account["nickname"],
                     selected_account["firefox_profile"],
-                    selected_account["topic"]
+                    selected_account["topic"],
                 )
-                
+
                 # Create Reddit instance to fetch from r/memes, r/dankmemes, r/ProgrammerHumor
                 reddit = Reddit(
                     subreddits=["memes", "dankmemes", "ProgrammerHumor"],
                     limit=25,
-                    min_score=500
+                    min_score=500,
                 )
-                
+
                 # Fetch trending posts
                 info("Fetching posts from subreddits...")
                 posts = reddit.fetch_trending_posts()
-                
+
                 if not posts:
                     warning("No posts with media found. Try lowering min_score.")
                     continue
-                
+
                 # Get the best post
                 best_post = reddit.get_best_post()
-                
+
                 if not best_post:
                     warning("No suitable post found.")
                     continue
-                
+
                 # Display the best post
                 info(f"Best post: {best_post.get('title', '')[:60]}...")
-                info(f"Score: {best_post.get('score', 0):,} | r/{best_post.get('subreddit')}")
-                
+                info(
+                    f"Score: {best_post.get('score', 0):,} | r/{best_post.get('subreddit')}"
+                )
+
                 confirm = question("Post this to Twitter? (Yes/No): ")
                 if confirm.lower() != "yes":
                     warning("Canceled.")
                     continue
-                
+
                 # Download the media
                 info("Downloading media...")
                 media_path = reddit.download_media(best_post)
-                
+
                 if not media_path:
                     error("Failed to download media.")
                     continue
-                
+
                 # Generate caption
                 caption = twitter.generate_caption_from_reddit(best_post)
-                
+
                 # Post to Twitter with caption
                 success("Posting to Twitter...")
                 result = twitter.post_with_media(caption, media_path)
-                
+
                 if result:
                     success("Posted to Twitter successfully!")
                 else:
                     error("Failed to post to Twitter.")
-                
+
                 # Cleanup temp files
                 reddit.cleanup()
-                
+
             elif user_input == 2:
                 # Select from Top Posts
                 info("Fetching top posts from subreddits...")
-                
+
                 if len(cached_accounts) == 0:
                     error("No Twitter account available.")
                     break
-                    
+
                 selected_account = cached_accounts[0]
-                
+
                 twitter = Twitter(
                     selected_account["id"],
                     selected_account["nickname"],
                     selected_account["firefox_profile"],
-                    selected_account["topic"]
+                    selected_account["topic"],
                 )
-                
+
                 reddit = Reddit(
                     subreddits=["memes", "dankmemes", "ProgrammerHumor"],
                     limit=25,
-                    min_score=100
+                    min_score=100,
                 )
-                
+
                 posts = reddit.fetch_trending_posts()
-                
+
                 if not posts:
                     warning("No posts found.")
                     continue
-                
+
                 # Display posts
                 reddit.display_posts()
-                
+
                 selected_idx = question("Select a post to post (number): ")
                 try:
                     selected_post = reddit.select_post(int(selected_idx))
@@ -588,86 +687,82 @@ def main():
                 except (ValueError, IndexError):
                     error("Invalid selection.")
                     continue
-                
+
                 # Download media
                 media_path = reddit.download_media(selected_post)
-                
+
                 if not media_path:
                     error("Failed to download media.")
                     continue
-                
+
                 # Generate and post caption
                 caption = twitter.generate_caption_from_reddit(selected_post)
                 result = twitter.post_with_media(caption, media_path)
-                
+
                 if result:
                     success("Posted to Twitter successfully!")
                 else:
                     error("Failed to post to Twitter.")
-                
+
                 reddit.cleanup()
-                
+
             elif user_input == 3:
                 # Choose Subreddit
                 custom_sub = question("Enter subreddit name (without r/): ").strip()
                 if not custom_sub:
                     error("Invalid subreddit.")
                     continue
-                
+
                 if len(cached_accounts) == 0:
                     error("No Twitter account available.")
                     break
-                    
+
                 selected_account = cached_accounts[0]
-                
+
                 twitter = Twitter(
                     selected_account["id"],
                     selected_account["nickname"],
                     selected_account["firefox_profile"],
-                    selected_account["topic"]
+                    selected_account["topic"],
                 )
-                
-                reddit = Reddit(
-                    subreddits=[custom_sub],
-                    limit=25,
-                    min_score=100
-                )
-                
+
+                reddit = Reddit(subreddits=[custom_sub], limit=25, min_score=100)
+
                 posts = reddit.fetch_hot_posts(custom_sub)
-                
+
                 if not posts:
                     warning(f"No posts with media found in r/{custom_sub}.")
                     continue
-                
+
                 # Get best post from this subreddit
                 best_post = posts[0] if posts else None
-                
+
                 if not best_post:
                     warning("No suitable post found.")
                     continue
-                
+
                 info(f"Best post: {best_post.get('title', '')[:60]}...")
                 info(f"Score: {best_post.get('score', 0):,}")
-                
+
                 confirm = question("Post this to Twitter? (Yes/No): ")
                 if confirm.lower() != "yes":
                     continue
-                
+
                 media_path = reddit.download_media(best_post)
                 if not media_path:
                     error("Failed to download media.")
                     continue
-                
+
                 caption = twitter.generate_caption_from_reddit(best_post)
                 result = twitter.post_with_media(caption, media_path)
-                
+
                 if result:
                     success("Posted to Twitter successfully!")
                 else:
                     error("Failed to post to Twitter.")
-                
+
                 reddit.cleanup()
-                
+
             elif user_input == 4:
                 # Setup CRON Job for Reddit-to-Twitter
                 info("How often do you want to auto-post Reddit memes to Twitter?")
@@ -680,7 +775,9 @@ def main():
 
                 cron_input = int(question("Select an Option: "))
 
-                cron_script_path = os.path.join(ROOT_DIR, "src", "reddit_twitter_cron.py")
+                cron_script_path = os.path.join(
+                    ROOT_DIR, "src", "reddit_twitter_cron.py"
+                )
                 model = get_active_model()
 
                 # Get the first Twitter account for the cron job
@@ -736,13 +833,21 @@ def main():
                     if acc["id"] == twitter_uuid:
                         account = acc
 
-                add_product({
-                    "id": str(uuid4()),
-                    "affiliate_link": affiliate_link,
-                    "twitter_uuid": twitter_uuid
-                })
+                add_product(
+                    {
+                        "id": str(uuid4()),
+                        "affiliate_link": affiliate_link,
+                        "twitter_uuid": twitter_uuid,
+                    }
+                )
 
-                afm = AffiliateMarketing(affiliate_link, account["firefox_profile"], account["id"], account["nickname"], account["topic"])
+                afm = AffiliateMarketing(
+                    affiliate_link,
+                    account["firefox_profile"],
+                    account["id"],
+                    account["nickname"],
+                    account["topic"],
+                )
 
                 afm.generate_pitch()
                 afm.share_pitch("twitter")
@@ -751,7 +856,13 @@ def main():
             table.field_names = ["ID", "Affiliate Link", "Twitter Account UUID"]
 
             for product in cached_products:
-                table.add_row([cached_products.index(product) + 1, colored(product["affiliate_link"], "cyan"), colored(product["twitter_uuid"], "blue")])
+                table.add_row(
+                    [
+                        cached_products.index(product) + 1,
+                        colored(product["affiliate_link"], "cyan"),
+                        colored(product["twitter_uuid"], "blue"),
+                    ]
+                )
 
             print(table)
 
@@ -773,7 +884,13 @@ def main():
                     if acc["id"] == selected_product["twitter_uuid"]:
                         account = acc
 
-                afm = AffiliateMarketing(selected_product["affiliate_link"], account["firefox_profile"], account["id"], account["nickname"], account["topic"])
+                afm = AffiliateMarketing(
+                    selected_product["affiliate_link"],
+                    account["firefox_profile"],
+                    account["id"],
+                    account["nickname"],
+                    account["topic"],
+                )
 
                 afm.generate_pitch()
                 afm.share_pitch("twitter")
@@ -791,7 +908,7 @@ def main():
     else:
         error("Invalid option selected. Please try again.", "red")
         main()
-    
+
 
 if __name__ == "__main__":
     # Print ASCII Banner
@@ -800,7 +917,12 @@ if __name__ == "__main__":
     first_time = get_first_time_running()
 
     if first_time:
-        print(colored("Hey! It looks like you're running MoneyPrinter V2 for the first time. Let's get you setup first!", "yellow"))
+        print(
+            colored(
+                "Hey! It looks like you're running MoneyPrinter V2 for the first time. Let's get you setup first!",
+                "yellow",
+            )
+        )
 
     # Setup file tree
     assert_folder_structure()
