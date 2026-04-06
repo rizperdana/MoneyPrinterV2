@@ -18,13 +18,37 @@
         "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md",
         "warning(f\"\\t=> URL extraction failed: {e}\")"
       ]
+    },
+    {
+      "iteration": 2,
+      "startedAt": "2026-04-06T23:17:55.083Z",
+      "endedAt": "2026-04-06T23:21:28.042Z",
+      "durationMs": 212906,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/classes/YouTube.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "except Exception:",
+        "-    except Exception:",
+        "SyntaxError: expected 'except' or 'finally' block",
+        "+        except Exception:"
+      ]
     }
   ],
-  "totalDurationMs": 213474,
+  "totalDurationMs": 426380,
   "struggleIndicators": {
     "repeatedErrors": {
       "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md": 1,
-      "warning(f\"\\t=> URL extraction failed: {e}\")": 1
+      "warning(f\"\\t=> URL extraction failed: {e}\")": 1,
+      "except Exception:": 1,
+      "-    except Exception:": 1,
+      "SyntaxError: expected 'except' or 'finally' block": 1,
+      "+        except Exception:": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0

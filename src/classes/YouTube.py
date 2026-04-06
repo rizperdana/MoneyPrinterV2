@@ -2462,18 +2462,25 @@ Example:
                                     pass
 
                             if not fb_url:
-                                fb_url = (
-                                    current_url
-                                    if current_url and "facebook.com" in current_url
-                                    else "https://www.facebook.com"
+                                # Don't return base URL - upload likely failed
+                                if verbose:
+                                    warning(
+                                        "\t=> Could not extract Facebook reel URL - upload may have failed"
+                                    )
+                                return (
+                                    False,
+                                    "Could not extract Facebook reel URL - upload may have failed or timed out",
                                 )
                         except Exception:
-                            fb_url = "https://www.facebook.com"
-                        return (True, fb_url)
-                    if "error" in content.lower() and "try again" in content.lower():
-                        if verbose:
-                            warning("\t=> Facebook upload reported an error")
-                        return (False, "Facebook upload reported an error")
+                            pass
+
+                        if (
+                            "error" in content.lower()
+                            and "try again" in content.lower()
+                        ):
+                            if verbose:
+                                warning("\t=> Facebook upload reported an error")
+                            return (False, "Facebook upload reported an error")
 
                 if verbose:
                     warning("\t=> Facebook upload not confirmed after 60s")
