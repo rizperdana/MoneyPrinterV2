@@ -1,18 +1,7 @@
 {
-  "timestamp": "2026-04-07T22:10:41.508531",
   "youtube": {
     "success": true,
     "url": "https://www.youtube.com/watch?v=n6wvxqtaUeM",
-    "error": null
-  },
-  "tiktok": {
-    "success": true,
-    "url": "https://www.tiktok.com/@raider_kickuuuu/video/7626032544047320341",
-    "error": null
-  },
-  "facebook": {
-    "success": true,
-    "url": "https://web.facebook.com/reel/974414658858784/",
     "error": null
   }
 }
