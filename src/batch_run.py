@@ -31,16 +31,23 @@ NICHES = {
         "mind-blowing science facts",
         "space mysteries explained",
         "shocking history facts",
+        "viral biology discoveries",
+        "incredible physics phenomena",
     ],
     "niche": [
         "underwater ocean mysteries",
         "ancient technology facts",
         "strange animal behaviors",
+        "hidden archaeological discoveries",
+        "bizarre weather phenomena",
     ],
 }
 
-# Flatten to get 5 popular + 5 niche
-ALL_NICHES = NICHES["popular"][:3] + NICHES["niche"][:2]
+# All niches for the pipeline
+ALL_NICHES = NICHES["popular"] + NICHES["niche"]
+
+# Number of videos per niche
+VIDEOS_PER_NICHE = 5
 
 RESULTS = []
 
@@ -104,43 +111,46 @@ def main():
 
     # Create videos for each niche
     for niche in ALL_NICHES:
-        print(f"\n{'=' * 60}")
-        print(f"Creating video for: {niche}")
-        print(f"{'=' * 60}")
+        for video_num in range(1, VIDEOS_PER_NICHE + 1):
+            print(f"\n{'=' * 60}")
+            print(f"Creating video {video_num}/{VIDEOS_PER_NICHE} for: {niche}")
+            print(f"{'=' * 60}")
 
-        # Run pipeline (without upload - we'll upload separately)
-        result = run_pipeline(
-            niche=niche,
-            language="English",
-            upload=False,  # Generate only first
-        )
-
-        if result.get("video_path") and os.path.exists(result["video_path"]):
-            created_count += 1
-
-            print(f"\n✓ Video created: {result['video_path']}")
-            print(f"  Title: {result.get('title', 'N/A')}")
-
-            # Now upload to platforms
-            print(f"\n>>> Uploading to platforms...")
-            upload_results = upload_to_platforms(
-                video_path=result["video_path"],
-                title=result.get("title", niche),
-                description=result.get("description", ""),
+            # Run pipeline (without upload - we'll upload separately)
+            result = run_pipeline(
+                niche=niche,
+                language="English",
+                upload=False,  # Generate only first
             )
 
-            result["platforms"] = upload_results
-            RESULTS.append(result)
+            if result.get("video_path") and os.path.exists(result["video_path"]):
+                created_count += 1
 
-            # Save progress
-            with open(os.path.join(ROOT_DIR, "batch_results.json"), "w") as f:
-                json.dump(RESULTS, f, indent=2)
-        else:
-            print(f"✗ Failed to create video for: {niche}")
-            print(f"  Error: {result.get('error', 'Unknown')}")
+                print(f"\n✓ Video created: {result['video_path']}")
+                print(f"  Title: {result.get('title', 'N/A')}")
 
-        # Rate limit between videos
-        time.sleep(5)
+                # Now upload to platforms
+                print(f"\n>>> Uploading to platforms...")
+                upload_results = upload_to_platforms(
+                    video_path=result["video_path"],
+                    title=result.get("title", niche),
+                    description=result.get("description", ""),
+                )
+
+                result["platforms"] = upload_results
+                result["niche"] = niche
+                result["video_number"] = video_num
+                RESULTS.append(result)
+
+                # Save progress
+                with open(os.path.join(ROOT_DIR, "batch_results.json"), "w") as f:
+                    json.dump(RESULTS, f, indent=2)
+            else:
+                print(f"✗ Failed to create video for: {niche}")
+                print(f"  Error: {result.get('error', 'Unknown')}")
+
+            # Rate limit between videos
+            time.sleep(5)
 
     print(f"\n{'=' * 60}")
     print(f"COMPLETED: {created_count}/{len(ALL_NICHES)} videos created")
