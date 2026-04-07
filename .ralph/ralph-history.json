@@ -401,12 +401,40 @@
       "errors": [
         "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.json"
       ]
+    },
+    {
+      "iteration": 18,
+      "startedAt": "2026-04-07T16:40:01.352Z",
+      "endedAt": "2026-04-07T17:08:34.861Z",
+      "durationMs": 1713405,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/classes/YouTube.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "ModuleNotFoundError: No module named 'classes'",
+        "RuntimeError: No model selected. Call select_model() first or pass model_name.",
+        "❌ Facebook upload failed: 'NoneType' object has no attribute 'rstrip'",
+        "AttributeError: 'NoneType' object has no attribute 'rstrip'",
+        "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text()='Public']]",
+        "⚠️ \t=> Bulk edit fallback failed: Message: SyntaxError: missing ) after argument list"
+      ]
     }
   ],
-  "totalDurationMs": 40332832,
+  "totalDurationMs": 42046237,
   "struggleIndicators": {
     "repeatedErrors": {
-      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.jso": 1
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.jso": 1,
+      "ModuleNotFoundError: No module named 'classes'": 1,
+      "RuntimeError: No model selected. Call select_model() first or pass model_name.": 1,
+      "❌ Facebook upload failed: 'NoneType' object has no attribute 'rstrip'": 1,
+      "AttributeError: 'NoneType' object has no attribute 'rstrip'": 1,
+      "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text": 1,
+      "⚠️ \t=> Bulk edit fallback failed: Message: SyntaxError: missing ) after argument list": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0

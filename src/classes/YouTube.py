@@ -3334,27 +3334,33 @@ Example:
                             )
                         time.sleep(5)
 
-                        # Try profile/videos again
-                        browser.get(profile_url.rstrip("/") + "/videos")
-                        time.sleep(8)
+                        # Try profile/videos again - only if we have a profile URL
+                        if profile_url:
+                            browser.get(profile_url.rstrip("/") + "/videos")
+                            time.sleep(8)
 
-                        # Try JS one more time
-                        final_js = """
-                        (function() {
-                            // Get all links and look for video patterns
-                            var links = document.querySelectorAll('a[href]');
-                            for (var i = 0; i < links.length; i++) {
-                                var href = links[i].href;
-                                if (href && (href.indexOf('/reel/') > -1 || href.indexOf('/videos/') > -1 || href.indexOf('/watch?v=') > -1)) {
-                                    return href;
+                            # Try JS one more time
+                            final_js = """
+                            (function() {
+                                // Get all links and look for video patterns
+                                var links = document.querySelectorAll('a[href]');
+                                for (var i = 0; i < links.length; i++) {
+                                    var href = links[i].href;
+                                    if (href && (href.indexOf('/reel/') > -1 || href.indexOf('/videos/') > -1 || href.indexOf('/watch?v=') > -1)) {
+                                        return href;
+                                    }
                                 }
-                            }
-                            return null;
-                        })();
-                        """
-                        fb_url = browser.execute_script(final_js)
-                        if fb_url:
-                            return (True, fb_url)
+                                return null;
+                            })();
+                            """
+                            fb_url = browser.execute_script(final_js)
+                            if fb_url:
+                                return (True, fb_url)
+                        else:
+                            if verbose:
+                                warning(
+                                    "\t=> No profile URL available for final attempt"
+                                )
 
                         # Return failure - cannot extract actual video URL
                         # Do not return fallback URL that appears to work but isn't the actual video
