@@ -2483,41 +2483,53 @@ Example:
         verbose = get_verbose()
 
         try:
+            # Try direct Reels create URL first (most reliable for modern FB UI)
             if verbose:
-                info("\t=> Navigating to Facebook...")
-            browser.get("https://www.facebook.com")
+                info("\t=> Navigating to Facebook Reels create page...")
+            browser.get("https://www.facebook.com/reels/create/")
             time.sleep(5)
 
-            # Try to find the Create Reel button or file upload
-            if verbose:
-                info("\t=> Looking for create/reel option...")
+            # Check if we're on the create page with file inputs
+            file_inputs = browser.find_elements(By.CSS_SELECTOR, 'input[type="file"]')
 
-            # Try to find file input for video upload
-            try:
-                file_input = wait.until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, 'input[type="file"]')
-                    )
-                )
-            except Exception:
-                # Try alternative: look for "Create Reel" or upload button
+            if len(file_inputs) >= 2:
+                # We're on the Reels create page
                 if verbose:
-                    info("\t=> Looking for upload button...")
+                    info("\t=> On Reels create page, found file inputs")
+                file_input = file_inputs[1] if len(file_inputs) > 1 else file_inputs[0]
+            else:
+                # Fallback: try home page approach
+                if verbose:
+                    info("\t=> Direct URL didn't work, trying home page...")
+                browser.get("https://www.facebook.com")
+                time.sleep(5)
+
+                # Try to find file input for video upload
                 try:
-                    upload_btn = wait.until(
-                        EC.element_to_be_clickable(
-                            (By.XPATH, "//*[contains(text(), 'Create Reel')]")
-                        )
-                    )
-                    upload_btn.click()
-                    time.sleep(3)
                     file_input = wait.until(
                         EC.presence_of_element_located(
                             (By.CSS_SELECTOR, 'input[type="file"]')
                         )
                     )
                 except Exception:
-                    file_input = None
+                    # Try alternative: look for "Create Reel" or upload button
+                    if verbose:
+                        info("\t=> Looking for upload button...")
+                    try:
+                        upload_btn = wait.until(
+                            EC.element_to_be_clickable(
+                                (By.XPATH, "//*[contains(text(), 'Create Reel')]")
+                            )
+                        )
+                        upload_btn.click()
+                        time.sleep(3)
+                        file_input = wait.until(
+                            EC.presence_of_element_located(
+                                (By.CSS_SELECTOR, 'input[type="file"]')
+                            )
+                        )
+                    except Exception:
+                        file_input = None
 
             if file_input:
                 if verbose:
@@ -2580,6 +2592,23 @@ Example:
                     except Exception:
                         continue
 
+                # Wait a bit for Facebook to process
+                time.sleep(3)
+
+                # Check for publish confirmation via page content
+                page_content = browser.page_source.lower()
+
+                # If we see "published" or similar, the upload succeeded
+                # We just need to find the URL
+                upload_succeeded = (
+                    "published" in page_content
+                    or "shared" in page_content
+                    or "your reel" in page_content
+                )
+
+                if verbose and upload_succeeded:
+                    info("\t=> Upload appears to have succeeded, finding URL...")
+
                 # Wait for upload confirmation
                 fb_url = ""
                 if verbose:
@@ -2589,13 +2618,21 @@ Example:
                 # Facebook can take 10-60 seconds to process and redirect
                 time.sleep(10)
 
-                # Check URL after wait
+                # Check URL after wait - only return if we have actual reel ID
                 current_url = browser.current_url
-                if "/reel/" in current_url or "/video/" in current_url:
+                # Must have more than just "/reel/" - need actual reel ID
+                reel_path = (
+                    current_url.split("/reel/")[-1] if "/reel/" in current_url else ""
+                )
+                if "/reel/" in current_url and len(reel_path) > 0:
                     fb_url = current_url
                     if verbose:
                         info(f"\t=> Got Facebook URL directly: {fb_url}")
                     return (True, fb_url)
+
+                # If still on /reel/ without ID, try to find reel from page or profile
+                if verbose:
+                    info("\t=> Not redirected to reel page, searching for URL...")
 
                 # Extended wait loop - monitor URL changes during upload
                 url_before_post = current_url
@@ -2604,14 +2641,16 @@ Example:
                     content = browser.page_source
                     current_url = browser.current_url
 
-                    # Check if URL has changed to a reel/video page
-                    if "/reel/" in current_url or "/video/" in current_url:
-                        fb_url = current_url
-                        if verbose:
-                            info(
-                                f"\t=> Got Facebook URL from redirect after {wait_iter * 2}s: {fb_url}"
-                            )
-                        return (True, fb_url)
+                    # Check if URL has changed to a reel/video page with actual ID
+                    if "/reel/" in current_url:
+                        reel_id = current_url.split("/reel/")[-1]
+                        if len(reel_id) > 0:  # Must have actual reel ID after /reel/
+                            fb_url = current_url
+                            if verbose:
+                                info(
+                                    f"\t=> Got Facebook URL from redirect after {wait_iter * 2}s: {fb_url}"
+                                )
+                            return (True, fb_url)
 
                     # Check if we got redirected away from the post page
                     # (e.g., to feed/profile - upload likely succeeded)
@@ -2675,9 +2714,14 @@ Example:
                                 f"\t=> Facebook upload confirmed (iteration {wait_iter})"
                             )
 
-                        # Check URL one more time
+                        # Check URL one more time - only return with actual ID
                         current_url = browser.current_url
-                        if "/reel/" in current_url or "/video/" in current_url:
+                        if "/reel/" in current_url:
+                            reel_id = current_url.split("/reel/")[-1]
+                            if len(reel_id) > 0:
+                                fb_url = current_url
+                                return (True, fb_url)
+                        elif "/video/" in current_url:
                             fb_url = current_url
                             return (True, fb_url)
 
@@ -2852,9 +2896,18 @@ Example:
                                     browser.get(approach_url)
                                     time.sleep(8)
 
-                                    # Check current URL for video patterns
+                                    # Check current URL for video patterns - must have ID
                                     current = browser.current_url
-                                    if "/reel/" in current or "/videos/" in current:
+                                    if "/reel/" in current:
+                                        reel_id = current.split("/reel/")[-1]
+                                        if len(reel_id) > 0:
+                                            fb_url = current
+                                            if verbose:
+                                                info(
+                                                    f"\t=> Got URL from navigation: {fb_url}"
+                                                )
+                                            return (True, fb_url)
+                                    elif "/videos/" in current:
                                         fb_url = current
                                         if verbose:
                                             info(

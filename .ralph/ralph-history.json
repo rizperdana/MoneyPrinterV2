@@ -78,14 +78,46 @@
         "⚠️ \t=> Visibility fix attempt 2 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=\"style-scope ytcp-video-metadata-visibility\"> is not clickable at point (1271,99) because another el",
         "⚠️ \t=> Visibility fix attempt 3 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=\"style-scope ytcp-video-metadata-visibility\"> is not clickable at point (1271,99) because another el"
       ]
+    },
+    {
+      "iteration": 4,
+      "startedAt": "2026-04-07T09:10:25.500Z",
+      "endedAt": "2026-04-07T10:45:22.338Z",
+      "durationMs": 5696536,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        ".ralph/ralph-tasks.md",
+        "src/classes/YouTube.py",
+        "upload_results.json",
+        ".ralph/ralph-context.md",
+        "tt_live_test.json",
+        "upload_status.txt",
+        "yt_live_test.json"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "ModuleNotFoundError: No module named 'config'",
+        "FileNotFoundError: [Errno 2] No such file or directory: 'config.json'",
+        "print('ERROR: No video file found in .mp directory')",
+        "ImportError: cannot import name 'set_verbose' from 'config' (/home/anon/Projects/experiment/MoneyPrinterV2/src/config.py). Did you mean: 'get_verbose'?",
+        "FileNotFoundError: [Errno 2] No such file or directory: '/home/anon/Projects/experiment/.mp'",
+        "cprint(f'Error: {e}', 'red')",
+        "selenium.common.exceptions.ElementNotInteractableException: Message: Element <h3 class=\"html-h3 xdj266r x14z9mp xat24cr x1lziwak xexx8yu xyri2b x18d9i69 x1c1uobl x1vvkbs x1heor9g x1qlqyl8 x1pd3egz x1a",
+        "Error: Message: Element <h3 class=\"html-h3 xdj266r x14z9mp xat24cr x1lziwak xexx8yu xyri2b x18d9i69 x1c1uobl x1vvkbs x1heor9g x1qlqyl8 x1pd3egz x1a2a7pz xzpqnlu x1hyvwdk xjm9jq1 x6ikm8r x10wlt62 x10l6",
+        "-    except Exception:",
+        "except Exception:"
+      ]
     }
   ],
-  "totalDurationMs": 13375222,
+  "totalDurationMs": 19071758,
   "struggleIndicators": {
     "repeatedErrors": {
       "print('ERROR: No video file found')": 1,
-      "ModuleNotFoundError: No module named 'config'": 2,
-      "FileNotFoundError: [Errno 2] No such file or directory: 'config.json'": 1,
+      "ModuleNotFoundError: No module named 'config'": 3,
+      "FileNotFoundError: [Errno 2] No such file or directory: 'config.json'": 2,
       "⚠️ \t=> Storage check failed: Message: SyntaxError: invalid regular expression flag r": 1,
       "+        warning(f\"\\t=> Immediate extraction failed: {e}\")": 1,
       "print(f'Error: {e}')": 1,
@@ -101,7 +133,15 @@
       "\u001b[0m$ \u001b[0mcd /home/anon/Projects/experiment/MoneyPrinterV2 && timeout 400 python3 test_youtube_only.": 1,
       "⚠️ \t=> Visibility fix attempt 1 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=": 1,
       "⚠️ \t=> Visibility fix attempt 2 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=": 1,
-      "⚠️ \t=> Visibility fix attempt 3 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=": 1
+      "⚠️ \t=> Visibility fix attempt 3 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=": 1,
+      "print('ERROR: No video file found in .mp directory')": 1,
+      "ImportError: cannot import name 'set_verbose' from 'config' (/home/anon/Projects/experiment/MoneyPri": 1,
+      "FileNotFoundError: [Errno 2] No such file or directory: '/home/anon/Projects/experiment/.mp'": 1,
+      "cprint(f'Error: {e}', 'red')": 1,
+      "selenium.common.exceptions.ElementNotInteractableException: Message: Element <h3 class=\"html-h3 xdj2": 1,
+      "Error: Message: Element <h3 class=\"html-h3 xdj266r x14z9mp xat24cr x1lziwak xexx8yu xyri2b x18d9i69 ": 1,
+      "-    except Exception:": 1,
+      "except Exception:": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0
