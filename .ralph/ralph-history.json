@@ -235,9 +235,24 @@
         "❌ Failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini",
         "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text()='Public']]"
       ]
+    },
+    {
+      "iteration": 9,
+      "startedAt": "2026-04-07T14:03:31.684Z",
+      "endedAt": "2026-04-07T14:19:33.280Z",
+      "durationMs": 961485,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [],
+      "exitCode": 0,
+      "completionDetected": false,
+      "errors": [
+        "\u001b[91m\u001b[1mError: \u001b[0mMCP error -32001: Request timed out"
+      ]
     }
   ],
-  "totalDurationMs": 30954254,
+  "totalDurationMs": 31915739,
   "struggleIndicators": {
     "repeatedErrors": {
       "print('ERROR: No video file found')": 1,
@@ -279,9 +294,10 @@
       "\u001b[91m\u001b[1mError: \u001b[0mRequest failed with status code: 400": 1,
       "RuntimeError: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
       "❌ Pipeline failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
-      "❌ Failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1
+      "❌ Failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
+      "\u001b[91m\u001b[1mError: \u001b[0mMCP error -32001: Request timed out": 1
     },
-    "noProgressIterations": 0,
+    "noProgressIterations": 1,
     "shortIterations": 0
   }
 }
