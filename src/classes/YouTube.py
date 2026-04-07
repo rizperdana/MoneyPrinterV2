@@ -1919,8 +1919,20 @@ Example:
                         # Log some page indicators for debugging
                         if "progress" in page_content or "uploading" in page_content:
                             info(f"\t=> Still uploading (progress indicator found)")
-                        if "error" in page_content or "failed" in page_content:
-                            error(f"\t=> Error indicator found in page content!")
+                        # Only flag actual upload errors, not UI text containing "error"
+                        # Look for specific error messages that indicate upload failure
+                        error_indicators = [
+                            "upload failed",
+                            "could not upload video",
+                            "something went wrong uploading",
+                            "video processing failed",
+                        ]
+                        actual_error = any(
+                            indicator in page_content for indicator in error_indicators
+                        )
+                        if actual_error:
+                            error(f"\t=> Actual error detected in page content!")
+                            # Continue checking instead of failing immediately
 
                     # Check for upload complete indicators in page content
                     for indicator in upload_complete_indicators:
@@ -2308,6 +2320,15 @@ Example:
                     browser.get(f"https://studio.youtube.com/video/{video_id}/edit")
                     time.sleep(5)
 
+                    # Scroll to top to ensure clean page state
+                    browser.execute_script("window.scrollTo(0, 0);")
+                    time.sleep(2)
+
+                    # Scroll down slowly to reach the visibility section
+                    for scroll_step in range(3):
+                        browser.execute_script("window.scrollBy(0, 300);")
+                        time.sleep(1)
+
                     # Method 1: Try multiple visibility badge selectors
                     vis_badge = None
                     for badge_sel in visibility_badge_selectors:
@@ -2320,11 +2341,13 @@ Example:
                             continue
 
                     if vis_badge:
+                        # Use JavaScript click to avoid element obscurance issues
                         browser.execute_script(
-                            "arguments[0].scrollIntoView();", vis_badge
+                            "arguments[0].scrollIntoView({block: 'center'});", vis_badge
                         )
                         time.sleep(1)
-                        vis_badge.click()
+                        # Use JavaScript click instead of regular click
+                        browser.execute_script("arguments[0].click();", vis_badge)
                         time.sleep(2.5)
 
                         # Try to find and click Public radio option
@@ -2334,7 +2357,10 @@ Example:
                                 "//tp-yt-paper-radio-button[.//span[text()='Public']]",
                             )
                             if public_opt.is_displayed():
-                                public_opt.click()
+                                # Use JavaScript click to avoid element obscurance
+                                browser.execute_script(
+                                    "arguments[0].click();", public_opt
+                                )
                                 time.sleep(2.5)
                         except Exception:
                             pass
@@ -2345,7 +2371,7 @@ Example:
                                 By.CSS_SELECTOR, "ytcp-button#done-button, #done-button"
                             )
                             wait.until(EC.visibility_of(done_btn))
-                            done_btn.click()
+                            browser.execute_script("arguments[0].click();", done_btn)
                             time.sleep(2.5)
                         except Exception:
                             pass
@@ -2359,7 +2385,7 @@ Example:
                                 "arguments[0].scrollIntoView();", save_btn
                             )
                             time.sleep(1)
-                            save_btn.click()
+                            browser.execute_script("arguments[0].click();", save_btn)
                             time.sleep(3)
                         except Exception:
                             pass
