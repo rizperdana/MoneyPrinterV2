@@ -1,18 +1,15 @@
 {
-  "timestamp": "2026-04-07T19:19:24.916805",
+  "timestamp": "2026-04-07T21:48:43.356267",
   "youtube": {
     "success": true,
-    "url": "https://www.youtube.com/watch?v=n6wvxqtaUeM",
-    "error": null
+    "url": "https://www.youtube.com/watch?v=n6wvxqtaUeM"
   },
   "tiktok": {
     "success": true,
-    "url": "https://www.tiktok.com/@raider_kickuuuu/video/7625987518944873748",
-    "error": null
+    "url": "https://www.tiktok.com/@raider_kickuuuu/video/7626026994706304277"
   },
   "facebook": {
     "success": true,
-    "url": "https://web.facebook.com/bluebowlrecipes/videos/?id=100063775717715&sk=videos",
-    "error": null
+    "url": "https://web.facebook.com/reel/1520558245721292/?comment_id=980478644548064&__tn__=R]"
   }
 }
