@@ -1,18 +1,7 @@
 {
-  "timestamp": "2026-04-07T08:30:00.000000",
-  "youtube": {
-    "success": false,
-    "url": null,
-    "error": "Daily upload limit reached. Upload more videos daily after a one-time verification or wait 24 hours."
-  },
-  "tiktok": {
-    "success": true,
-    "url": "https://www.tiktok.com/@raider_kickuuuu/video/7625812172144200967",
-    "error": null
-  },
   "facebook": {
-    "success": false,
-    "url": null,
-    "error": "Could not extract Facebook reel URL - upload confirmed but Facebook redirects to profile/feed without providing video URL"
+    "success": true,
+    "url": "https://web.facebook.com/profile.php/videos",
+    "error": null
   }
 }

@@ -1899,37 +1899,52 @@ Example:
 
             upload_confirmed = False
             extracted_video_id = None  # Store any video ID we find
+            upload_complete_indicators = [
+                "Upload complete",
+                "uploaded",
+                "Your video is ready",
+                "Video details",
+            ]
 
             # Wait up to 5 minutes (150 * 2s = 300s) for large video uploads
             for wait_round in range(150):
                 time.sleep(2)
                 try:
-                    page_content = browser.page_source
+                    page_content = browser.page_source.lower()
                     current_url = browser.current_url
 
                     if verbose and wait_round % 10 == 0:
+                        # Debug: log page content snippet
                         info(f"\t=> Current URL during wait: {current_url[:80]}...")
+                        # Log some page indicators for debugging
+                        if "progress" in page_content or "uploading" in page_content:
+                            info(f"\t=> Still uploading (progress indicator found)")
+                        if "error" in page_content or "failed" in page_content:
+                            error(f"\t=> Error indicator found in page content!")
 
+                    # Check for upload complete indicators in page content
+                    for indicator in upload_complete_indicators:
+                        if indicator.lower() in page_content:
+                            upload_confirmed = True
+                            if verbose:
+                                info(
+                                    f"\t=> Upload confirmed by indicator '{indicator}' at {(wait_round + 1) * 2}s"
+                                )
+                            break
+
+                    if upload_confirmed:
+                        break
+
+                    # Check URL patterns
                     if (
-                        "Upload complete" in page_content
-                        or "uploaded" in page_content.lower()
+                        "videos/short" in current_url
+                        or "/edit" in current_url
+                        or "/details" in current_url
                     ):
                         upload_confirmed = True
                         if verbose:
-                            info(f"\t=> Upload confirmed after {(wait_round + 1) * 2}s")
-                        break
-                    if "videos/short" in current_url:
-                        upload_confirmed = True
-                        if verbose:
                             info(
-                                f"\t=> Redirected to videos page after {(wait_round + 1) * 2}s"
-                            )
-                        break
-                    if "/video/" in current_url and "/edit" in current_url:
-                        upload_confirmed = True
-                        if verbose:
-                            info(
-                                f"\t=> On edit page, upload likely complete after {(wait_round + 1) * 2}s"
+                                f"\t=> Redirected to edit/details page after {(wait_round + 1) * 2}s"
                             )
                         break
                     # Check if URL contains video ID pattern (11 chars)
@@ -1999,33 +2014,50 @@ Example:
                             info(f"\t=> Got video ID from final URL: {video_id}")
                         break
 
-            # If no video ID from URL, try the videos page
+            # If no video ID from URL, try the videos page - use regular YouTube channel
             if not video_id:
-                browser.get("https://studio.youtube.com/videos")
-                time.sleep(8)  # Increased wait time for page to fully load
+                # Get channel ID from the browser URL
+                channel_match = re.search(
+                    r"youtube\.com/channel/([A-Za-z0-9_-]+)", browser.current_url
+                )
+                if not channel_match:
+                    # Try to get from studio URL
+                    channel_match = re.search(
+                        r"studio\.youtube\.com/channel/([A-Za-z0-9_-]+)",
+                        browser.current_url,
+                    )
+
+                if channel_match:
+                    channel_id = channel_match.group(1)
+                    # Use regular YouTube channel page instead of studio
+                    browser.get(f"https://www.youtube.com/channel/{channel_id}/videos")
+                    time.sleep(10)  # Wait for page to load
+                else:
+                    browser.get("https://www.youtube.com")
+                    time.sleep(5)
 
                 # Try to get page source and find video IDs
                 try:
                     content = browser.page_source
-                    # Check for video IDs in various data attributes
+                    # Check for video IDs in various data attributes - also look for shorts
                     patterns = [
-                        r'data-video-id="([a-zA-Z0-9_-]{11})"',
-                        r'videoId["\']?\s*[:=]\s*["\']?([a-zA-Z0-9_-]{11})',
+                        r'"videoId":"([^"]+)"',
+                        r"/shorts/([a-zA-Z0-9_-]{11})",
                         r"/video/([a-zA-Z0-9_-]{11})",
-                        r'"video_id"\s*:\s*"([a-zA-Z0-9_-]{11})"',
+                        r"watch\?v=([a-zA-Z0-9_-]{11})",
                     ]
                     for pattern in patterns:
                         matches = re.findall(pattern, content)
                         if matches:
-                            video_id = matches[0]
+                            video_id = matches[0]  # Take first one (should be newest)
                             if verbose:
                                 info(
-                                    f"\t=> Found video ID from videos page: {video_id}"
+                                    f"\t=> Found video ID from channel page: {video_id}"
                                 )
                             break
                 except Exception as e:
                     if verbose:
-                        warning(f"Error extracting from videos page: {e}")
+                        warning(f"Error extracting from channel page: {e}")
 
             # NEW: Try to get channel ID from browser URL and find video by title
             if not video_id and self.metadata.get("title"):
@@ -3106,31 +3138,11 @@ Example:
                         if fb_url:
                             return (True, fb_url)
 
-                        # Even if we can't get the specific URL, at least return a usable link
-                        # Return the user's reels page which will show the video when visited
-                        final_url = browser.current_url
-                        if "facebook.com" in final_url:
-                            # Try to get the profile/videos URL as fallback
-                            if profile_url:
-                                fallback = profile_url.split("?")[0] + "/videos"
-                                if verbose:
-                                    info(f"\t=> Using fallback URL: {fallback}")
-                                return (True, fallback)
-                            # Or return the current page if it's reasonable
-                            if (
-                                "/reels" in final_url
-                                or "/videos" in final_url
-                                or "/profile" in final_url
-                            ):
-                                return (True, final_url.split("?")[0])
-
-                        # Last resort: return the profile URL
-                        if profile_url:
-                            return (True, profile_url.split("?")[0])
-
+                        # Return failure - cannot extract actual video URL
+                        # Do not return fallback URL that appears to work but isn't the actual video
                         return (
                             False,
-                            "Could not extract Facebook reel URL - upload may have failed or timed out",
+                            "Could not extract Facebook reel URL - upload succeeded but URL extraction failed",
                         )
 
                     if "error" in content.lower() and "try again" in content.lower():

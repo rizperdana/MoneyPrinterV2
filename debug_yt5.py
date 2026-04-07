@@ -1,92 +1,76 @@
 #!/usr/bin/env python3
 """
-Check YouTube Studio Content section
+Try getting videos from regular YouTube channel page
 """
 
 import os
 import sys
+import re
+import time
 
 PROJECT_ROOT = "/home/anon/Projects/experiment/MoneyPrinterV2"
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
 
-import time
-import re
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
-gecko_dir = "/home/anon/.cache/selenium/geckodriver/linux64/0.36.0"
-os.environ["PATH"] = gecko_dir + ":" + os.environ.get("PATH", "")
-
-from config import get_firefox_profile_path
-from selenium.webdriver.common.by import By
-from classes.YouTube import YouTube
-
-fp = get_firefox_profile_path()
-youtube = YouTube(
-    account_uuid="test",
-    account_nickname="Test",
-    fp_profile_path=fp,
-    niche="test",
-    language="English",
+os.environ["PATH"] = (
+    "/home/anon/.cache/selenium/geckodriver/linux64/0.36.0:"
+    + os.environ.get("PATH", "")
 )
 
-# Try going to content section
-print("Navigating to YouTube Studio Content...")
-youtube.browser.get("https://studio.youtube.com/content")
-time.sleep(25)
+from config import get_firefox_profile_path
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
 
-print(f"Current URL: {youtube.browser.current_url}")
+fp = get_firefox_profile_path()
+options = Options()
+options.add_argument("--headless")
+options.add_argument("-profile")
+options.add_argument(fp)
 
-# Check page text
-body = youtube.browser.find_element(By.TAG_NAME, "body")
-print(f"Page text length: {len(body.text)}")
-print(f"Page text sample: {body.text[:500] if body.text else 'empty'}")
+browser = webdriver.Firefox(options=options)
 
-# Check page source
-content = youtube.browser.page_source
+try:
+    # Try regular YouTube channel videos page
+    print("=== Go to YouTube channel videos ===")
+    browser.get("https://www.youtube.com/channel/UCFhX7gLJhz7cBMSzIdSgpqg/videos")
+    time.sleep(15)
+    print(f"URL: {browser.current_url}")
 
-# Save for debugging
-with open("/tmp/yt_content.html", "w") as f:
-    f.write(content[:80000])
-print("\nSaved to /tmp/yt_content.html")
+    # Get page source
+    content = browser.page_source
 
-# Look for video patterns
-patterns = [
-    (r'"videoId":"([^"]+)"', "videoId"),
-    (r"/video/([a-zA-Z0-9_-]{11})", "/video/"),
-    (r'data-video-id="([^"]+)"', "data-video-id"),
-    (r'"id":"([^"]+)"', '"id"'),
-]
+    # Try patterns
+    patterns = [
+        (r'"videoId":"([^"]+)"', "videoId"),
+        (r"/video/([a-zA-Z0-9_-]{11})", "/video/"),
+        (r"/shorts/([a-zA-Z0-9_-]{11})", "/shorts/"),
+    ]
 
-print("\nSearching for video IDs...")
-for pattern, name in patterns:
-    matches = re.findall(pattern, content)
-    if matches:
-        print(f"  {name}: {matches[:5]}")
-    else:
-        print(f"  {name}: none")
+    for pattern, name in patterns:
+        matches = re.findall(pattern, content)
+        if matches:
+            print(f"{name}: {matches[:3]}")
 
-# Try getting video links via JS
-js_result = youtube.browser.execute_script("""
-    var results = [];
-    
-    // Try various selectors
-    var selectors = [
-        'a[href*="/video/"]',
-        'a[href*="watch?v="]',
-        'a[href*="studio.youtube.com/video"]'
-    ];
-    
-    for (var s = 0; s < selectors.length; s++) {
-        var els = document.querySelectorAll(selectors[s]);
-        for (var i = 0; i < Math.min(els.length, 5); i++) {
-            results.push(els[i].href);
+    # Try JS on regular YouTube
+    print("\n=== JS extraction ===")
+    js_result = browser.execute_script("""
+        var results = [];
+        
+        // Try finding video links
+        var links = document.querySelectorAll('a[href*="/watch?v="], a[href*="/shorts/"]');
+        console.log('Found ' + links.length + ' video links');
+        
+        for (var i = 0; i < Math.min(links.length, 5); i++) {
+            results.push(links[i].href);
         }
-    }
-    
-    return results.slice(0, 10);
-""")
-print(f"\nJS found links: {js_result}")
+        
+        return results;
+    """)
+    print(f"Video links: {js_result}")
 
-youtube.cleanup()
+finally:
+    browser.quit()
