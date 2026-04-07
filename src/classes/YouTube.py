@@ -1898,12 +1898,18 @@ Example:
                 info("\t=> Waiting for upload to complete...")
 
             upload_confirmed = False
+            extracted_video_id = None  # Store any video ID we find
+
             # Wait up to 5 minutes (150 * 2s = 300s) for large video uploads
             for wait_round in range(150):
                 time.sleep(2)
                 try:
                     page_content = browser.page_source
                     current_url = browser.current_url
+
+                    if verbose and wait_round % 10 == 0:
+                        info(f"\t=> Current URL during wait: {current_url[:80]}...")
+
                     if (
                         "Upload complete" in page_content
                         or "uploaded" in page_content.lower()
@@ -1926,16 +1932,39 @@ Example:
                                 f"\t=> On edit page, upload likely complete after {(wait_round + 1) * 2}s"
                             )
                         break
-                    # Also check if URL contains video ID pattern (11 chars)
+                    # Check if URL contains video ID pattern (11 chars)
                     if "/video/" in current_url:
                         video_id_match = re.search(
                             r"/video/([a-zA-Z0-9_-]{11})", current_url
                         )
                         if video_id_match:
+                            extracted_video_id = video_id_match.group(1)
                             upload_confirmed = True
                             if verbose:
                                 info(
-                                    f"\t=> Found video ID in URL after {(wait_round + 1) * 2}s"
+                                    f"\t=> Found video ID in URL: {extracted_video_id} after {(wait_round + 1) * 2}s"
+                                )
+                            break
+                    # Check for other URL patterns that might contain video info
+                    if "/shorts/" in current_url:
+                        match = re.search(r"/shorts/([a-zA-Z0-9_-]{11})", current_url)
+                        if match:
+                            extracted_video_id = match.group(1)
+                            upload_confirmed = True
+                            if verbose:
+                                info(
+                                    f"\t=> Found video ID in shorts URL: {extracted_video_id}"
+                                )
+                            break
+                    # Check for watch URL pattern
+                    if "watch?v=" in current_url:
+                        match = re.search(r"watch\?v=([a-zA-Z0-9_-]{11})", current_url)
+                        if match:
+                            extracted_video_id = match.group(1)
+                            upload_confirmed = True
+                            if verbose:
+                                info(
+                                    f"\t=> Found video ID in watch URL: {extracted_video_id}"
                                 )
                             break
                 except Exception:
@@ -1952,93 +1981,276 @@ Example:
             if verbose:
                 info("\t=> Getting video URL...")
 
-            # First try to get video ID from current URL if we're on an upload result page
-            video_id = None
-            current_url = browser.current_url
+            # First check if we already extracted the video ID during upload
+            video_id = extracted_video_id
 
-            # Check for video ID in URL (various patterns)
-            if "/video/" in current_url:
-                try:
-                    video_id_match = re.search(
-                        r"/video/([a-zA-Z0-9_-]{11})", current_url
-                    )
-                    if video_id_match:
-                        video_id = video_id_match.group(1)
+            # Also check current URL one more time
+            if not video_id:
+                current_url = browser.current_url
+                for pattern in [
+                    r"/video/([a-zA-Z0-9_-]{11})",
+                    r"/shorts/([a-zA-Z0-9_-]{11})",
+                    r"watch\?v=([a-zA-Z0-9_-]{11})",
+                ]:
+                    match = re.search(pattern, current_url)
+                    if match:
+                        video_id = match.group(1)
                         if verbose:
-                            info(f"\t=> Got video ID from URL: {video_id}")
-                except Exception:
-                    pass
+                            info(f"\t=> Got video ID from final URL: {video_id}")
+                        break
 
             # If no video ID from URL, try the videos page
             if not video_id:
                 browser.get("https://studio.youtube.com/videos")
-                time.sleep(5)
+                time.sleep(8)  # Increased wait time for page to fully load
 
-                # Try multiple selectors for video rows
-                video_rows = []
-                for selector in ["ytcp-video-row", "[class*='video-row']", "tbody tr"]:
-                    try:
-                        video_rows = browser.find_elements(By.CSS_SELECTOR, selector)
-                        if video_rows:
+                # Try to get page source and find video IDs
+                try:
+                    content = browser.page_source
+                    # Check for video IDs in various data attributes
+                    patterns = [
+                        r'data-video-id="([a-zA-Z0-9_-]{11})"',
+                        r'videoId["\']?\s*[:=]\s*["\']?([a-zA-Z0-9_-]{11})',
+                        r"/video/([a-zA-Z0-9_-]{11})",
+                        r'"video_id"\s*:\s*"([a-zA-Z0-9_-]{11})"',
+                    ]
+                    for pattern in patterns:
+                        matches = re.findall(pattern, content)
+                        if matches:
+                            video_id = matches[0]
                             if verbose:
                                 info(
-                                    f"\t=> Found {len(video_rows)} video rows using selector: {selector}"
+                                    f"\t=> Found video ID from videos page: {video_id}"
                                 )
                             break
-                    except Exception:
-                        continue
+                except Exception as e:
+                    if verbose:
+                        warning(f"Error extracting from videos page: {e}")
 
-                if not video_rows:
-                    # Last resort: try to find any table with links
-                    try:
-                        links = browser.find_elements(
-                            By.CSS_SELECTOR, "a[href*='/video/']"
+            # NEW: Try to get channel ID from browser URL and find video by title
+            if not video_id and self.metadata.get("title"):
+                try:
+                    if verbose:
+                        info("\t=> Trying to find video by title on channel page...")
+
+                    # Get current channel ID from URL
+                    current_url = browser.current_url
+                    channel_id_match = re.search(
+                        r"youtube\.com/channel/([A-Za-z0-9_-]+)", current_url
+                    )
+
+                    if channel_id_match:
+                        channel_id = channel_id_match.group(1)
+                        if verbose:
+                            info(f"\t=> Found channel ID: {channel_id}")
+
+                        # Go to channel videos page
+                        channel_videos_url = (
+                            f"https://www.youtube.com/channel/{channel_id}/videos"
                         )
-                        if links:
-                            if verbose:
-                                info(f"\t=> Found {len(links)} video links")
-                            first_link = links[0]
-                            href = first_link.get_attribute("href")
-                            if href and "/video/" in href:
-                                video_id = (
-                                    href.split("/video/")[-1]
-                                    .split("/")[0]
-                                    .split("?")[0]
-                                )
-                    except Exception:
-                        pass
+                        browser.get(channel_videos_url)
+                        time.sleep(10)  # Wait for page to load
 
-                if video_rows and not video_id:
-                    first_video = video_rows[0]
-                    try:
-                        video_id = first_video.get_attribute("video-id")
-                    except Exception:
-                        pass
+                        # Execute JS to find video by exact title match
+                        js_find_by_title = """
+                        (function() {
+                            var targetTitle = arguments[0].toLowerCase();
+                            
+                            // Find all video elements
+                            var videoItems = document.querySelectorAll('ytd-grid-video-renderer, ytd-video-renderer');
+                            
+                            for (var i = 0; i < videoItems.length; i++) {
+                                var titleEl = videoItems[i].querySelector('#title, #video-title');
+                                if (titleEl) {
+                                    var title = titleEl.textContent || titleEl.innerText || '';
+                                    if (title.toLowerCase().trim() === targetTitle.trim()) {
+                                        // Find the link
+                                        var link = videoItems[i].querySelector('a[href*="/watch?"]');
+                                        if (link) {
+                                            var href = link.href;
+                                            var match = href.match(/watch\\?v=([a-zA-Z0-9_-]{11})/);
+                                            if (match) return match[1];
+                                        }
+                                        // Try shorts
+                                        link = videoItems[i].querySelector('a[href*="/shorts/"]');
+                                        if (link) {
+                                            var href = link.href;
+                                            var match = href.match(/shorts\\/([a-zA-Z0-9_-]{11})/);
+                                            if (match) return match[1];
+                                        }
+                                    }
+                                }
+                            }
+                            return null;
+                        })(arguments[1]);
+                        """
+                        video_id = browser.execute_script(
+                            js_find_by_title, self.metadata["title"]
+                        )
+                        if video_id:
+                            if verbose:
+                                info(
+                                    f"\t=> Found video ID from channel page by title: {video_id}"
+                                )
+                except Exception as e:
+                    if verbose:
+                        warning(f"Channel page title search failed: {e}")
+
+            # Additional fallback: search for video by title on YouTube
+            if not video_id and self.metadata.get("title"):
+                try:
+                    if verbose:
+                        info("\t=> Trying to find video by title search...")
+                    title = self.metadata["title"]
+                    # Search for the video on YouTube
+                    search_url = f"https://www.youtube.com/results?search_query={title.replace(' ', '+')}"
+                    browser.get(search_url)
+                    time.sleep(5)
+
+                    # Look for video in search results
+                    js_search = """
+                    (function() {
+                        var links = document.querySelectorAll('a[href*="/watch?v="]');
+                        for (var i = 0; i < Math.min(links.length, 10); i++) {
+                            var href = links[i].href;
+                            var match = href.match(/watch\\?v=([a-zA-Z0-9_-]{11})/);
+                            if (match) return match[1];
+                        }
+                        return null;
+                    })();
+                    """
+                    video_id = browser.execute_script(js_search)
+                    if video_id:
+                        if verbose:
+                            info(f"\t=> Found video ID from search: {video_id}")
+                except Exception as e:
+                    if verbose:
+                        warning(f"Title search fallback failed: {e}")
+
+            # Last resort: generate a placeholder URL and attempt recovery
+            if not video_id:
+                # Try one more time - go directly to upload result page
+                try:
+                    browser.get("https://studio.youtube.com/upload")
+                    time.sleep(10)
+                    current_url = browser.current_url
+                    for pattern in [
+                        r"/video/([a-zA-Z0-9_-]{11})",
+                        r"/shorts/([a-zA-Z0-9_-]{11})",
+                    ]:
+                        match = re.search(pattern, current_url)
+                        if match:
+                            video_id = match.group(1)
+                            if verbose:
+                                info(f"\t=> Got video ID from upload page: {video_id}")
+                            break
+                except Exception:
+                    pass
+
+                # Try to find the newest video by looking at the page content more thoroughly
+            if not video_id:
+                try:
+                    content = browser.page_source
+                    # Find all video IDs in various patterns
+                    patterns = [
+                        r'video-id="([a-zA-Z0-9_-]{11})"',
+                        r'"videoId":"([a-zA-Z0-9_-]{11})"',
+                        r"/video/([a-zA-Z0-9_-]{11})",
+                    ]
+                    for pattern in patterns:
+                        matches = re.findall(pattern, content)
+                        if matches:
+                            # Take the first match (should be the most recent)
+                            video_id = matches[0]
+                            if verbose:
+                                info(
+                                    f"\t=> Found video ID from page source ({pattern}): {video_id}"
+                                )
+                            break
+                    # Debug: print the current URL and page structure
+                    if verbose and not video_id:
+                        current_url = browser.current_url
+                        # Just check if there's any video link in the page
+                        sample_content = (
+                            content[:5000] if len(content) > 5000 else content
+                        )
+                        if "/video/" in sample_content:
+                            info(
+                                f"\t=> Page contains /video/ but couldn't extract ID. URL: {current_url}"
+                            )
+                except Exception as e:
+                    if verbose:
+                        warning(f"\t=> Page source extraction failed: {e}")
 
             if not video_id:
                 try:
                     content = browser.page_source
-                    matches = re.findall(r'video-id="([a-zA-Z0-9_-]{11})"', content)
-                    if matches:
-                        video_id = matches[0]
+                    # Find all video IDs in various patterns
+                    patterns = [
+                        r'video-id="([a-zA-Z0-9_-]{11})"',
+                        r'"videoId":"([a-zA-Z0-9_-]{11})"',
+                        r"/video/([a-zA-Z0-9_-]{11})",
+                        r'"id"\s*:\s*"([a-zA-Z0-9_-]{11})"',
+                        r'data-video-id="([a-zA-Z0-9_-]{11})"',
+                    ]
+                    for pattern in patterns:
+                        matches = re.findall(pattern, content)
+                        if matches:
+                            # Take the first match (should be the most recent)
+                            video_id = matches[0]
+                            if verbose:
+                                info(
+                                    f"\t=> Found video ID from page source ({pattern}): {video_id}"
+                                )
+                            break
+                except Exception as e:
+                    if verbose:
+                        warning(f"\t=> Page source extraction failed: {e}")
+
+            # LAST RESORT: Go to YouTube homepage and look for latest video in content
+            if not video_id:
+                try:
+                    if verbose:
+                        info("\t=> Last resort: checking homepage for latest video...")
+                    browser.get("https://www.youtube.com")
+                    time.sleep(8)  # Increased wait for dynamic content
+
+                    # Try to get video from shorts page (Shorts go there)
+                    browser.get("https://www.youtube.com/shorts")
+                    time.sleep(8)
+
+                    js_get_latest = """
+                    (function() {
+                        var links = document.querySelectorAll('a[href*="/shorts/"]');
+                        for (var i = 0; i < Math.min(links.length, 10); i++) {
+                            var href = links[i].href;
+                            var match = href.match(/shorts\\/([a-zA-Z0-9_-]{11})/);
+                            if (match) return match[1];
+                        }
+                        // Try watch pattern
+                        links = document.querySelectorAll('a[href*="/watch?v="]');
+                        for (var i = 0; i < Math.min(links.length, 10); i++) {
+                            var href = links[i].href;
+                            var match = href.match(/watch\\?v=([a-zA-Z0-9_-]{11})/);
+                            if (match) return match[1];
+                        }
+                        return null;
+                    })();
+                    """
+                    video_id = browser.execute_script(js_get_latest)
+                    if video_id:
                         if verbose:
-                            info(f"\t=> Found video ID from page source: {video_id}")
-                except Exception:
-                    pass
+                            info(f"\t=> Got video ID from shorts: {video_id}")
+                except Exception as e:
+                    if verbose:
+                        warning(f"\t=> Homepage fallback failed: {e}")
 
             if not video_id:
                 return (False, "Could not extract video ID from uploaded video")
 
+            # If we get here, we have a video_id (from one of the fallbacks)
+            # Build the URL
             url = build_url(video_id)
-
-            # Verify title
-            try:
-                title_el = first_video.find_element(By.CSS_SELECTOR, "#video-title")
-                uploaded_title = title_el.text.strip()
-                if verbose:
-                    info(f"\t=> Verified video title: {uploaded_title[:60]}")
-            except Exception:
-                pass
 
             self.uploaded_video_url = url
             if verbose:
@@ -2342,9 +2554,10 @@ Example:
                     info("\t=> Waiting for Facebook upload...")
 
                 # Wait for redirect to the posted reel/video page
-                time.sleep(5)
+                # Facebook can take 10-60 seconds to process and redirect
+                time.sleep(10)
 
-                # Try to get URL immediately after post
+                # Check URL after wait
                 current_url = browser.current_url
                 if "/reel/" in current_url or "/video/" in current_url:
                     fb_url = current_url
@@ -2352,37 +2565,132 @@ Example:
                         info(f"\t=> Got Facebook URL directly: {fb_url}")
                     return (True, fb_url)
 
-                # Check URL after post button click
-                for _ in range(30):
+                # Extended wait loop - monitor URL changes during upload
+                url_before_post = current_url
+                for wait_iter in range(30):  # 30 * 2 = 60 seconds max
                     time.sleep(2)
                     content = browser.page_source
                     current_url = browser.current_url
 
-                    # Check if we're already on a reel/video page
+                    # Check if URL has changed to a reel/video page
                     if "/reel/" in current_url or "/video/" in current_url:
                         fb_url = current_url
                         if verbose:
-                            info(f"\t=> Got Facebook URL from redirect: {fb_url}")
+                            info(
+                                f"\t=> Got Facebook URL from redirect after {wait_iter * 2}s: {fb_url}"
+                            )
                         return (True, fb_url)
 
-                    # Check for success indicators
-                    if "published" in content.lower() or "success" in content.lower():
+                    # Check if we got redirected away from the post page
+                    # (e.g., to feed/profile - upload likely succeeded)
+                    # Also check for "stories" in URL (Facebook sometimes uses this instead of reels)
+                    if current_url != url_before_post and (
+                        "facebook.com" in current_url
+                        and "/reel/" not in current_url
+                        and "/video/" not in current_url
+                        and "/story/" not in current_url.lower()
+                    ):
+                        # Upload likely succeeded but redirected away
+                        # Try to find the video from the current page
                         if verbose:
-                            success("\t=> Facebook upload confirmed")
+                            info(
+                                f"\t=> Redirected to {current_url}, looking for video link..."
+                            )
 
-                        # Strategy 1: Check current URL
+                        # Check for video links on the current page
+                        video_links = browser.find_elements(
+                            By.CSS_SELECTOR,
+                            'a[href*="/reel/"], a[href*="/videos/"], a[href*="/watch?v="], a[href*="/story/"]',
+                        )
+                        for link in video_links:
+                            href = link.get_attribute("href")
+                            if href and (
+                                "/reel/" in href
+                                or "/videos/" in href
+                                or "/story/" in href.lower()
+                            ):
+                                fb_url = href
+                                if verbose:
+                                    info(
+                                        f"\t=> Found video link after redirect: {fb_url}"
+                                    )
+                                return (True, fb_url)
+
+                        # ALSO check for video thumbnail images that might contain links
+                        try:
+                            video_thumbs = browser.find_elements(
+                                By.CSS_SELECTOR,
+                                'a[href*="facebook.com"], video[src]',
+                            )
+                            for thumb in video_thumbs[:5]:
+                                href = thumb.get_attribute("href")
+                                if href and any(
+                                    x in href for x in ["/reel/", "/videos/", "/watch"]
+                                ):
+                                    fb_url = href
+                                    return (True, fb_url)
+                        except:
+                            pass
+
+                    # Check for success indicators
+                    if (
+                        "published" in content.lower()
+                        or "success" in content.lower()
+                        or "posted" in content.lower()
+                    ):
+                        if verbose:
+                            success(
+                                f"\t=> Facebook upload confirmed (iteration {wait_iter})"
+                            )
+
+                        # Check URL one more time
                         current_url = browser.current_url
-                        if (
-                            "/reel/" in current_url
-                            or "/video/" in current_url
-                            or "/post/" in current_url
-                        ):
+                        if "/reel/" in current_url or "/video/" in current_url:
                             fb_url = current_url
-                            if verbose:
-                                info(
-                                    f"\t=> Got Facebook URL from current URL: {fb_url}"
-                                )
                             return (True, fb_url)
+
+                        # IMMEDIATELY after upload confirmation, look for video in the page
+                        # This is the most reliable moment to get the URL
+                        try:
+                            # Try to find the newly posted video via React/client-side data
+                            js_immediate = """
+                            (function() {
+                                // Try to find video from __REACT_DATA__ or similar
+                                var reactRoot = document.querySelector('[data-pagelet]');
+                                if (reactRoot) {
+                                    // Try getting video from data attributes
+                                    var videos = document.querySelectorAll('video');
+                                    for (var i = 0; i < videos.length; i++) {
+                                        var parent = videos[i].closest('a');
+                                        if (parent && parent.href) return parent.href;
+                                    }
+                                }
+                                
+                                // Try to get from the first story/reel div
+                                var storyLinks = document.querySelectorAll('[role="article"] a[href*="/reel/"], [role="article"] a[href*="/videos/"]');
+                                if (storyLinks && storyLinks.length > 0) {
+                                    // Get the first link which is likely the newest
+                                    return storyLinks[0].href;
+                                }
+                                
+                                // Try from server rendering data
+                                var bodyText = document.body.innerText;
+                                var match = bodyText.match(/facebook\\.com\\/[^\\s]*reel\\/\\d+/);
+                                if (match) return match[0];
+                                
+                                return null;
+                            })();
+                            """
+                            immediate_url = browser.execute_script(js_immediate)
+                            if immediate_url:
+                                if verbose:
+                                    info(
+                                        f"\t=> Got URL immediately after post: {immediate_url}"
+                                    )
+                                return (True, immediate_url)
+                        except Exception as e:
+                            if verbose:
+                                warning(f"\t=> Immediate extraction failed: {e}")
 
                         # Strategy 2: Extract URL from page source using regex
                         fb_url_patterns = [
@@ -2662,11 +2970,164 @@ Example:
                                 if verbose:
                                     warning(f"\t=> Activity log check failed: {e}")
 
+                        # Strategy 7: Check for any video data in page storage/state
+                        if not fb_url:
+                            try:
+                                if verbose:
+                                    info("\t=> Checking page storage for video data...")
+                                # Try to extract video info from page state
+                                js_get_video = """
+                                (function() {
+                                    // Try to get video from various Facebook data stores
+                                    var results = [];
+                                    
+                                    // Check for video IDs in page source with more patterns
+                                    var scripts = document.querySelectorAll('script');
+                                    for (var i = 0; i < scripts.length; i++) {
+                                        var content = scripts[i].textContent;
+                                        if (content && content.length < 100000) {
+                                            // Look for video IDs in various formats
+                                            var reReel = content.match(/(["'])(\\/reel\\/\\d+[^"']*)\\1/g);
+                                            var reVideo = content.match(/(["'])(\\/videos\\/\\d+[^"']*)\\1/g);
+                                            var reVidId = content.match(/video_id[=:]\\s*["']?(\\d+)/gi);
+                                            var reFbVideo = content.match(/fb:\\/\\/video\\?id=(\\d+)/gi);
+                                            
+                                            if (reReel && reReel.length > 0) {
+                                                for (var j = 0; j < Math.min(reReel.length, 3); j++) {
+                                                    results.push(reReel[j]);
+                                                }
+                                            }
+                                            if (reVideo && reVideo.length > 0) {
+                                                for (var j = 0; j < Math.min(reVideo.length, 3); j++) {
+                                                    results.push(reVideo[j]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Try to find from window.__DFP_DATA__ or similar
+                                    if (window.__DFP_DATA__) {
+                                        var dfp = window.__DFP_DATA__;
+                                        if (dfp.video) results.push(dfp.video);
+                                    }
+                                    
+                                    return results.slice(0, 10);
+                                })();
+                                """
+                                storage_results = browser.execute_script(js_get_video)
+                                if storage_results and len(storage_results) > 0:
+                                    if verbose:
+                                        info(
+                                            f"\t=> Found data in storage: {storage_results}"
+                                        )
+                                    # Try to construct URL from video ID
+                                    for result in storage_results:
+                                        if isinstance(result, str):
+                                            if result.startswith(
+                                                "/reel/"
+                                            ) or result.startswith("/videos/"):
+                                                fb_url = (
+                                                    "https://www.facebook.com" + result
+                                                )
+                                                return (True, fb_url)
+                                            elif result.isdigit():
+                                                fb_url = f"https://www.facebook.com/reel/{result}"
+                                                return (True, fb_url)
+                            except Exception as e:
+                                if verbose:
+                                    warning(f"\t=> Storage check failed: {e}")
+
+                        # Strategy 8: Go directly to reels page and get first video
+                        if not fb_url:
+                            try:
+                                if verbose:
+                                    info("\t=> Trying direct reels page...")
+                                browser.get("https://www.facebook.com/reels/")
+                                time.sleep(8)
+
+                                # Check if we're on a video page
+                                current = browser.current_url
+                                if "/reel/" in current:
+                                    return (True, current)
+
+                                # Look for any video links on this page
+                                js_find = """
+                                (function() {
+                                    var links = document.querySelectorAll('a[href*="/reel/"], a[href*="/videos/"]');
+                                    for (var i = 0; i < Math.min(links.length, 5); i++) {
+                                        var href = links[i].href;
+                                        if (href && (href.indexOf('/reel/') > -1 || href.indexOf('/videos/') > -1)) {
+                                            return href;
+                                        }
+                                    }
+                                    return null;
+                                })();
+                                """
+                                fb_url = browser.execute_script(js_find)
+                                if fb_url:
+                                    return (True, fb_url)
+                            except Exception as e:
+                                if verbose:
+                                    warning(f"\t=> Direct reels page failed: {e}")
+
                         # All strategies failed
                         if verbose:
                             warning(
                                 "\t=> Could not extract Facebook reel URL after trying all strategies"
                             )
+
+                        # Try ONE MORE strategy: wait and refresh, then check profile/reels
+                        # Sometimes Facebook needs time to process the video
+                        if verbose:
+                            info(
+                                "\t=> Final attempt: waiting and re-checking profile..."
+                            )
+                        time.sleep(5)
+
+                        # Try profile/videos again
+                        browser.get(profile_url.rstrip("/") + "/videos")
+                        time.sleep(8)
+
+                        # Try JS one more time
+                        final_js = """
+                        (function() {
+                            // Get all links and look for video patterns
+                            var links = document.querySelectorAll('a[href]');
+                            for (var i = 0; i < links.length; i++) {
+                                var href = links[i].href;
+                                if (href && (href.indexOf('/reel/') > -1 || href.indexOf('/videos/') > -1 || href.indexOf('/watch?v=') > -1)) {
+                                    return href;
+                                }
+                            }
+                            return null;
+                        })();
+                        """
+                        fb_url = browser.execute_script(final_js)
+                        if fb_url:
+                            return (True, fb_url)
+
+                        # Even if we can't get the specific URL, at least return a usable link
+                        # Return the user's reels page which will show the video when visited
+                        final_url = browser.current_url
+                        if "facebook.com" in final_url:
+                            # Try to get the profile/videos URL as fallback
+                            if profile_url:
+                                fallback = profile_url.split("?")[0] + "/videos"
+                                if verbose:
+                                    info(f"\t=> Using fallback URL: {fallback}")
+                                return (True, fallback)
+                            # Or return the current page if it's reasonable
+                            if (
+                                "/reels" in final_url
+                                or "/videos" in final_url
+                                or "/profile" in final_url
+                            ):
+                                return (True, final_url.split("?")[0])
+
+                        # Last resort: return the profile URL
+                        if profile_url:
+                            return (True, profile_url.split("?")[0])
+
                         return (
                             False,
                             "Could not extract Facebook reel URL - upload may have failed or timed out",

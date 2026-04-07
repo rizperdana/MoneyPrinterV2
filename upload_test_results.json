@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-04-07T09:20:32.705576",
+  "results": {
+    "youtube": {
+      "success": false,
+      "url": "Could not extract video ID from uploaded video"
+    },
+    "tiktok": {
+      "success": true,
+      "url": "https://www.tiktok.com/@raider_kickuuuu/video/7625812172144200967"
+    },
+    "facebook": {
+      "success": false,
+      "url": "Could not extract Facebook reel URL - upload may have failed or timed out"
+    }
+  },
+  "all_valid": true
+}
