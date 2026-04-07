@@ -2679,13 +2679,21 @@ Example:
                     # Check if URL has changed to a reel/video page with actual ID
                     if "/reel/" in current_url:
                         reel_id = current_url.split("/reel/")[-1]
-                        if len(reel_id) > 0:  # Must have actual reel ID after /reel/
+                        if len(reel_id) > 0 and not reel_id.startswith("?"):
                             fb_url = current_url
                             if verbose:
                                 info(
                                     f"\t=> Got Facebook URL from redirect after {wait_iter * 2}s: {fb_url}"
                                 )
                             return (True, fb_url)
+                    elif "/watch?v=" in current_url:
+                        # Must have /watch?v= to be actual video URL
+                        fb_url = current_url
+                        if verbose:
+                            info(
+                                f"\t=> Got Facebook URL from redirect after {wait_iter * 2}s: {fb_url}"
+                            )
+                        return (True, fb_url)
 
                     # Check if we got redirected away from the post page
                     # (e.g., to feed/profile - upload likely succeeded)
@@ -2722,16 +2730,23 @@ Example:
                             )
                             for link in video_links:
                                 href = link.get_attribute("href")
+                                # Only accept URLs that have actual video IDs, not just page URLs
+                                # Accept: /reel/123, /videos/123, /watch?v=123
+                                # Reject: /videos (just the page), /videos?id=123 (profile videos page)
                                 if href and (
                                     "/reel/" in href
-                                    or "/videos/" in href
-                                    or "/story/" in href.lower()
+                                    or "/watch?v=" in href
+                                    or (
+                                        "/videos/" in href
+                                        and not href.endswith("/videos")
+                                    )
                                 ):
                                     # Double-check: don't return profile videos page URLs
                                     if (
                                         "?id=" in href
                                         and "/videos" in href
                                         and "/reel/" not in href
+                                        and "/watch?v=" not in href
                                     ):
                                         continue  # Skip profile videos links
                                     fb_url = href
@@ -2797,7 +2812,7 @@ Example:
                                 }
                                 
                                 // Try to get from the first story/reel div
-                                var storyLinks = document.querySelectorAll('[role="article"] a[href*="/reel/"], [role="article"] a[href*="/videos/"]');
+                                var storyLinks = document.querySelectorAll('[role="article"] a[href*="/reel/"], [role="article"] a[href*="/videos/"], [role="article"] a[href*="/watch?v="]');
                                 if (storyLinks && storyLinks.length > 0) {
                                     // Get the first link which is likely the newest
                                     return storyLinks[0].href;
@@ -2805,8 +2820,12 @@ Example:
                                 
                                 // Try from server rendering data
                                 var bodyText = document.body.innerText;
-                                var match = bodyText.match(/facebook\\.com\\/[^\\s]*reel\\/\\d+/);
+                                var match = bodyText.match(/facebook\.com\/[^\s]*reel\/\d+/);
                                 if (match) return match[0];
+                                
+                                // Also try to match watch URLs
+                                var matchWatch = bodyText.match(/facebook\.com\/watch\?v=\d+/);
+                                if (matchWatch) return matchWatch[0];
                                 
                                 return null;
                             })();
@@ -2954,20 +2973,57 @@ Example:
                                     current = browser.current_url
                                     if "/reel/" in current:
                                         reel_id = current.split("/reel/")[-1]
-                                        if len(reel_id) > 0:
+                                        if len(reel_id) > 0 and not reel_id.startswith(
+                                            "?"
+                                        ):
                                             fb_url = current
                                             if verbose:
                                                 info(
                                                     f"\t=> Got URL from navigation: {fb_url}"
                                                 )
                                             return (True, fb_url)
-                                    elif "/videos/" in current:
+                                    elif "/videos/" in current and "/watch" in current:
+                                        # Must have /watch in URL to be actual video, not just videos page
                                         fb_url = current
                                         if verbose:
                                             info(
                                                 f"\t=> Got URL from navigation: {fb_url}"
                                             )
                                         return (True, fb_url)
+
+                                    # We're on a videos page but no specific video yet - look for video links
+                                    if "/videos" in current or "/reels" in current:
+                                        # Look for the most recent video link on this page
+                                        try:
+                                            js_get_recent_video = """
+                                            (function() {
+                                                // Find all video links and get the most recent one
+                                                var links = document.querySelectorAll('a[href*="/reel/"], a[href*="/videos/"], a[href*="/watch?v="]');
+                                                if (links && links.length > 0) {
+                                                    // Return the first one (most recent in feed)
+                                                    return links[0].href;
+                                                }
+                                                return null;
+                                            })();
+                                            """
+                                            recent_video = browser.execute_script(
+                                                js_get_recent_video
+                                            )
+                                            if (
+                                                recent_video
+                                                and "/reel/" in recent_video
+                                                or "/watch?v=" in recent_video
+                                            ):
+                                                if verbose:
+                                                    info(
+                                                        f"\t=> Found recent video: {recent_video}"
+                                                    )
+                                                return (True, recent_video)
+                                        except Exception as e:
+                                            if verbose:
+                                                warning(
+                                                    f"\t=> Could not find recent video: {e}"
+                                                )
 
                                     # Try to find video links
                                     for sel in [

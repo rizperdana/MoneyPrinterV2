@@ -1,2 +1,3 @@
 # Ralph Tasks
 - [ ] make sure Tiktok, Youtube, and Facebook Title and Description are correctly following what already generated, some case like tiktoke are set file name as title so better truncate every default word first when selecting input element to prevent wrong caption, this example video uploaded use filename instead actual caption https://www.tiktok.com/@raider_kickuuuu/video/7625812172144200967
+- [ ] additional goals is when user run src/main.py it allow to run single pipeline to auto create content then post on all platform and run the scheduler, test end to end to make sure all flow works, dont use old video when uploading, always create new one using pipeline

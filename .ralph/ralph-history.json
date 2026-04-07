@@ -207,24 +207,52 @@
       "errors": [
         "\u001b[91m\u001b[1mError: \u001b[0mRequest failed with status code: 400"
       ]
+    },
+    {
+      "iteration": 8,
+      "startedAt": "2026-04-07T13:24:13.500Z",
+      "endedAt": "2026-04-07T14:03:30.605Z",
+      "durationMs": 2357030,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        ".ralph/ralph-tasks.md",
+        "src/classes/YouTube.py",
+        ".ralph/ralph-context.md",
+        "src/test_facebook_quick.py",
+        "src/test_tiktok.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": false,
+      "errors": [
+        "ModuleNotFoundError: No module named 'config'",
+        "FileNotFoundError: [Errno 2] No such file or directory: 'config.json'",
+        "RuntimeError: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini",
+        "⚠️ DuckDuckGo failed: Expecting value: line 1 column 1 (char 0)",
+        "[llm_provider] Exception in _try_generate: HTTPStatusError: Server error '502 Bad Gateway' for url 'http://localhost:8317/v1/chat/completions'",
+        "❌ Pipeline failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini",
+        "❌ Failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini",
+        "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text()='Public']]"
+      ]
     }
   ],
-  "totalDurationMs": 28597224,
+  "totalDurationMs": 30954254,
   "struggleIndicators": {
     "repeatedErrors": {
       "print('ERROR: No video file found')": 1,
-      "ModuleNotFoundError: No module named 'config'": 3,
-      "FileNotFoundError: [Errno 2] No such file or directory: 'config.json'": 2,
+      "ModuleNotFoundError: No module named 'config'": 4,
+      "FileNotFoundError: [Errno 2] No such file or directory: 'config.json'": 3,
       "⚠️ \t=> Storage check failed: Message: SyntaxError: invalid regular expression flag r": 1,
       "+        warning(f\"\\t=> Immediate extraction failed: {e}\")": 1,
       "print(f'Error: {e}')": 1,
-      "[llm_provider] Exception in _try_generate: HTTPStatusError: Server error '502 Bad Gateway' for url '": 1,
+      "[llm_provider] Exception in _try_generate: HTTPStatusError: Server error '502 Bad Gateway' for url '": 2,
       "Error: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
       "ModuleNotFoundError: No module named 'g4f'": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mYou must read file /home/anon/Projects/experiment/MoneyPrinterV2/debug_yt5.py be": 1,
       "FAILED: No video ID found": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mNo changes to apply: oldString and newString are identical.": 1,
-      "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text": 2,
+      "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text": 3,
       "❌ YouTube failed: Could not extract video ID from uploaded video": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/all_results.json": 1,
       "\u001b[0m$ \u001b[0mcd /home/anon/Projects/experiment/MoneyPrinterV2 && timeout 400 python3 test_youtube_only.": 1,
@@ -239,7 +267,7 @@
       "Error: Message: Element <h3 class=\"html-h3 xdj266r x14z9mp xat24cr x1lziwak xexx8yu xyri2b x18d9i69 ": 1,
       "-    except Exception:": 1,
       "except Exception:": 2,
-      "⚠️ DuckDuckGo failed: Expecting value: line 1 column 1 (char 0)": 1,
+      "⚠️ DuckDuckGo failed: Expecting value: line 1 column 1 (char 0)": 2,
       "RuntimeError: No model selected. Call select_model() first or pass model_name.": 1,
       "RuntimeError: All models failed (tried: kilo-auto/free). Last error from: kilo-auto/free": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/upload_results.jso": 2,
@@ -248,7 +276,10 @@
       "⚠️ \t=> Visibility fix attempt 4 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=": 1,
       "⚠️ \t=> Visibility fix attempt 5 failed: Message: Element <ytcp-icon-button id=\"select-button\" class=": 1,
       "\u001b[0m⚙ \u001b[0mcompress {\"topic\":\"Upload to YouTube, TikTok, Facebook - Task Complete\",\"content\":[{\"endId": 1,
-      "\u001b[91m\u001b[1mError: \u001b[0mRequest failed with status code: 400": 1
+      "\u001b[91m\u001b[1mError: \u001b[0mRequest failed with status code: 400": 1,
+      "RuntimeError: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
+      "❌ Pipeline failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
+      "❌ Failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0
