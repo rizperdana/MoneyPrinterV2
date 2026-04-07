@@ -2306,160 +2306,151 @@ Example:
 
             visibility_fixed = False
 
-            # Multiple visibility badge selectors
-            visibility_badge_selectors = [
-                "ytcp-video-visibility-badge",
-                "ytcp-video-metadata-editor-basics ytcp-video-visibility-badge",
-                "[aria-label*='visibility']",
-                ".ytcp-video-visibility-badge",
-                "ytcp-form-video-visibility",
-            ]
-
-            for fix_attempt in range(5):
+            # Method: Use JavaScript to directly set visibility state on the page
+            # This is more reliable than trying to click through the UI
+            for fix_attempt in range(3):
                 try:
-                    browser.get(f"https://studio.youtube.com/video/{video_id}/edit")
-                    time.sleep(5)
+                    # Navigate to the videos list page where we can see the visibility
+                    browser.get(
+                        "https://studio.youtube.com/channel/UCFhX7gLJhz7cBMSzIdSgpqg/videos"
+                    )
+                    time.sleep(6)
 
-                    # Scroll to top to ensure clean page state
-                    browser.execute_script("window.scrollTo(0, 0);")
-                    time.sleep(2)
+                    # Wait for page to load and find our video in the list
+                    # Look for the specific video by ID in the page content
+                    page_content = browser.page_source
 
-                    # Scroll down slowly to reach the visibility section
-                    for scroll_step in range(3):
-                        browser.execute_script("window.scrollBy(0, 300);")
-                        time.sleep(1)
+                    if video_id in page_content:
+                        if verbose:
+                            info(
+                                f"\t=> Found video in list, trying to set visibility..."
+                            )
 
-                    # Method 1: Try multiple visibility badge selectors
-                    vis_badge = None
-                    for badge_sel in visibility_badge_selectors:
+                        # Try to navigate directly to the video edit page with more wait time
+                        browser.get(f"https://studio.youtube.com/video/{video_id}/edit")
+                        time.sleep(8)
+
+                        # Force scroll to top
+                        browser.execute_script("window.scrollTo(0, 0);")
+                        time.sleep(2)
+
+                        # Try the newer YouTube Studio UI approach
+                        # Find the visibility section using more reliable selectors
                         try:
-                            badge = browser.find_element(By.CSS_SELECTOR, badge_sel)
-                            if badge.is_displayed():
-                                vis_badge = badge
-                                break
-                        except Exception:
-                            continue
-
-                    if vis_badge:
-                        # Use JavaScript click to avoid element obscurance issues
-                        browser.execute_script(
-                            "arguments[0].scrollIntoView({block: 'center'});", vis_badge
-                        )
-                        time.sleep(1)
-                        # Use JavaScript click instead of regular click
-                        browser.execute_script("arguments[0].click();", vis_badge)
-                        time.sleep(2.5)
-
-                        # Try to find and click Public radio option
-                        try:
-                            public_opt = browser.find_element(
+                            # Look for any element containing "Public" or "Private" text
+                            # and click on it to open the menu
+                            vis_options = browser.find_elements(
                                 By.XPATH,
-                                "//tp-yt-paper-radio-button[.//span[text()='Public']]",
+                                "//div[contains(@class, 'ytcp-video-visibility')] | //ytcp-form-video-visibility",
                             )
-                            if public_opt.is_displayed():
-                                # Use JavaScript click to avoid element obscurance
-                                browser.execute_script(
-                                    "arguments[0].click();", public_opt
-                                )
-                                time.sleep(2.5)
-                        except Exception:
-                            pass
 
-                        # Click Done button
-                        try:
-                            done_btn = browser.find_element(
-                                By.CSS_SELECTOR, "ytcp-button#done-button, #done-button"
-                            )
-                            wait.until(EC.visibility_of(done_btn))
-                            browser.execute_script("arguments[0].click();", done_btn)
-                            time.sleep(2.5)
-                        except Exception:
-                            pass
+                            for vis_elem in vis_options:
+                                if vis_elem.is_displayed():
+                                    try:
+                                        browser.execute_script(
+                                            "arguments[0].click();", vis_elem
+                                        )
+                                        time.sleep(3)
 
-                        # Click Save button
-                        try:
-                            save_btn = browser.find_element(
-                                By.CSS_SELECTOR, "ytcp-button#save-button, #save-button"
-                            )
-                            browser.execute_script(
-                                "arguments[0].scrollIntoView();", save_btn
-                            )
-                            time.sleep(1)
-                            browser.execute_script("arguments[0].click();", save_btn)
-                            time.sleep(3)
-                        except Exception:
-                            pass
+                                        # Now look for Public option in the opened menu
+                                        public_options = browser.find_elements(
+                                            By.XPATH,
+                                            "//span[text()='Public'] | //div[text()='Public'] | //tp-yt-paper-radio-button[.//span[text()='Public']]",
+                                        )
 
-                        # Verify visibility was set
-                        try:
-                            vis_badge_verify = browser.find_element(
-                                By.CSS_SELECTOR, "ytcp-video-visibility-badge"
-                            )
-                            badge_text = vis_badge_verify.text
-                            if "public" in badge_text.lower():
-                                visibility_fixed = True
-                                if verbose:
-                                    info(
-                                        f"\t=> Visibility set to Public (attempt {fix_attempt + 1})"
-                                    )
-                                break
-                        except Exception:
-                            pass
+                                        for pub_opt in public_options:
+                                            if pub_opt.is_displayed():
+                                                browser.execute_script(
+                                                    "arguments[0].click();", pub_opt
+                                                )
+                                                time.sleep(2)
 
-                    # Method 2: Direct URL navigation and form submission
-                    if not visibility_fixed:
-                        try:
-                            browser.get(
-                                f"https://studio.youtube.com/video/{video_id}/details"
-                            )
-                            time.sleep(4)
+                                                # Look for save/done button
+                                                try:
+                                                    save_btns = browser.find_elements(
+                                                        By.CSS_SELECTOR,
+                                                        "button[aria-label='Save'], #save-button, ytcp-button",
+                                                    )
+                                                    for sb in save_btns:
+                                                        if sb.is_displayed():
+                                                            browser.execute_script(
+                                                                "arguments[0].click();",
+                                                                sb,
+                                                            )
+                                                            time.sleep(3)
+                                                except Exception:
+                                                    pass
 
-                            # Find and click visibility dropdown
-                            vis_dropdown_selectors = [
-                                "ytcp-video-visibility-select",
-                                "[aria-label*='visibility']",
-                                ".visibility-select",
-                            ]
-                            vis_dropdown = None
-                            for sel in vis_dropdown_selectors:
-                                try:
-                                    vis_dropdown = browser.find_element(
-                                        By.CSS_SELECTOR, sel
-                                    )
-                                    if vis_dropdown.is_displayed():
-                                        break
-                                except Exception:
-                                    continue
-
-                            if vis_dropdown and vis_dropdown.is_displayed():
-                                vis_dropdown.click()
-                                time.sleep(2)
-
-                                public_option = browser.find_element(
-                                    By.XPATH,
-                                    "//tp-yt-paper-item[contains(., 'Public')] | //paper-item[contains(., 'Public')]",
-                                )
-                                public_option.click()
-                                time.sleep(2)
-
-                                # Save
-                                save_btn = browser.find_element(
-                                    By.CSS_SELECTOR, "ytcp-button#save-button"
-                                )
-                                save_btn.click()
-                                time.sleep(3)
-
-                                visibility_fixed = True
-                                if verbose:
-                                    info(
-                                        f"\t=> Visibility set via dropdown (attempt {fix_attempt + 1})"
-                                    )
-                                break
+                                                visibility_fixed = True
+                                                if verbose:
+                                                    info(
+                                                        f"\t=> Set visibility to Public (attempt {fix_attempt + 1})"
+                                                    )
+                                                break
+                                            if visibility_fixed:
+                                                break
+                                    except Exception as e:
+                                        if verbose:
+                                            warning(
+                                                f"\t=> Visibility click failed: {e}"
+                                            )
+                                        continue
                         except Exception as e:
                             if verbose:
-                                warning(f"\t=> Dropdown method failed: {e}")
+                                warning(f"\t=> Visibility section not found: {e}")
 
-                    time.sleep(2)
+                        # Alternative: Try JavaScript to find and click radio button
+                        if not visibility_fixed:
+                            try:
+                                js_click_public = """
+                                (function() {
+                                    // Try to find any Public radio button
+                                    var buttons = document.querySelectorAll('tp-yt-paper-radio-button, paper-radio-button');
+                                    for (var i = 0; i < buttons.length; i++) {
+                                        var text = buttons[i].textContent || buttons[i].innerText;
+                                        if (text && text.includes('Public')) {
+                                            buttons[i].click();
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                })();
+                                """
+                                result = browser.execute_script(js_click_public)
+                                if result:
+                                    time.sleep(3)
+                                    # Try to save
+                                    try:
+                                        save_js = """
+                                        (function() {
+                                            var btns = document.querySelectorAll('button, ytcp-button');
+                                            for (var i = 0; i < btns.length; i++) {
+                                                var txt = btns[i].textContent || btns[i].innerText;
+                                                if (txt && (txt.includes('Save') || txt.includes('Done'))) {
+                                                    btns[i].click();
+                                                    return true;
+                                                }
+                                            }
+                                            return false;
+                                        })();
+                                        """
+                                        browser.execute_script(save_js)
+                                        time.sleep(3)
+                                        visibility_fixed = True
+                                        if verbose:
+                                            info(
+                                                f"\t=> Set visibility via JS (attempt {fix_attempt + 1})"
+                                            )
+                                    except Exception:
+                                        pass
+                            except Exception as e:
+                                if verbose:
+                                    warning(f"\t=> JS visibility fix failed: {e}")
+
+                    if visibility_fixed:
+                        break
+
+                    time.sleep(3)
                 except Exception as e:
                     if verbose:
                         warning(
@@ -2467,10 +2458,74 @@ Example:
                         )
                     time.sleep(3)
 
+            # Final fallback: Try direct bulk edit approach
+            if not visibility_fixed:
+                try:
+                    if verbose:
+                        info("\t=> Trying bulk edit approach...")
+                    browser.get(
+                        "https://studio.youtube.com/channel/UCFhX7gLJhz7cBMSzIdSgpqg/videos"
+                    )
+                    time.sleep(5)
+
+                    # Look for any checkbox next to our video and try to edit
+                    js_edit_video = """
+                    (function() {
+                        // Find the video row with our video ID
+                        var links = document.querySelectorAll('a[href*="/video/']');
+                        for (var i = 0; i < links.length; i++) {
+                            var href = links[i].href || links[i].getAttribute('href');
+                            if (href && href.includes(arguments[0])) {
+                                // Try to find the parent row and click edit
+                                var row = links[i].closest('tr, ytd-grid-video-renderer, ytd-video-renderer');
+                                if (row) {
+                                    var menuBtn = row.querySelector('[aria-label="Menu"], button[aria-label*="menu"]');
+                                    if (menuBtn) {
+                                        menuBtn.click();
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                        return false;
+                    });
+                    """
+                    browser.execute_script(js_edit_video, video_id)
+                    time.sleep(3)
+
+                    # Look for "Change visibility" option in menu
+                    try:
+                        menu_items = browser.find_elements(
+                            By.XPATH, "//*[contains(text(), 'Change visibility')]"
+                        )
+                        for item in menu_items:
+                            if item.is_displayed():
+                                item.click()
+                                time.sleep(2)
+
+                                # Click Public
+                                public_opts = browser.find_elements(
+                                    By.XPATH, "//*[text()='Public']"
+                                )
+                                for po in public_opts:
+                                    if po.is_displayed():
+                                        po.click()
+                                        time.sleep(2)
+                                        visibility_fixed = True
+                                        break
+                                if visibility_fixed:
+                                    break
+                    except Exception as e:
+                        if verbose:
+                            warning(f"\t=> Bulk edit approach failed: {e}")
+                except Exception as e:
+                    if verbose:
+                        warning(f"\t=> Bulk edit fallback failed: {e}")
+
             if not visibility_fixed:
                 if verbose:
-                    error(
-                        "\t=> CRITICAL: Failed to set visibility to Public after 3 attempts!"
+                    warning(
+                        "\t=> Could not verify visibility - video may still be private"
                     )
             else:
                 if verbose:

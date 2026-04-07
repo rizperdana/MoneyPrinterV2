@@ -288,9 +288,36 @@
       "errors": [
         "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.json"
       ]
+    },
+    {
+      "iteration": 12,
+      "startedAt": "2026-04-07T14:58:38.034Z",
+      "endedAt": "2026-04-07T15:23:21.666Z",
+      "durationMs": 1483497,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/classes/YouTube.py",
+        "upload_results.json"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text()='Public']]; For documentation on this error, please visit: https://www.selenium.dev/documentation",
+        "-            except Exception:",
+        "+                                    except Exception:",
+        "-                    except Exception:",
+        "+                                    f\"\\t=> Visibility click failed: {e}\"",
+        "-                    warning(f\"\\t=> Dropdown method failed: {e}\")",
+        "+                        except Exception:",
+        "+                        warning(f\"\\t=> JS visibility fix failed: {e}\")",
+        "f\"\\t=> Visibility fix attempt {fix_attempt + 1} failed: {e}\"",
+        "+                warning(f\"\\t=> Bulk edit approach failed: {e}\")"
+      ]
     }
   ],
-  "totalDurationMs": 34257004,
+  "totalDurationMs": 35740501,
   "struggleIndicators": {
     "repeatedErrors": {
       "print('ERROR: No video file found')": 1,
@@ -305,7 +332,7 @@
       "\u001b[91m\u001b[1mError: \u001b[0mYou must read file /home/anon/Projects/experiment/MoneyPrinterV2/debug_yt5.py be": 1,
       "FAILED: No video ID found": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mNo changes to apply: oldString and newString are identical.": 1,
-      "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text": 4,
+      "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text": 5,
       "❌ YouTube failed: Could not extract video ID from uploaded video": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/all_results.json": 1,
       "\u001b[0m$ \u001b[0mcd /home/anon/Projects/experiment/MoneyPrinterV2 && timeout 400 python3 test_youtube_only.": 1,
@@ -334,9 +361,18 @@
       "❌ Pipeline failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
       "❌ Failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mMCP error -32001: Request timed out": 1,
-      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.jso": 1
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.jso": 1,
+      "-            except Exception:": 1,
+      "+                                    except Exception:": 1,
+      "-                    except Exception:": 1,
+      "+                                    f\"\\t=> Visibility click failed: {e}\"": 1,
+      "-                    warning(f\"\\t=> Dropdown method failed: {e}\")": 1,
+      "+                        except Exception:": 1,
+      "+                        warning(f\"\\t=> JS visibility fix failed: {e}\")": 1,
+      "f\"\\t=> Visibility fix attempt {fix_attempt + 1} failed: {e}\"": 1,
+      "+                warning(f\"\\t=> Bulk edit approach failed: {e}\")": 1
     },
-    "noProgressIterations": 1,
+    "noProgressIterations": 0,
     "shortIterations": 0
   }
 }
