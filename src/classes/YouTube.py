@@ -106,10 +106,9 @@ class YouTube:
         self.options.add_argument(self._fp_profile_path)
 
         gecko_path = "/home/anon/.cache/selenium/geckodriver/linux64/0.36.0/geckodriver"
-        service = Service(executable_path=gecko_path)
 
         self.browser: webdriver.Firefox = webdriver.Firefox(
-            service=service, options=self.options
+            executable_path=gecko_path, options=self.options
         )
         self.wait: WebDriverWait = WebDriverWait(self.browser, 30)
         self.page = self.browser
