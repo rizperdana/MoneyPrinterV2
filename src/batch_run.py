@@ -40,6 +40,11 @@ NICHES = {
         "strange animal behaviors",
         "hidden archaeological discoveries",
         "bizarre weather phenomena",
+        "deep sea creatures discovery",
+        "abandoned places history",
+        "rare astronomical events",
+        "unexplained natural phenomena",
+        "obscure historical figures",
     ],
 }
 
