@@ -45,6 +45,11 @@ NICHES = {
         "rare astronomical events",
         "unexplained natural phenomena",
         "obscure historical figures",
+        "parallel universes explained",
+        "simulation theory explained",
+        "consciousness mysteries",
+        "time paradoxes explained",
+        "origin of life theories",
     ],
 }
 
