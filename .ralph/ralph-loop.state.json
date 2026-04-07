@@ -1,13 +1,13 @@
 {
   "active": true,
-  "iteration": 19,
-  "minIterations": 20,
+  "iteration": 1,
+  "minIterations": 18,
   "maxIterations": 20,
   "completionPromise": "COMPLETE",
   "tasksMode": false,
   "taskPromise": "READY_FOR_NEXT_TASK",
-  "prompt": "activate superpowers skill then read PLAN-SPEC.md do run and test until it able to upload on youtube, facebook, and tiktok wih actual link to published post not base url of platform",
-  "startedAt": "2026-04-07T02:09:41.120Z",
+  "prompt": "run this pipeline, add more niche that popular, around 5 niche, do create 5 video each and do upload to all platform, make sure its published by getting their share url",
+  "startedAt": "2026-04-07T17:56:27.971Z",
   "model": "",
   "agent": "opencode"
 }
