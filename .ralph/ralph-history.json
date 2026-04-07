@@ -273,9 +273,24 @@
       "errors": [
         "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text()='Public']]; For documentation on this error, please visit: https://www.selenium.dev/documentation"
       ]
+    },
+    {
+      "iteration": 11,
+      "startedAt": "2026-04-07T14:49:43.426Z",
+      "endedAt": "2026-04-07T14:58:36.956Z",
+      "durationMs": 533453,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.json"
+      ]
     }
   ],
-  "totalDurationMs": 33723551,
+  "totalDurationMs": 34257004,
   "struggleIndicators": {
     "repeatedErrors": {
       "print('ERROR: No video file found')": 1,
@@ -318,9 +333,10 @@
       "RuntimeError: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
       "❌ Pipeline failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
       "❌ Failed: All models failed (tried: gpt-4o-mini). Last error from: gpt-4o-mini": 1,
-      "\u001b[91m\u001b[1mError: \u001b[0mMCP error -32001: Request timed out": 1
+      "\u001b[91m\u001b[1mError: \u001b[0mMCP error -32001: Request timed out": 1,
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.jso": 1
     },
-    "noProgressIterations": 0,
+    "noProgressIterations": 1,
     "shortIterations": 0
   }
 }
