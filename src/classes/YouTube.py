@@ -106,10 +106,12 @@ class YouTube:
         self.options.add_argument(self._fp_profile_path)
 
         gecko_path = "/home/anon/.cache/selenium/geckodriver/linux64/0.36.0/geckodriver"
+        # Add gecko driver to PATH for selenium
+        gecko_dir = os.path.dirname(gecko_path)
+        if gecko_dir not in os.environ.get("PATH", ""):
+            os.environ["PATH"] = gecko_dir + ":" + os.environ.get("PATH", "")
 
-        self.browser: webdriver.Firefox = webdriver.Firefox(
-            executable_path=gecko_path, options=self.options
-        )
+        self.browser: webdriver.Firefox = webdriver.Firefox(options=self.options)
         self.wait: WebDriverWait = WebDriverWait(self.browser, 30)
         self.page = self.browser
 
@@ -2367,119 +2369,313 @@ Example:
                     if "published" in content.lower() or "success" in content.lower():
                         if verbose:
                             success("\t=> Facebook upload confirmed")
-                        try:
-                            current_url = browser.current_url
-                            if "/reel/" in current_url or "/video/" in current_url:
-                                fb_url = current_url
-                            elif "/post/" in current_url:
-                                fb_url = current_url
-                            else:
-                                try:
-                                    post_links = browser.find_elements(
-                                        By.CSS_SELECTOR,
-                                        'a[href*="/reel/"], a[href*="/video/"], a[href*="/posts/"]',
+
+                        # Strategy 1: Check current URL
+                        current_url = browser.current_url
+                        if (
+                            "/reel/" in current_url
+                            or "/video/" in current_url
+                            or "/post/" in current_url
+                        ):
+                            fb_url = current_url
+                            if verbose:
+                                info(
+                                    f"\t=> Got Facebook URL from current URL: {fb_url}"
+                                )
+                            return (True, fb_url)
+
+                        # Strategy 2: Extract URL from page source using regex
+                        fb_url_patterns = [
+                            r'(https://www\.facebook\.com/[^"\s]*?/reel/\d+)',
+                            r'(https://www\.facebook\.com/[^"\s]*?/videos/\d+)',
+                            r"(https://www\.facebook\.com/watch\?v=\d+)",
+                            r"(https://fb\.watch/[a-zA-Z0-9_-]+)",
+                            r"(https://www\.facebook\.com/reel/\d+)",
+                            r'["\'](/reel/\d+[^"\']*)["\']',
+                            r'["\'](/videos/\d+[^"\']*)["\']',
+                            r'"url":"(https://www\.facebook\.com/[^"]*?(?:reel|video|post)[^"]*?)"',
+                        ]
+                        for pattern in fb_url_patterns:
+                            matches = re.findall(pattern, content)
+                            if matches:
+                                fb_url = matches[0]
+                                if not fb_url.startswith("http"):
+                                    fb_url = "https://www.facebook.com" + fb_url
+                                # Clean up any escaped characters
+                                fb_url = fb_url.replace("\\/", "/").replace(
+                                    "\\u0025", "%"
+                                )
+                                if verbose:
+                                    info(
+                                        f"\t=> Facebook URL from regex pattern: {fb_url}"
                                     )
-                                    for link in post_links:
-                                        href = link.get_attribute("href")
-                                        if (
-                                            href
-                                            and "facebook.com" in href
-                                            and ("/reel/" in href or "/video/" in href)
-                                        ):
-                                            fb_url = href
-                                            break
+                                return (True, fb_url)
+
+                        # Strategy 3: Find links via DOM
+                        try:
+                            post_links = browser.find_elements(
+                                By.CSS_SELECTOR,
+                                'a[href*="/reel/"], a[href*="/videos/"], a[href*="/watch?v="], a[href*="fb.watch"]',
+                            )
+                            for link in post_links:
+                                href = link.get_attribute("href")
+                                if (
+                                    href
+                                    and "facebook.com" in href
+                                    and (
+                                        "/reel/" in href
+                                        or "/videos/" in href
+                                        or "/watch" in href
+                                    )
+                                ):
+                                    fb_url = href
+                                    if verbose:
+                                        info(
+                                            f"\t=> Facebook URL from DOM links: {fb_url}"
+                                        )
+                                    return (True, fb_url)
+                        except Exception as e:
+                            if verbose:
+                                warning(f"\t=> DOM link search failed: {e}")
+
+                        # Strategy 4: Navigate to profile and find latest reel
+                        if verbose:
+                            info(
+                                "\t=> Trying to extract Facebook reel URL from profile..."
+                            )
+                        try:
+                            # Get current user's profile URL from the page
+                            profile_url = None
+                            profile_selectors = [
+                                'a[href*="/profile.php"]',
+                                'a[data-testid="right_nav_Profile"]',
+                                'a[aria-label="Profile"]',
+                                'a[aria-label="Your profile"]',
+                            ]
+                            for sel in profile_selectors:
+                                try:
+                                    profile_links = browser.find_elements(
+                                        By.CSS_SELECTOR, sel
+                                    )
+                                    if profile_links:
+                                        profile_url = profile_links[0].get_attribute(
+                                            "href"
+                                        )
+                                        break
+                                except Exception:
+                                    continue
+
+                            # Fallback: try to get profile from current user menu
+                            if not profile_url:
+                                try:
+                                    # Click on profile/menu button
+                                    menu_btn = browser.find_element(
+                                        By.CSS_SELECTOR,
+                                        '[aria-label="Menu"], [aria-label="Account"]',
+                                    )
+                                    menu_btn.click()
+                                    time.sleep(2)
+                                    profile_link = browser.find_element(
+                                        By.CSS_SELECTOR,
+                                        'a[href*="/profile.php"], a[href*="/"][data-lynx-mode]',
+                                    )
+                                    profile_url = profile_link.get_attribute("href")
                                 except Exception:
                                     pass
 
-                            # If still no URL, try to navigate to profile/page to find latest reel
-                            if not fb_url:
-                                try:
+                            if profile_url:
+                                if verbose:
+                                    info(f"\t=> Found profile URL: {profile_url}")
+
+                                # Extract profile ID from URL
+                                profile_id = None
+                                id_match = re.search(
+                                    r"profile\.php\?id=(\d+)", profile_url
+                                )
+                                if id_match:
+                                    profile_id = id_match.group(1)
+
+                                # Try multiple approaches to find the uploaded video
+                                approaches = []
+
+                                # Approach 1: Direct videos URL
+                                if profile_id:
+                                    approaches.append(
+                                        f"https://www.facebook.com/profile.php?id={profile_id}&sk=videos"
+                                    )
+                                approaches.append(profile_url.rstrip("/") + "/videos")
+                                approaches.append(profile_url.rstrip("/") + "/reels")
+
+                                for approach_url in approaches:
                                     if verbose:
-                                        info(
-                                            "\t=> Trying to extract Facebook reel URL from profile..."
-                                        )
-                                    # Navigate to Facebook homepage to find profile
-                                    browser.get("https://www.facebook.com")
-                                    time.sleep(5)
+                                        info(f"\t=> Trying approach: {approach_url}")
+                                    browser.get(approach_url)
+                                    time.sleep(8)
 
-                                    # Look for profile link
-                                    try:
-                                        profile_links = browser.find_elements(
-                                            By.CSS_SELECTOR,
-                                            'a[href*="/profile.php"], a[href*="/people/"]',
-                                        )
-                                        if profile_links:
-                                            profile_links[0].click()
-                                            time.sleep(5)
-
-                                            # Look for reels/videos on profile
-                                            reel_links = browser.find_elements(
-                                                By.CSS_SELECTOR,
-                                                'a[href*="/reel/"], a[href*="/watch/"], a[href*="/video/"]',
+                                    # Check current URL for video patterns
+                                    current = browser.current_url
+                                    if "/reel/" in current or "/videos/" in current:
+                                        fb_url = current
+                                        if verbose:
+                                            info(
+                                                f"\t=> Got URL from navigation: {fb_url}"
                                             )
-                                            for link in reel_links:
+                                        return (True, fb_url)
+
+                                    # Try to find video links
+                                    for sel in [
+                                        'a[href*="/reel/"]',
+                                        'a[href*="/videos/"]',
+                                        'a[href*="/watch?v="]',
+                                    ]:
+                                        try:
+                                            links = browser.find_elements(
+                                                By.CSS_SELECTOR, sel
+                                            )
+                                            if verbose:
+                                                info(
+                                                    f"\t=> Found {len(links)} links with {sel}"
+                                                )
+                                            for link in links:
                                                 href = link.get_attribute("href")
-                                                if (
-                                                    href
-                                                    and "facebook.com" in href
-                                                    and (
-                                                        "/reel/" in href
-                                                        or "/video/" in href
-                                                    )
+                                                if href and (
+                                                    "/reel/" in href
+                                                    or "/videos/" in href
                                                 ):
                                                     fb_url = href
                                                     if verbose:
                                                         info(
-                                                            f"\t=> Facebook reel URL from profile: {fb_url}"
+                                                            f"\t=> Facebook URL found: {fb_url}"
                                                         )
-                                                    break
-                                    except Exception:
-                                        pass
+                                                    return (True, fb_url)
+                                        except Exception as e:
+                                            if verbose:
+                                                warning(f"\t=> {sel} failed: {e}")
 
-                                    # Fallback: search for any reel/video link on current page
-                                    if not fb_url:
-                                        all_links = browser.find_elements(
-                                            By.TAG_NAME, "a"
-                                        )
-                                        for link in all_links:
-                                            href = link.get_attribute("href")
-                                            if (
-                                                href
-                                                and "facebook.com" in href
-                                                and (
-                                                    "/reel/" in href
-                                                    or "/video/" in href
+                                    # Try JavaScript approach
+                                    try:
+                                        js_result = browser.execute_script("""
+                                            (function() {
+                                                var links = document.querySelectorAll('a[href]');
+                                                var results = [];
+                                                for (var i = 0; i < links.length; i++) {
+                                                    var href = links[i].href;
+                                                    if (href && (href.indexOf('/reel/') > -1 || href.indexOf('/videos/') > -1 || href.indexOf('/watch?v=') > -1)) {
+                                                        results.push(href);
+                                                    }
+                                                }
+                                                return results.slice(0, 5);
+                                            })();
+                                        """)
+                                        if js_result and len(js_result) > 0:
+                                            fb_url = js_result[0]
+                                            if verbose:
+                                                info(
+                                                    f"\t=> Facebook URL from JS: {fb_url}"
                                                 )
-                                            ):
-                                                fb_url = href
-                                                if verbose:
-                                                    info(
-                                                        f"\t=> Facebook reel URL from page: {fb_url}"
-                                                    )
-                                                break
-                                except Exception:
-                                    pass
+                                            return (True, fb_url)
+                                    except Exception as e:
+                                        if verbose:
+                                            warning(f"\t=> JS search failed: {e}")
 
-                            if not fb_url:
-                                # Don't return base URL - upload likely failed
-                                if verbose:
-                                    warning(
-                                        "\t=> Could not extract Facebook reel URL - upload may have failed"
-                                    )
-                                return (
-                                    False,
-                                    "Could not extract Facebook reel URL - upload may have failed or timed out",
-                                )
-                        except Exception:
-                            pass
+                                    # Try to extract from page source
+                                    page_content = browser.page_source
+                                    for pattern in [
+                                        r'(https://www\.facebook\.com/[^"\s]*?/reel/\d+)',
+                                        r'(https://www\.facebook\.com/[^"\s]*?/videos/\d+)',
+                                        r"(https://www\.facebook\.com/watch\?v=\d+)",
+                                    ]:
+                                        matches = re.findall(pattern, page_content)
+                                        if matches:
+                                            fb_url = matches[0]
+                                            if verbose:
+                                                info(
+                                                    f"\t=> Facebook URL from page source: {fb_url}"
+                                                )
+                                            return (True, fb_url)
 
-                        if (
-                            "error" in content.lower()
-                            and "try again" in content.lower()
-                        ):
+                                    if fb_url:
+                                        break
+                        except Exception as e:
                             if verbose:
-                                warning("\t=> Facebook upload reported an error")
-                            return (False, "Facebook upload reported an error")
+                                warning(f"\t=> Profile navigation failed: {e}")
+
+                        # Strategy 5: Use JavaScript to find recent video posts
+                        if not fb_url:
+                            try:
+                                if verbose:
+                                    info(
+                                        "\t=> Using JavaScript to find recent video URL..."
+                                    )
+                                # Try to find video URLs via JavaScript
+                                js_find_video = """
+                                (function() {
+                                    var links = document.querySelectorAll('a[href*="/reel/"], a[href*="/videos/"], a[href*="/watch?v="]');
+                                    for (var i = 0; i < links.length; i++) {
+                                        var href = links[i].href;
+                                        if (href && (href.indexOf('/reel/') > -1 || href.indexOf('/videos/') > -1)) {
+                                            return href;
+                                        }
+                                    }
+                                    return null;
+                                })();
+                                """
+                                fb_url = browser.execute_script(js_find_video)
+                                if fb_url:
+                                    if verbose:
+                                        info(
+                                            f"\t=> Facebook URL from JavaScript: {fb_url}"
+                                        )
+                                    return (True, fb_url)
+                            except Exception as e:
+                                if verbose:
+                                    warning(f"\t=> JavaScript search failed: {e}")
+
+                        # Strategy 6: Check activity log for recent post
+                        if not fb_url:
+                            try:
+                                if verbose:
+                                    info(
+                                        "\t=> Checking activity log for recent post..."
+                                    )
+                                browser.get(
+                                    "https://www.facebook.com/your_activity/interactions"
+                                )
+                                time.sleep(5)
+                                # Look for recent video links
+                                video_links = browser.find_elements(
+                                    By.CSS_SELECTOR,
+                                    'a[href*="/reel/"], a[href*="/videos/"]',
+                                )
+                                for link in video_links:
+                                    href = link.get_attribute("href")
+                                    if href and (
+                                        "/reel/" in href or "/videos/" in href
+                                    ):
+                                        fb_url = href
+                                        if verbose:
+                                            info(
+                                                f"\t=> Facebook URL from activity log: {fb_url}"
+                                            )
+                                        return (True, fb_url)
+                            except Exception as e:
+                                if verbose:
+                                    warning(f"\t=> Activity log check failed: {e}")
+
+                        # All strategies failed
+                        if verbose:
+                            warning(
+                                "\t=> Could not extract Facebook reel URL after trying all strategies"
+                            )
+                        return (
+                            False,
+                            "Could not extract Facebook reel URL - upload may have failed or timed out",
+                        )
+
+                    if "error" in content.lower() and "try again" in content.lower():
+                        if verbose:
+                            warning("\t=> Facebook upload reported an error")
+                        return (False, "Facebook upload reported an error")
 
                 if verbose:
                     warning("\t=> Facebook upload not confirmed after 60s")
