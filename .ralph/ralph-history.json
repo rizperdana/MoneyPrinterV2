@@ -423,9 +423,27 @@
         "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text()='Public']]",
         "⚠️ \t=> Bulk edit fallback failed: Message: SyntaxError: missing ) after argument list"
       ]
+    },
+    {
+      "iteration": 19,
+      "startedAt": "2026-04-07T17:08:36.031Z",
+      "endedAt": "2026-04-07T17:30:45.875Z",
+      "durationMs": 1329770,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "upload_results.json"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "❌ Facebook upload failed: Message: File not found: .mp/45c40236-9728-43f1-86c5-16eb688fc575.mp4",
+        "selenium.common.exceptions.InvalidArgumentException: Message: File not found: .mp/45c40236-9728-43f1-86c5-16eb688fc575.mp4"
+      ]
     }
   ],
-  "totalDurationMs": 42046237,
+  "totalDurationMs": 43376007,
   "struggleIndicators": {
     "repeatedErrors": {
       "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/config.example.jso": 1,
@@ -434,7 +452,9 @@
       "❌ Facebook upload failed: 'NoneType' object has no attribute 'rstrip'": 1,
       "AttributeError: 'NoneType' object has no attribute 'rstrip'": 1,
       "⚠️ \t=> Strategy 1 failed: Message: Unable to locate element: //tp-yt-paper-radio-button[.//span[text": 1,
-      "⚠️ \t=> Bulk edit fallback failed: Message: SyntaxError: missing ) after argument list": 1
+      "⚠️ \t=> Bulk edit fallback failed: Message: SyntaxError: missing ) after argument list": 1,
+      "❌ Facebook upload failed: Message: File not found: .mp/45c40236-9728-43f1-86c5-16eb688fc575.mp4": 1,
+      "selenium.common.exceptions.InvalidArgumentException: Message: File not found: .mp/45c40236-9728-43f1": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0

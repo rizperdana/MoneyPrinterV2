@@ -3,5 +3,15 @@
     "success": true,
     "url": "https://www.youtube.com/watch?v=n6wvxqtaUeM",
     "error": null
+  },
+  "tiktok": {
+    "success": true,
+    "url": "https://www.tiktok.com/@raider_kickuuuu/video/7626068561374956821",
+    "error": null
+  },
+  "facebook": {
+    "success": true,
+    "url": "https://web.facebook.com/reel/1520558245721292/?comment_id=980478644548064&__tn__=R]",
+    "error": null
   }
 }
