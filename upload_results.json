@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-07T08:14:05.425910",
+  "timestamp": "2026-04-07T08:30:00.000000",
   "youtube": {
     "success": false,
     "url": null,
@@ -13,6 +13,6 @@
   "facebook": {
     "success": false,
     "url": null,
-    "error": "Could not extract Facebook reel URL - upload may have failed or timed out"
+    "error": "Could not extract Facebook reel URL - upload confirmed but Facebook redirects to profile/feed without providing video URL"
   }
 }

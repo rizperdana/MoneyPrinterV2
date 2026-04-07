@@ -75,9 +75,35 @@
         "print(\"ERROR: No video file found\")",
         "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/fb_test.log"
       ]
+    },
+    {
+      "iteration": 4,
+      "startedAt": "2026-04-07T01:46:41.306Z",
+      "endedAt": "2026-04-07T02:07:22.790Z",
+      "durationMs": 1241243,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "upload_results.json"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "Looking at this, I need to understand the current upload implementation and what's failing. Let me check the upload methods and the test files:",
+        "Looking at the test output, I see the issue. The Facebook upload is confirming success (`✅ Facebook upload confirmed`) but then all the URL extraction strategies fail to find the video link. This sugg",
+        "FAILED: Could not extract Facebook reel URL - upload may have failed or timed out",
+        "except Exception:",
+        "warning(f\"\\t=> {sel} failed: {e}\")",
+        "warning(f\"\\t=> JS search failed: {e}\")",
+        "warning(f\"\\t=> Profile navigation failed: {e}\")",
+        "warning(f\"\\t=> JavaScript search failed: {e}\")",
+        "warning(f\"\\t=> Activity log check failed: {e}\")",
+        "warning(f\"\\t=> DOM link search failed: {e}\")"
+      ]
     }
   ],
-  "totalDurationMs": 5607528,
+  "totalDurationMs": 6848771,
   "struggleIndicators": {
     "repeatedErrors": {
       "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/PLAN-SPEC.md": 2,
@@ -89,7 +115,7 @@
       "-    except Exception:": 1,
       "+        warning(f\"\\t=> Profile navigation failed: {e}\")": 1,
       "+            except Exception:": 1,
-      "except Exception:": 1,
+      "except Exception:": 2,
       "\u001b[0m⚙ \u001b[0mcompress {\"content\":[{\"endId\":\"m0067\",\"startId\":\"m0001\",\"summary\":\"Iteration 2 completed. ": 1,
       "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/src/classes/Facebo": 1,
       "- When tested: Fails with \"Daily upload limit reached\" - quota issue, not URL extraction issue": 1,
@@ -100,7 +126,16 @@
       "FileNotFoundError: [Errno 2] No such file or directory: '/home/anon/Projects/experiment/config.json'": 1,
       "FileNotFoundError: [Errno 2] No such file or directory: '/home/anon/Projects/experiment/MoneyPrinter": 1,
       "print(\"ERROR: No video file found\")": 1,
-      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/fb_test.log": 1
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/fb_test.log": 1,
+      "Looking at this, I need to understand the current upload implementation and what's failing. Let me c": 1,
+      "Looking at the test output, I see the issue. The Facebook upload is confirming success (`✅ Facebook ": 1,
+      "FAILED: Could not extract Facebook reel URL - upload may have failed or timed out": 1,
+      "warning(f\"\\t=> {sel} failed: {e}\")": 1,
+      "warning(f\"\\t=> JS search failed: {e}\")": 1,
+      "warning(f\"\\t=> Profile navigation failed: {e}\")": 1,
+      "warning(f\"\\t=> JavaScript search failed: {e}\")": 1,
+      "warning(f\"\\t=> Activity log check failed: {e}\")": 1,
+      "warning(f\"\\t=> DOM link search failed: {e}\")": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0
