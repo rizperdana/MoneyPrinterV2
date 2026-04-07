@@ -2624,11 +2624,20 @@ Example:
                 reel_path = (
                     current_url.split("/reel/")[-1] if "/reel/" in current_url else ""
                 )
-                if "/reel/" in current_url and len(reel_path) > 0:
-                    fb_url = current_url
-                    if verbose:
-                        info(f"\t=> Got Facebook URL directly: {fb_url}")
-                    return (True, fb_url)
+                if (
+                    "/reel/" in current_url
+                    and len(reel_path) > 0
+                    and len(reel_path) < 50
+                ):
+                    # Ensure the path actually contains an ID (not just "/reel/")
+                    # Also check it's not the malformed "reel/" path with nothing after
+                    if reel_path.strip() and not reel_path.startswith("?"):
+                        fb_url = current_url
+                        if verbose:
+                            info(f"\t=> Got Facebook URL directly: {fb_url}")
+                        return (True, fb_url)
+                elif verbose:
+                    info(f"\t=> URL has no valid reel ID, searching: {current_url}")
 
                 # If still on /reel/ without ID, try to find reel from page or profile
                 if verbose:

@@ -110,9 +110,62 @@
         "-    except Exception:",
         "except Exception:"
       ]
+    },
+    {
+      "iteration": 5,
+      "startedAt": "2026-04-07T10:45:24.238Z",
+      "endedAt": "2026-04-07T11:16:58.459Z",
+      "durationMs": 1893964,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "config.example.json",
+        "debug_yt.py",
+        "debug_yt2.py",
+        "debug_yt3.py",
+        "debug_yt4.py",
+        "debug_yt5.py",
+        "facebook_result.json",
+        "final_results.json",
+        "quick_test.py",
+        "quick_tiktok_test.py",
+        "quick_youtube_test.py",
+        "src/classes/YouTube.py",
+        "test_all_platforms.py",
+        "test_facebook_upload.py",
+        "test_fb_debug.py",
+        "test_fb_only.py",
+        "test_fb_quick.py",
+        "test_fb_simple.py",
+        "test_final.py",
+        "test_tt_only.py",
+        "test_uploads.py",
+        "test_youtube_only.py",
+        "test_yt_quick.py",
+        "test_yt_simple.py",
+        "tt_live_test.json",
+        "tt_result.json",
+        "upload_results.json",
+        "upload_status.txt",
+        "upload_test_results.json",
+        "yt_live_test.json",
+        "yt_result.json",
+        "yt_test_result.json",
+        "tests/test_utils.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "⚠️ DuckDuckGo failed: Expecting value: line 1 column 1 (char 0)",
+        "RuntimeError: No model selected. Call select_model() first or pass model_name.",
+        "RuntimeError: All models failed (tried: kilo-auto/free). Last error from: kilo-auto/free",
+        "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/upload_results.json",
+        "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/final_results.json"
+      ]
     }
   ],
-  "totalDurationMs": 19071758,
+  "totalDurationMs": 20965722,
   "struggleIndicators": {
     "repeatedErrors": {
       "print('ERROR: No video file found')": 1,
@@ -141,7 +194,12 @@
       "selenium.common.exceptions.ElementNotInteractableException: Message: Element <h3 class=\"html-h3 xdj2": 1,
       "Error: Message: Element <h3 class=\"html-h3 xdj266r x14z9mp xat24cr x1lziwak xexx8yu xyri2b x18d9i69 ": 1,
       "-    except Exception:": 1,
-      "except Exception:": 1
+      "except Exception:": 1,
+      "⚠️ DuckDuckGo failed: Expecting value: line 1 column 1 (char 0)": 1,
+      "RuntimeError: No model selected. Call select_model() first or pass model_name.": 1,
+      "RuntimeError: All models failed (tried: kilo-auto/free). Last error from: kilo-auto/free": 1,
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/upload_results.jso": 1,
+      "\u001b[91m\u001b[1mError: \u001b[0mFile not found: /home/anon/Projects/experiment/MoneyPrinterV2/final_results.json": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0
