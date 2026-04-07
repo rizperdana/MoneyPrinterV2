@@ -2696,31 +2696,50 @@ Example:
                         and "/video/" not in current_url
                         and "/story/" not in current_url.lower()
                     ):
-                        # Upload likely succeeded but redirected away
-                        # Try to find the video from the current page
-                        if verbose:
-                            info(
-                                f"\t=> Redirected to {current_url}, looking for video link..."
-                            )
-
-                        # Check for video links on the current page
-                        video_links = browser.find_elements(
-                            By.CSS_SELECTOR,
-                            'a[href*="/reel/"], a[href*="/videos/"], a[href*="/watch?v="], a[href*="/story/"]',
+                        # Check if redirected to a profile videos page (not the actual video)
+                        # URL pattern like "facebook.com/username/videos/?id=123" is NOT the video
+                        is_profile_videos_page = "?id=" in current_url and (
+                            "/videos" in current_url or current_url.endswith("/videos")
                         )
-                        for link in video_links:
-                            href = link.get_attribute("href")
-                            if href and (
-                                "/reel/" in href
-                                or "/videos/" in href
-                                or "/story/" in href.lower()
-                            ):
-                                fb_url = href
-                                if verbose:
-                                    info(
-                                        f"\t=> Found video link after redirect: {fb_url}"
-                                    )
-                                return (True, fb_url)
+
+                        if is_profile_videos_page:
+                            # This is a profile videos page, not the actual video - continue searching
+                            if verbose:
+                                info(
+                                    f"\t=> Redirected to profile videos page, continuing search..."
+                                )
+                        else:
+                            # This might be the actual video or feed - search for video links
+                            if verbose:
+                                info(
+                                    f"\t=> Redirected to {current_url[:60]}, looking for video link..."
+                                )
+
+                            # Check for video links on the current page
+                            video_links = browser.find_elements(
+                                By.CSS_SELECTOR,
+                                'a[href*="/reel/"], a[href*="/videos/"], a[href*="/watch?v="], a[href*="/story/"]',
+                            )
+                            for link in video_links:
+                                href = link.get_attribute("href")
+                                if href and (
+                                    "/reel/" in href
+                                    or "/videos/" in href
+                                    or "/story/" in href.lower()
+                                ):
+                                    # Double-check: don't return profile videos page URLs
+                                    if (
+                                        "?id=" in href
+                                        and "/videos" in href
+                                        and "/reel/" not in href
+                                    ):
+                                        continue  # Skip profile videos links
+                                    fb_url = href
+                                    if verbose:
+                                        info(
+                                            f"\t=> Found video link after redirect: {fb_url}"
+                                        )
+                                    return (True, fb_url)
 
                         # ALSO check for video thumbnail images that might contain links
                         try:
