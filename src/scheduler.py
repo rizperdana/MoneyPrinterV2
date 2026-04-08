@@ -32,11 +32,15 @@ import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Load .env
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
 
+# Add src to path before local imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Load .env before other imports
+load_dotenv(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+)
 
 from config import ROOT_DIR, get_verbose
 from status import info, success, warning, error
@@ -59,8 +63,6 @@ SCHEDULE_FILE = os.path.join(ROOT_DIR, ".mp", "scheduler_state.json")
 #   5   00:00   US West (UTC-8) 09:00 morning scroll
 #   6   04:00   US East (UTC-5) 15:00 afternoon scroll
 
-REDDIT_TWITTER_TIMES = ["09:00", "13:00", "17:00", "21:00", "00:00", "04:00"]
-
 # YouTube Shorts: 3/day (EU evening, US morning, US evening)
 YOUTUBE_TIMES = ["17:00", "21:00", "04:00"]
 
@@ -69,12 +71,12 @@ YOUTUBE_TIMES = ["17:00", "21:00", "04:00"]
 # Slot 2 (21:00 UTC+7): EU peak
 # Slot 3 (04:00 UTC+7): US East peak
 YOUTUBE_ACCOUNT_TIMES = {
-    "awoogle":   ["17:00", "21:00", "04:00"],
-    "TechArch":  ["17:10", "21:10", "04:10"],
+    "awoogle": ["17:00", "21:00", "04:00"],
+    "TechArch": ["17:10", "21:10", "04:10"],
     "MegaBuild": ["17:20", "21:20", "04:20"],
-    "GoldSci":   ["17:30", "21:30", "04:30"],
+    "GoldSci": ["17:30", "21:30", "04:30"],
     "SciFiLore": ["17:40", "21:40", "04:40"],
-    "BrainRot":  ["17:50", "21:50", "04:50"],
+    "BrainRot": ["17:50", "21:50", "04:50"],
 }
 
 # Twitter text posts: 3/day (morning waves)
@@ -82,6 +84,7 @@ TWITTER_TIMES = ["09:00", "17:00", "21:00"]
 
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
+
 
 def setup_logging(foreground: bool = False) -> logging.Logger:
     """Set up logging to file + optional console."""
@@ -91,8 +94,7 @@ def setup_logging(foreground: bool = False) -> logging.Logger:
     logger.setLevel(logging.INFO)
 
     formatter = logging.Formatter(
-        "[%(asctime)s] %(levelname)s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        "[%(asctime)s] %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # File handler (always)
@@ -112,6 +114,7 @@ def setup_logging(foreground: bool = False) -> logging.Logger:
 
 
 # ─── State Management ────────────────────────────────────────────────────────
+
 
 def load_state() -> dict:
     """Load scheduler state from disk."""
@@ -156,6 +159,7 @@ def get_next_run(times: list[str], last_run: str = None) -> datetime:
 
 
 # ─── Job Execution ───────────────────────────────────────────────────────────
+
 
 def run_youtube_job(account_id: str, model: str, logger: logging.Logger) -> bool:
     """Run a YouTube video generation + upload job."""
@@ -249,6 +253,7 @@ def run_reddit_twitter_job(account_id: str, model: str, logger: logging.Logger) 
 
 # ─── Main Loop ───────────────────────────────────────────────────────────────
 
+
 def get_active_model() -> str:
     """Get the primary model from config."""
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as f:
@@ -263,6 +268,7 @@ def main_loop(logger: logging.Logger):
 
     # Auto-discover accounts from cache
     from cache import get_accounts
+
     yt_accounts = get_accounts("youtube")
     tw_accounts = get_accounts("twitter")
 
@@ -287,10 +293,16 @@ def main_loop(logger: logging.Logger):
     rt_next = {acc["id"]: get_next_run(REDDIT_TWITTER_TIMES) for acc in tw_accounts}
 
     for acc in yt_accounts:
-        logger.info(f"[YouTube] {acc['nickname']}: next run at {yt_next[acc['id']].strftime('%Y-%m-%d %H:%M')}")
+        logger.info(
+            f"[YouTube] {acc['nickname']}: next run at {yt_next[acc['id']].strftime('%Y-%m-%d %H:%M')}"
+        )
     for acc in tw_accounts:
-        logger.info(f"[Twitter] {acc['nickname']}: next run at {tw_next[acc['id']].strftime('%Y-%m-%d %H:%M')}")
-        logger.info(f"[Reddit→Twitter] {acc['nickname']}: next run at {rt_next[acc['id']].strftime('%Y-%m-%d %H:%M')}")
+        logger.info(
+            f"[Twitter] {acc['nickname']}: next run at {tw_next[acc['id']].strftime('%Y-%m-%d %H:%M')}"
+        )
+        logger.info(
+            f"[Reddit→Twitter] {acc['nickname']}: next run at {rt_next[acc['id']].strftime('%Y-%m-%d %H:%M')}"
+        )
 
     running = True
 
@@ -314,7 +326,9 @@ def main_loop(logger: logging.Logger):
                 state["last_runs"][f"youtube_{acc_id}"] = now.isoformat()
                 save_state(state)
                 yt_next[acc_id] = get_next_run(acc_times, last_run=now.isoformat())
-                logger.info(f"[YouTube] {acc['nickname']}: next run at {yt_next[acc_id].strftime('%Y-%m-%d %H:%M')}")
+                logger.info(
+                    f"[YouTube] {acc['nickname']}: next run at {yt_next[acc_id].strftime('%Y-%m-%d %H:%M')}"
+                )
 
         # Check Twitter text jobs
         for acc in tw_accounts:
@@ -324,7 +338,9 @@ def main_loop(logger: logging.Logger):
                 state["last_runs"][f"twitter_{acc_id}"] = now.isoformat()
                 save_state(state)
                 tw_next[acc_id] = get_next_run(TWITTER_TIMES, last_run=now.isoformat())
-                logger.info(f"[Twitter] {acc['nickname']}: next run at {tw_next[acc_id].strftime('%Y-%m-%d %H:%M')}")
+                logger.info(
+                    f"[Twitter] {acc['nickname']}: next run at {tw_next[acc_id].strftime('%Y-%m-%d %H:%M')}"
+                )
 
         # Check Reddit→Twitter meme jobs (6/day global coverage)
         for acc in tw_accounts:
@@ -333,8 +349,12 @@ def main_loop(logger: logging.Logger):
                 success = run_reddit_twitter_job(acc_id, model, logger)
                 state["last_runs"][f"reddit_twitter_{acc_id}"] = now.isoformat()
                 save_state(state)
-                rt_next[acc_id] = get_next_run(REDDIT_TWITTER_TIMES, last_run=now.isoformat())
-                logger.info(f"[Reddit→Twitter] {acc['nickname']}: next run at {rt_next[acc_id].strftime('%Y-%m-%d %H:%M')}")
+                rt_next[acc_id] = get_next_run(
+                    REDDIT_TWITTER_TIMES, last_run=now.isoformat()
+                )
+                logger.info(
+                    f"[Reddit→Twitter] {acc['nickname']}: next run at {rt_next[acc_id].strftime('%Y-%m-%d %H:%M')}"
+                )
 
         # Sleep 30 seconds between checks
         time.sleep(30)
@@ -343,6 +363,7 @@ def main_loop(logger: logging.Logger):
 
 
 # ─── Daemon Management ──────────────────────────────────────────────────────
+
 
 def is_running() -> bool:
     """Check if scheduler is already running."""
@@ -457,6 +478,7 @@ def cmd_status():
 
     # Show next runs
     from cache import get_accounts
+
     yt_accounts = get_accounts("youtube")
     tw_accounts = get_accounts("twitter")
 

@@ -19,17 +19,19 @@ import json
 import argparse
 import time
 
-# Load .env before other imports
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
 
-# Add src to path
+# Add src to path before local imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from config import *
-from status import *
+# Load .env before other imports that need env vars
+load_dotenv(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+)
+
+from config import ROOT_DIR, get_ollama_model
+from status import error, success, info, warning
 from llm_provider import select_model
-from config import get_ollama_model
 from classes.YouTube import YouTube
 from classes.Tts import TTS
 
@@ -39,10 +41,6 @@ def run_pipeline(
     language: str,
     upload: bool = False,
     headless: bool = True,
-    postiz_enabled: bool = False,
-    postiz_url: str = "",
-    postiz_key: str = "",
-    postiz_platforms: list = None,
 ) -> dict:
     """
     Run the full video generation pipeline non-interactively.
@@ -52,12 +50,9 @@ def run_pipeline(
         language: Content language (e.g., "English")
         upload: Whether to upload to YouTube after generation
         headless: Run Firefox in headless mode
-        postiz_url: Postiz instance URL (overrides config)
-        postiz_key: Postiz API key (overrides config)
-        postiz_platforms: Target platforms for Postiz (overrides config)
 
     Returns:
-        dict with keys: topic, title, description, video_path, uploaded, postiz
+        dict with keys: topic, title, description, video_path, uploaded, error
     """
     result = {
         "topic": None,
@@ -65,7 +60,6 @@ def run_pipeline(
         "description": None,
         "video_path": None,
         "uploaded": False,
-        "postiz": None,
         "error": None,
     }
 
@@ -140,9 +134,9 @@ def run_pipeline(
         for i, prompt in enumerate(prompts):
             img_path = youtube.generate_image(prompt, delay_between=30)
             if img_path:
-                success(f"Image {i+1}/{len(prompts)}: {os.path.basename(img_path)}")
+                success(f"Image {i + 1}/{len(prompts)}: {os.path.basename(img_path)}")
             else:
-                warning(f"Image {i+1}/{len(prompts)}: FAILED (will use placeholder)")
+                warning(f"Image {i + 1}/{len(prompts)}: FAILED (will use placeholder)")
             # 30s delay is handled inside generate_image() after each success
 
         # Fill remaining slots with placeholders if any images failed
@@ -171,7 +165,6 @@ def run_pipeline(
         size_mb = os.path.getsize(youtube.video_path) / 1024 / 1024
         success(f"Video: {youtube.video_path} ({size_mb:.1f} MB)")
 
-        # Upload (optional)
         if upload:
             info("Uploading to YouTube...")
             try:
@@ -179,63 +172,24 @@ def run_pipeline(
                 if upload_success:
                     result["uploaded"] = True
                     result["youtube_url"] = getattr(youtube, "uploaded_video_url", None)
-                    success(f"Video uploaded successfully! {result.get('youtube_url', '')}")
+                    success(
+                        f"Video uploaded successfully! {result.get('youtube_url', '')}"
+                    )
                 else:
                     result["uploaded"] = False
-                    result["error"] = "Upload returned False — check Firefox profile login or YouTube Studio selectors"
+                    result["error"] = (
+                        "Upload returned False — check Firefox profile login or YouTube Studio selectors"
+                    )
                     error(result["error"])
             except Exception as e:
                 error(f"Upload failed: {e}")
                 result["error"] = f"Upload failed: {e}"
 
-        # Postiz publishing (optional, triggered by --postiz flag or --postiz-key)
-        postiz_enabled = bool(postiz_key) or bool(os.environ.get("POSTIZ_API_KEY", ""))
-        if postiz_enabled:
-            info("Publishing via Postiz...")
-            try:
-                from classes.Postiz import Postiz, PostizClientError
-
-                url = postiz_url or os.environ.get("POSTIZ_API_URL", "https://api.postiz.com")
-                key = postiz_key or os.environ.get("POSTIZ_API_KEY", "")
-                platforms = postiz_platforms or ["youtube", "tiktok"]
-
-                client = Postiz(api_key=key, api_url=url)
-
-                # Verify integrations
-                integration_map = client.find_integrations(platforms)
-                if not integration_map:
-                    warning(f"No Postiz integrations found for: {', '.join(platforms)}")
-                    result["postiz"] = {"status": "skipped", "reason": "no integrations"}
-                else:
-                    for p, integ in integration_map.items():
-                        info(f"Postiz integration: {p} -> @{integ.get('profile', '?')}")
-
-                    desc = result.get("description") or result.get("title") or ""
-                    postiz_result = client.publish_video(
-                        video_path=youtube.video_path,
-                        title=result["title"] or "Untitled",
-                        description=desc,
-                        platforms=list(integration_map.keys()),
-                    )
-                    post_id = postiz_result.get("post", {}).get("id", "unknown")
-                    success(f"Published via Postiz (post ID: {post_id})")
-                    result["postiz"] = {
-                        "status": "published",
-                        "post_id": post_id,
-                        "platforms": list(integration_map.keys()),
-                        "skipped": postiz_result.get("skipped_platforms", []),
-                    }
-            except PostizClientError as e:
-                warning(f"Postiz publish failed: {e}")
-                result["postiz"] = {"status": "failed", "error": str(e)}
-            except Exception as e:
-                warning(f"Postiz publish error: {e}")
-                result["postiz"] = {"status": "failed", "error": str(e)}
-
     except Exception as e:
         error(f"Pipeline failed: {e}")
         result["error"] = str(e)
         import traceback
+
         traceback.print_exc()
 
     return result
@@ -246,13 +200,24 @@ def _generate_placeholder_images(youtube, count: int, offset: int = 0):
     from PIL import Image, ImageDraw, ImageFont
 
     colors = [
-        (30, 60, 114), (42, 82, 152), (50, 100, 180),
-        (60, 120, 200), (70, 140, 220), (80, 160, 240),
-        (90, 180, 250), (100, 200, 255),
+        (30, 60, 114),
+        (42, 82, 152),
+        (50, 100, 180),
+        (60, 120, 200),
+        (70, 140, 220),
+        (80, 160, 240),
+        (90, 180, 250),
+        (100, 200, 255),
     ]
     labels = [
-        "Scene 1", "Scene 2", "Scene 3", "Scene 4",
-        "Scene 5", "Scene 6", "Scene 7", "Scene 8",
+        "Scene 1",
+        "Scene 2",
+        "Scene 3",
+        "Scene 4",
+        "Scene 5",
+        "Scene 6",
+        "Scene 7",
+        "Scene 8",
     ]
 
     for i in range(min(count, len(colors))):
@@ -260,7 +225,9 @@ def _generate_placeholder_images(youtube, count: int, offset: int = 0):
         img = Image.new("RGB", (1080, 1920), colors[i % len(colors)])
         draw = ImageDraw.Draw(img)
         try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60)
+            font = ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 60
+            )
         except Exception:
             font = ImageFont.load_default()
 
@@ -276,21 +243,27 @@ def _generate_placeholder_images(youtube, count: int, offset: int = 0):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MoneyPrinterV2 Non-Interactive Pipeline")
-    parser.add_argument("--niche", default="interesting science facts", help="Video niche/topic")
+    parser = argparse.ArgumentParser(
+        description="MoneyPrinterV2 Non-Interactive Pipeline"
+    )
+    parser.add_argument(
+        "--niche", default="interesting science facts", help="Video niche/topic"
+    )
     parser.add_argument("--language", default="English", help="Content language")
-    parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
-    parser.add_argument("--no-headless", action="store_true", help="Show Firefox browser")
-    parser.add_argument("--postiz", action="store_true", help="Publish via Postiz after generation")
-    parser.add_argument("--postiz-url", default="", help="Postiz instance URL (default: https://api.postiz.com)")
-    parser.add_argument("--postiz-key", default="", help="Postiz API key (or set POSTIZ_API_KEY env var)")
-    parser.add_argument("--postiz-platforms", default="", help="Comma-separated platforms (default: youtube,tiktok)")
+    parser.add_argument(
+        "--upload", action="store_true", help="Upload to YouTube after generation"
+    )
+    parser.add_argument(
+        "--no-headless", action="store_true", help="Show Firefox browser"
+    )
     args = parser.parse_args()
 
     # Parse Postiz platforms
     postiz_platforms = None
     if args.postiz_platforms:
-        postiz_platforms = [p.strip() for p in args.postiz_platforms.split(",") if p.strip()]
+        postiz_platforms = [
+            p.strip() for p in args.postiz_platforms.split(",") if p.strip()
+        ]
 
     info("=" * 50)
     info("MoneyPrinterV2 - Automated Pipeline")
@@ -301,9 +274,6 @@ def main():
         language=args.language,
         upload=args.upload,
         headless=not args.no_headless,
-        postiz_url=args.postiz_url,
-        postiz_key=args.postiz_key,
-        postiz_platforms=postiz_platforms,
     )
 
     print("\n" + "=" * 50)

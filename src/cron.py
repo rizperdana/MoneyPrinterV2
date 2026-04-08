@@ -1,19 +1,19 @@
 # RUN THIS N AMOUNT OF TIMES
-import sys
 import os
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load .env so CLIPROXY_API_KEY and other vars are available in subprocess
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-from status import *
+from status import error, success, info, warning
 from cache import get_accounts
 from config import get_verbose
 from classes.Twitter import Twitter
 from classes.YouTube import YouTube
 from llm_provider import select_model
-from post_bridge_integration import maybe_crosspost_youtube_short
 from tracker import (
     record_attempt,
     record_uploading,

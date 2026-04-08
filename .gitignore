@@ -16,3 +16,4 @@ auto.sh
 kittentts_pkg/
 .tool-versions
 geckodriver.log
+.docs

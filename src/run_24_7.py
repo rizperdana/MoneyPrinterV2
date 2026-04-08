@@ -17,20 +17,22 @@ import time
 import random
 import argparse
 import logging
+import shutil
 from datetime import datetime
 from pathlib import Path
 
-# Load .env before other imports
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
 
-# Add src to path
+# Add src to path before local imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Load .env before other imports
+load_dotenv(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+)
 
 from config import ROOT_DIR, get_verbose
 from status import info, success, warning, error
-
-import shutil
 
 # Default niches if no file provided
 DEFAULT_NICHES = [
@@ -62,7 +64,9 @@ def setup_logging(output_dir: str) -> logging.Logger:
     log_dir = os.path.join(output_dir, "logs")
     os.makedirs(log_dir, exist_ok=True)
 
-    log_file = os.path.join(log_dir, f"run_24_7_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+    log_file = os.path.join(
+        log_dir, f"run_24_7_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    )
 
     logger = logging.getLogger("mpv2_24_7")
     logger.setLevel(logging.INFO)
@@ -70,7 +74,9 @@ def setup_logging(output_dir: str) -> logging.Logger:
     # File handler
     fh = logging.FileHandler(log_file, encoding="utf-8")
     fh.setLevel(logging.INFO)
-    formatter = logging.Formatter("[%(asctime)s] %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    formatter = logging.Formatter(
+        "[%(asctime)s] %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 
@@ -87,12 +93,16 @@ def load_niches(niches_file: str = None) -> list:
     """Load niches from file or use defaults."""
     if niches_file and os.path.exists(niches_file):
         with open(niches_file, "r") as f:
-            niches = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+            niches = [
+                line.strip() for line in f if line.strip() and not line.startswith("#")
+            ]
         return niches
     return DEFAULT_NICHES
 
 
-def run_single_video(niche: str, output_dir: str, logger: logging.Logger, upload: bool = False) -> dict:
+def run_single_video(
+    niche: str, output_dir: str, logger: logging.Logger, upload: bool = False
+) -> dict:
     """Run the pipeline for a single video."""
     from run_pipeline import run_pipeline
 
@@ -111,6 +121,7 @@ def run_single_video(niche: str, output_dir: str, logger: logging.Logger, upload
             dst = os.path.join(video_dir, "video.mp4")
             if os.path.exists(src):
                 import shutil
+
                 shutil.copy2(src, dst)
                 result["video_path"] = dst
 
@@ -131,6 +142,7 @@ def run_single_video(niche: str, output_dir: str, logger: logging.Logger, upload
     except Exception as e:
         logger.error(f"Pipeline exception: {e}")
         import traceback
+
         logger.error(traceback.format_exc())
         return {"error": str(e)}
 
@@ -139,17 +151,17 @@ def cleanup_old_files(output_dir: str, max_age_days: int = 7):
     """Remove old video files to free disk space."""
     import glob
     import time
-    
+
     now = time.time()
     cutoff = now - (max_age_days * 86400)
-    
+
     removed = 0
     for pattern in ["*.mp4", "*.wav", "*.png", "*.srt"]:
         for f in glob.glob(os.path.join(output_dir, "**", pattern), recursive=True):
             if os.path.getmtime(f) < cutoff:
                 os.remove(f)
                 removed += 1
-    
+
     if removed > 0:
         info(f"Cleaned up {removed} old files (>{max_age_days} days)")
 
@@ -158,7 +170,7 @@ def check_disk_space(min_gb: float = 2.0) -> bool:
     """Check if enough disk space is available."""
     total, used, free = shutil.disk_usage(ROOT_DIR)
     free_gb = free / (1024**3)
-    
+
     if free_gb < min_gb:
         warning(f"Low disk space: {free_gb:.1f} GB free (minimum: {min_gb} GB)")
         return False
@@ -166,14 +178,42 @@ def check_disk_space(min_gb: float = 2.0) -> bool:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MoneyPrinterV2 24/7 Content Production")
-    parser.add_argument("--interval", type=int, default=7200, help="Seconds between videos (default: 7200 = 2 hours)")
-    parser.add_argument("--niches", type=str, default=None, help="Path to niches file (one per line)")
-    parser.add_argument("--output-dir", type=str, default=None, help="Output directory (default: .mp/24_7/)")
-    parser.add_argument("--max-videos", type=int, default=0, help="Max videos to produce (0 = unlimited)")
-    parser.add_argument("--random-order", action="store_true", default=True, help="Randomize niche order")
-    parser.add_argument("--no-random-order", action="store_true", help="Use niches in order")
-    parser.add_argument("--upload", action="store_true", help="Upload to YouTube after generation")
+    parser = argparse.ArgumentParser(
+        description="MoneyPrinterV2 24/7 Content Production"
+    )
+    parser.add_argument(
+        "--interval",
+        type=int,
+        default=7200,
+        help="Seconds between videos (default: 7200 = 2 hours)",
+    )
+    parser.add_argument(
+        "--niches", type=str, default=None, help="Path to niches file (one per line)"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Output directory (default: .mp/24_7/)",
+    )
+    parser.add_argument(
+        "--max-videos",
+        type=int,
+        default=0,
+        help="Max videos to produce (0 = unlimited)",
+    )
+    parser.add_argument(
+        "--random-order",
+        action="store_true",
+        default=True,
+        help="Randomize niche order",
+    )
+    parser.add_argument(
+        "--no-random-order", action="store_true", help="Use niches in order"
+    )
+    parser.add_argument(
+        "--upload", action="store_true", help="Upload to YouTube after generation"
+    )
     args = parser.parse_args()
 
     output_dir = args.output_dir or os.path.join(ROOT_DIR, ".mp", "24_7")
@@ -223,7 +263,9 @@ def main():
                 result = run_single_video(niche, output_dir, logger, upload=args.upload)
                 if result.get("video_path"):
                     break
-                logger.warning(f"Attempt {attempt+1}/3 failed: {result.get('error', 'Unknown')}")
+                logger.warning(
+                    f"Attempt {attempt + 1}/3 failed: {result.get('error', 'Unknown')}"
+                )
                 if attempt < 2:
                     logger.info("Retrying in 60 seconds...")
                     time.sleep(60)
@@ -232,7 +274,9 @@ def main():
                 video_count += 1
                 logger.info(f"Total videos produced: {video_count}")
             else:
-                logger.error(f"Video failed after 3 attempts, skipping to next niche...")
+                logger.error(
+                    f"Video failed after 3 attempts, skipping to next niche..."
+                )
 
             # Cleanup old files periodically
             if video_count % 5 == 0:
@@ -246,7 +290,9 @@ def main():
 
             # Wait for next video
             if args.max_videos == 0 or video_count < args.max_videos:
-                logger.info(f"Waiting {args.interval}s ({args.interval / 60:.0f} min) until next video...")
+                logger.info(
+                    f"Waiting {args.interval}s ({args.interval / 60:.0f} min) until next video..."
+                )
                 time.sleep(args.interval)
 
     except KeyboardInterrupt:

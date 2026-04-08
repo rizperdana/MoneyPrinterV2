@@ -2,12 +2,11 @@ import os
 from urllib.parse import urlparse
 from typing import Any
 
-from status import *
-from config import *
-from constants import *
+from status import info
+from config import get_firefox_profile_path, get_headless
+from constants import AMAZON_PRODUCT_TITLE_ID, AMAZON_FEATURE_BULLETS_ID
 from llm_provider import generate_text
 from .Twitter import Twitter
-from selenium_firefox import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service

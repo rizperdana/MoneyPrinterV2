@@ -1,4 +1,5 @@
 import os
+import sys
 import schedule
 import subprocess
 
@@ -8,22 +9,31 @@ load_dotenv(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 )
 
-from art import *
-from cache import *
-from utils import *
-from config import *
-from status import *
+from art import print_banner
+from cache import get_accounts, add_account, remove_account, get_products, add_product
+from utils import rem_temp_files, fetch_songs
+from config import (
+    ROOT_DIR,
+    get_verbose,
+    get_first_time_running,
+    assert_folder_structure,
+    get_ollama_model,
+)
+from status import error, success, info, warning, question
+from constants import (
+    OPTIONS,
+    YOUTUBE_OPTIONS,
+    TWITTER_OPTIONS,
+    YOUTUBE_CRON_OPTIONS,
+    TWITTER_CRON_OPTIONS,
+)
 from uuid import uuid4
-from constants import *
 from termcolor import colored
 from classes.Twitter import Twitter
 from classes.YouTube import YouTube
 from prettytable import PrettyTable
 from classes.Outreach import Outreach
 from classes.AFM import AffiliateMarketing
-from classes.Reddit import Reddit
-from llm_provider import list_models, select_model, get_active_model
-from post_bridge_integration import maybe_crosspost_youtube_short
 
 try:
     from classes.Tts import TTS
@@ -527,294 +537,6 @@ def main():
                             info(" => Climbing Options Ladder...", False)
                         break
     elif user_input == 3:
-        info("Starting Reddit to Twitter...")
-
-        # Get Twitter account (cached or prompt to create)
-        cached_accounts = get_accounts("twitter")
-
-        if len(cached_accounts) == 0:
-            warning("No Twitter accounts found. Create one first.")
-            user_input = question("Yes/No: ")
-
-            if user_input.lower() == "yes":
-                generated_uuid = str(uuid4())
-
-                success(f" => Generated ID: {generated_uuid}")
-                nickname = question(" => Enter a nickname for this account: ")
-                fp_profile = question(" => Enter the path to the Firefox profile: ")
-                topic = question(" => Enter the account topic (e.g. memes): ")
-
-                add_account(
-                    "twitter",
-                    {
-                        "id": generated_uuid,
-                        "nickname": nickname,
-                        "firefox_profile": fp_profile,
-                        "topic": topic,
-                        "posts": [],
-                    },
-                )
-
-                success("Account configured successfully!")
-            else:
-                error("Need a Twitter account to post to Twitter.")
-                main()
-
-        # Show Reddit to Twitter options
-        while True:
-            info("\n============ REDDIT TO TWITTER ===========", False)
-
-            for idx, option in enumerate(REDDIT_TWITTER_OPTIONS):
-                print(colored(f" {idx + 1}. {option}", "cyan"))
-
-            info("============================================\n", False)
-
-            user_input = int(question("Select an option: "))
-
-            if user_input == 1:
-                # Fetch & Post Best Meme
-                info("Fetching best meme from Reddit...")
-
-                # Get or create Twitter account
-                if len(cached_accounts) == 0:
-                    error("No Twitter account available.")
-                    break
-
-                selected_account = cached_accounts[0]
-
-                # Create Twitter instance
-                twitter = Twitter(
-                    selected_account["id"],
-                    selected_account["nickname"],
-                    selected_account["firefox_profile"],
-                    selected_account["topic"],
-                )
-
-                # Create Reddit instance to fetch from r/memes, r/dankmemes, r/ProgrammerHumor
-                reddit = Reddit(
-                    subreddits=["memes", "dankmemes", "ProgrammerHumor"],
-                    limit=25,
-                    min_score=500,
-                )
-
-                # Fetch trending posts
-                info("Fetching posts from subreddits...")
-                posts = reddit.fetch_trending_posts()
-
-                if not posts:
-                    warning("No posts with media found. Try lowering min_score.")
-                    continue
-
-                # Get the best post
-                best_post = reddit.get_best_post()
-
-                if not best_post:
-                    warning("No suitable post found.")
-                    continue
-
-                # Display the best post
-                info(f"Best post: {best_post.get('title', '')[:60]}...")
-                info(
-                    f"Score: {best_post.get('score', 0):,} | r/{best_post.get('subreddit')}"
-                )
-
-                confirm = question("Post this to Twitter? (Yes/No): ")
-                if confirm.lower() != "yes":
-                    warning("Canceled.")
-                    continue
-
-                # Download the media
-                info("Downloading media...")
-                media_path = reddit.download_media(best_post)
-
-                if not media_path:
-                    error("Failed to download media.")
-                    continue
-
-                # Generate caption
-                caption = twitter.generate_caption_from_reddit(best_post)
-
-                # Post to Twitter with caption
-                success("Posting to Twitter...")
-                result = twitter.post_with_media(caption, media_path)
-
-                if result:
-                    success("Posted to Twitter successfully!")
-                else:
-                    error("Failed to post to Twitter.")
-
-                # Cleanup temp files
-                reddit.cleanup()
-
-            elif user_input == 2:
-                # Select from Top Posts
-                info("Fetching top posts from subreddits...")
-
-                if len(cached_accounts) == 0:
-                    error("No Twitter account available.")
-                    break
-
-                selected_account = cached_accounts[0]
-
-                twitter = Twitter(
-                    selected_account["id"],
-                    selected_account["nickname"],
-                    selected_account["firefox_profile"],
-                    selected_account["topic"],
-                )
-
-                reddit = Reddit(
-                    subreddits=["memes", "dankmemes", "ProgrammerHumor"],
-                    limit=25,
-                    min_score=100,
-                )
-
-                posts = reddit.fetch_trending_posts()
-
-                if not posts:
-                    warning("No posts found.")
-                    continue
-
-                # Display posts
-                reddit.display_posts()
-
-                selected_idx = question("Select a post to post (number): ")
-                try:
-                    selected_post = reddit.select_post(int(selected_idx))
-                    if not selected_post:
-                        error("Invalid selection.")
-                        continue
-                except (ValueError, IndexError):
-                    error("Invalid selection.")
-                    continue
-
-                # Download media
-                media_path = reddit.download_media(selected_post)
-
-                if not media_path:
-                    error("Failed to download media.")
-                    continue
-
-                # Generate and post caption
-                caption = twitter.generate_caption_from_reddit(selected_post)
-                result = twitter.post_with_media(caption, media_path)
-
-                if result:
-                    success("Posted to Twitter successfully!")
-                else:
-                    error("Failed to post to Twitter.")
-
-                reddit.cleanup()
-
-            elif user_input == 3:
-                # Choose Subreddit
-                custom_sub = question("Enter subreddit name (without r/): ").strip()
-                if not custom_sub:
-                    error("Invalid subreddit.")
-                    continue
-
-                if len(cached_accounts) == 0:
-                    error("No Twitter account available.")
-                    break
-
-                selected_account = cached_accounts[0]
-
-                twitter = Twitter(
-                    selected_account["id"],
-                    selected_account["nickname"],
-                    selected_account["firefox_profile"],
-                    selected_account["topic"],
-                )
-
-                reddit = Reddit(subreddits=[custom_sub], limit=25, min_score=100)
-
-                posts = reddit.fetch_hot_posts(custom_sub)
-
-                if not posts:
-                    warning(f"No posts with media found in r/{custom_sub}.")
-                    continue
-
-                # Get best post from this subreddit
-                best_post = posts[0] if posts else None
-
-                if not best_post:
-                    warning("No suitable post found.")
-                    continue
-
-                info(f"Best post: {best_post.get('title', '')[:60]}...")
-                info(f"Score: {best_post.get('score', 0):,}")
-
-                confirm = question("Post this to Twitter? (Yes/No): ")
-                if confirm.lower() != "yes":
-                    continue
-
-                media_path = reddit.download_media(best_post)
-                if not media_path:
-                    error("Failed to download media.")
-                    continue
-
-                caption = twitter.generate_caption_from_reddit(best_post)
-                result = twitter.post_with_media(caption, media_path)
-
-                if result:
-                    success("Posted to Twitter successfully!")
-                else:
-                    error("Failed to post to Twitter.")
-
-                reddit.cleanup()
-
-            elif user_input == 4:
-                # Setup CRON Job for Reddit-to-Twitter
-                info("How often do you want to auto-post Reddit memes to Twitter?")
-
-                info("\n============ OPTIONS ============", False)
-                for idx, cron_option in enumerate(REDDIT_TWITTER_CRON_OPTIONS):
-                    print(colored(f" {idx + 1}. {cron_option}", "cyan"))
-
-                info("=================================\n", False)
-
-                cron_input = int(question("Select an Option: "))
-
-                cron_script_path = os.path.join(
-                    ROOT_DIR, "src", "reddit_twitter_cron.py"
-                )
-                model = get_active_model()
-
-                # Get the first Twitter account for the cron job
-                if len(cached_accounts) == 0:
-                    error("No Twitter account available.")
-                    continue
-
-                account_id = cached_accounts[0]["id"]
-                command = ["python", cron_script_path, account_id, model]
-
-                def job():
-                    subprocess.run(command)
-
-                if cron_input == 1:
-                    # Every hour
-                    schedule.every(1).hours.do(job)
-                    success("Set up CRON Job: every hour.")
-                elif cron_input == 2:
-                    # Every 6 hours
-                    schedule.every(6).hours.do(job)
-                    success("Set up CRON Job: every 6 hours.")
-                elif cron_input == 3:
-                    # Every 12 hours
-                    schedule.every(12).hours.do(job)
-                    success("Set up CRON Job: every 12 hours.")
-                elif cron_input == 4:
-                    # Once a day
-                    schedule.every(1).day.do(job)
-                    success("Set up CRON Job: once a day.")
-                else:
-                    warning("Invalid option, skipping.")
-
-            elif user_input == 5:
-                if get_verbose():
-                    info(" => Climbing Options Ladder...", False)
-                break
-    elif user_input == 4:
         info("Starting Affiliate Marketing...")
 
         cached_products = get_products()

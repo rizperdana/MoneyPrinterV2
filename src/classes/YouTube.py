@@ -11,14 +11,32 @@ import requests
 import assemblyai as aai
 from PIL import Image
 
-from utils import *
-from cache import *
+from utils import close_running_selenium_instances, build_url, choose_random_song
+from cache import get_accounts, add_account
 from .Tts import TTS
 from llm_provider import generate_text
-from config import *
-from status import *
+from config import (
+    ROOT_DIR,
+    get_headless,
+    get_script_sentence_length,
+    get_stt_provider,
+    get_assemblyai_api_key,
+    get_whisper_model,
+    get_whisper_device,
+    get_whisper_compute_type,
+    get_threads,
+    get_fonts_dir,
+    get_font,
+    get_is_for_kids,
+)
+from status import error, success, info, warning
 from uuid import uuid4
-from constants import *
+from constants import (
+    YOUTUBE_TEXTBOX_ID,
+    YOUTUBE_MADE_FOR_KIDS_NAME,
+    YOUTUBE_NEXT_BUTTON_ID,
+    YOUTUBE_DONE_BUTTON_ID,
+)
 from typing import List
 from moviepy import (
     VideoClip,
@@ -684,74 +702,7 @@ Example:
         self.images.append(image_path)
         return image_path
 
-    def generate_image_nanobanana2(self, prompt: str) -> str:
-        """
-        Generates an AI Image using Nano Banana 2 API (Gemini image API).
-
-        Args:
-            prompt (str): Prompt for image generation
-
-        Returns:
-            path (str): The path to the generated image.
-        """
-        print(f"Generating Image using Nano Banana 2 API: {prompt}")
-
-        api_key = get_nanobanana2_api_key()
-        if not api_key:
-            error("nanobanana2_api_key is not configured.")
-            return None
-
-        base_url = get_nanobanana2_api_base_url().rstrip("/")
-        model = get_nanobanana2_model()
-        aspect_ratio = get_nanobanana2_aspect_ratio()
-
-        endpoint = f"{base_url}/models/{model}:generateContent"
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "responseModalities": ["IMAGE"],
-                "imageConfig": {"aspectRatio": aspect_ratio},
-            },
-        }
-
-        try:
-            response = requests.post(
-                endpoint,
-                headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
-                json=payload,
-                timeout=300,
-            )
-            if response.status_code == 429:
-                if get_verbose():
-                    warning("Gemini image API rate limited (429). Falling back.")
-                return None
-            response.raise_for_status()
-            body = response.json()
-
-            candidates = body.get("candidates", [])
-            for candidate in candidates:
-                content = candidate.get("content", {})
-                for part in content.get("parts", []):
-                    inline_data = part.get("inlineData") or part.get("inline_data")
-                    if not inline_data:
-                        continue
-                    data = inline_data.get("data")
-                    mime_type = inline_data.get("mimeType") or inline_data.get(
-                        "mime_type", ""
-                    )
-                    if data and str(mime_type).startswith("image/"):
-                        image_bytes = base64.b64decode(data)
-                        return self._persist_image(image_bytes, "Nano Banana 2 API")
-
-            if get_verbose():
-                warning(
-                    f"Nano Banana 2 did not return an image payload. Response: {body}"
-                )
-            return None
-        except Exception as e:
-            if get_verbose():
-                warning(f"Failed to generate image with Nano Banana 2 API: {str(e)}")
-            return None
+    # GEMINI IMAGE GENERATION COMPLETELY REMOVED
 
     def generate_image_pollinations(self, prompt: str) -> str:
         """
@@ -1135,46 +1086,29 @@ Example:
     def generate_image(self, prompt: str, delay_between: int = 2) -> str:
         """
         Generates an AI Image based on the given prompt.
-        Priority: Pollinations (paid) -> g4f (free) -> Cloudflare Workers AI -> Pixabay
+        Priority: Cloudflare Image API -> Pollination AI -> warning on failure
         """
-        # 1. Try Pollinations with API key (fastest, most reliable)
+        # 1. Try Cloudflare Image API FIRST
         if get_verbose():
-            info("Trying Pollinations API...")
+            info("Trying Cloudflare Image API...")
+        result = self.generate_image_cloudflare(prompt)
+        if result is not None:
+            time.sleep(delay_between)
+            return result
+
+        # 2. Fallback to Pollination AI
+        if get_verbose():
+            info("Cloudflare failed. Trying Pollination AI...")
         result = self.generate_image_pollinations(prompt)
         if result is not None:
             time.sleep(delay_between)
             return result
 
-        # 2. Try g4f (Pollinations free)
-        if not getattr(self, "_g4f_quota_exhausted", False):
-            if get_verbose():
-                info("Pollinations failed. Trying g4f (free)...")
-            result = self.generate_image_g4f(prompt)
-            if result is not None:
-                time.sleep(delay_between)
-                return result
-        elif get_verbose():
-            info("g4f quota exhausted, skipping...")
-
-        # 3. Try Cloudflare Workers AI (SDXL) - may be rate limited
+        # All failed - show proper warning
         if get_verbose():
-            info("Trying Cloudflare Workers AI (SDXL)...")
-        result = self.generate_image_cloudflare(prompt)
-        if result is not None:
-            time.sleep(2)
-            return result
-
-        # 4. Try Pixabay - stock photos
-        if get_verbose():
-            info("All AI generation failed. Trying Pixabay stock photos...")
-        result = self.generate_image_pixabay(prompt)
-        if result is not None:
-            time.sleep(5)
-            return result
-
-        # All failed - caller will use placeholder
-        if get_verbose():
-            warning("All image generation methods failed.")
+            warning(
+                "⚠️ ALL IMAGE GENERATION METHODS FAILED. No image generated for this prompt."
+            )
         return None
 
     def generate_script_to_speech(self, tts_instance: TTS) -> str:
@@ -1458,11 +1392,17 @@ Example:
         subtitles = None
         try:
             subtitles_path = self.generate_subtitles(self.tts_path)
-            equalize_subtitles(subtitles_path, 10)
+            # Skip broken equalize_subtitles function
             subtitles = SubtitlesClip(subtitles_path, generator)
-            subtitles = subtitles.with_position(("center", "center"))
+            subtitles = subtitles.with_position(
+                ("center", 0.7)
+            )  # Lower position for better visibility
+            subtitles = subtitles.with_duration(total_dur)
         except Exception as e:
             warning(f"Failed to generate subtitles, continuing without subtitles: {e}")
+            import traceback
+
+            traceback.print_exc()
 
         random_song_clip = AudioFileClip(random_song).with_fps(44100)
 
@@ -3467,10 +3407,42 @@ Example:
                         continue
 
                 if caption_el:
-                    title = self.metadata.get("title", "")
-                    caption_el.send_keys(title[:2200])  # TikTok caption limit
+                    # Clear existing caption (TikTok auto-fills filename with UUID prefix)
+                    caption_el.clear()
+                    time.sleep(0.3)
+
+                    # Build proper TikTok caption: Title + clean description + hashtags
+                    title = self.metadata.get("title", "").strip()
+                    description = self.metadata.get("description", "").strip()
+                    tags = self.metadata.get("tags", [])
+
+                    # Remove any UUID prefix if present (matches 8-4-4-4-12 UUID format)
+                    import re
+
+                    uuid_pattern = r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+                    title = re.sub(uuid_pattern, "", title).strip()
+                    description = re.sub(uuid_pattern, "", description).strip()
+
+                    # Combine everything properly for TikTok single caption field
+                    caption_parts = [title]
+                    if description and description != title:
+                        caption_parts.append("\n\n" + description)
+
+                    # Add hashtags at the end
+                    if tags:
+                        hashtag_str = " ".join(
+                            [f"#{tag.replace(' ', '')}" for tag in tags[:10]]
+                        )
+                        caption_parts.append("\n\n" + hashtag_str)
+
+                    final_caption = "".join(caption_parts).strip()
+
+                    # Send clean caption, respect TikTok limit
+                    caption_el.send_keys(final_caption[:2200])
                     if verbose:
-                        info("\t=> Caption set")
+                        info(
+                            f"\t=> Caption set successfully ({len(final_caption)} chars)"
+                        )
 
                 time.sleep(3)
 

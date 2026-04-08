@@ -10,11 +10,10 @@ from datetime import datetime
 from termcolor import colored
 from uuid import uuid4
 
-from cache import *
-from config import *
-from status import *
+from cache import get_accounts, add_account
+from config import get_firefox_profile_path
+from status import error, success, info, warning
 from llm_provider import generate_text
-from constants import *
 
 
 class Reddit:
@@ -64,7 +63,9 @@ class Reddit:
                     info(" => Reddit: using PRAW (authenticated)")
             except Exception as e:
                 if get_verbose():
-                    warning(f" => Reddit: PRAW init failed, falling back to raw requests: {e}")
+                    warning(
+                        f" => Reddit: PRAW init failed, falling back to raw requests: {e}"
+                    )
         else:
             if get_verbose():
                 info(" => Reddit: no credentials, using raw requests")
@@ -154,13 +155,17 @@ class Reddit:
                 media_type = "image"
 
         if post_data.get("is_video", False):
-            media_url = post_data.get("media", {}).get("reddit_video", {}).get("fallback_url")
+            media_url = (
+                post_data.get("media", {}).get("reddit_video", {}).get("fallback_url")
+            )
             if media_url:
                 media_type = "video"
         elif post_data.get("crosspost_parent_list"):
             parent = post_data["crosspost_parent_list"][0]
             if parent.get("is_video", False):
-                media_url = parent.get("media", {}).get("reddit_video", {}).get("fallback_url")
+                media_url = (
+                    parent.get("media", {}).get("reddit_video", {}).get("fallback_url")
+                )
                 if media_url:
                     media_type = "video"
             else:
@@ -249,10 +254,13 @@ class Reddit:
 
         except requests.exceptions.SSLError as e:
             if get_verbose():
-                warning(f"SSL error fetching r/{subreddit}, retrying without verify: {e}")
+                warning(
+                    f"SSL error fetching r/{subreddit}, retrying without verify: {e}"
+                )
             # Retry without SSL verification as fallback
             try:
                 import urllib3
+
                 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
                 response = requests.get(
                     url,
@@ -271,7 +279,9 @@ class Reddit:
                         posts.append(post_info)
 
                 if get_verbose():
-                    info(f" => Fetched {len(posts)} posts from r/{subreddit} (no SSL verify)")
+                    info(
+                        f" => Fetched {len(posts)} posts from r/{subreddit} (no SSL verify)"
+                    )
                 return posts
             except Exception as e2:
                 if get_verbose():
@@ -290,26 +300,26 @@ class Reddit:
             posts (List[dict]): Combined list of posts from all subreddits
         """
         all_posts = []
-        
+
         for subreddit in self.subreddits:
             if get_verbose():
                 info(f" => Fetching posts from r/{subreddit}...")
-            
+
             posts = self.fetch_hot_posts(subreddit)
             all_posts.extend(posts)
-            
+
             # Small delay between subreddit requests
             time.sleep(1)
-        
+
         # Sort by score (highest first)
         all_posts.sort(key=lambda x: x.get("score", 0), reverse=True)
-        
+
         # Store posts
         self.posts = all_posts
-        
+
         if get_verbose():
             success(f" => Total trending posts: {len(all_posts)}")
-        
+
         return all_posts
 
     def download_media(self, post: Dict) -> Optional[str]:
@@ -324,10 +334,10 @@ class Reddit:
         """
         media_url = post.get("media_url")
         media_type = post.get("media_type")
-        
+
         if not media_url:
             return None
-        
+
         # Determine file extension
         if media_type == "video":
             ext = ".mp4"
@@ -335,10 +345,10 @@ class Reddit:
             ext = ".png"
         else:
             ext = ".jpg"
-        
+
         filename = f"{post['id']}_{post['subreddit']}{ext}"
         filepath = os.path.join(self.temp_dir, filename)
-        
+
         try:
             # Handle i.redd.it URLs (Reddit's image CDN)
             if "i.redd.it" in media_url:
@@ -346,10 +356,12 @@ class Reddit:
                 if media_type == "image":
                     # Try to get the full resolution
                     media_url = media_url.replace("/preview/", "/")
-            
-            response = requests.get(media_url, timeout=60, headers=self._get_headers(), verify=True)
+
+            response = requests.get(
+                media_url, timeout=60, headers=self._get_headers(), verify=True
+            )
             response.raise_for_status()
-            
+
             # Check content type if available
             content_type = response.headers.get("Content-Type", "")
             if "video" in content_type:
@@ -359,28 +371,30 @@ class Reddit:
                 if "png" in content_type:
                     ext = ".png"
                     filepath = filepath.replace(".jpg", ".png")
-            
+
             # Ensure correct extension
             if not filepath.endswith(ext):
                 filepath = filepath.rsplit(".", 1)[0] + ext
-            
+
             with open(filepath, "wb") as f:
                 f.write(response.content)
-            
+
             # Verify file was written and has content
             if os.path.getsize(filepath) > 1000:
                 self.downloaded_media.append(filepath)
-                
+
                 if get_verbose():
                     info(f" => Downloaded media: {filepath}")
-                
+
                 return filepath
             else:
                 if get_verbose():
-                    warning(f" => Downloaded file too small, likely corrupted: {filepath}")
+                    warning(
+                        f" => Downloaded file too small, likely corrupted: {filepath}"
+                    )
                 os.remove(filepath)
                 return None
-                
+
         except Exception as e:
             if get_verbose():
                 warning(f"Failed to download media: {e}")
@@ -397,16 +411,16 @@ class Reddit:
             paths (List[str]): List of paths to downloaded files
         """
         downloaded = []
-        
+
         for post in self.posts[:max_downloads]:
             filepath = self.download_media(post)
             if filepath:
                 downloaded.append(filepath)
             time.sleep(0.5)  # Rate limiting
-        
+
         if get_verbose():
             success(f" => Downloaded {len(downloaded)} media files")
-        
+
         return downloaded
 
     def get_post_caption(self, post: Dict, max_length: int = 280) -> str:
@@ -441,7 +455,7 @@ class Reddit:
 
         # Truncate if needed
         if len(title) > max_length - 50:
-            title = title[:max_length - 53].rsplit(" ", 1)[0] + "..."
+            title = title[: max_length - 53].rsplit(" ", 1)[0] + "..."
 
         # Generate hashtag from subreddit
         hashtag = f"#{subreddit}" if subreddit else "#memes"
@@ -453,7 +467,7 @@ class Reddit:
 
         # Final check and truncate
         if len(caption) > max_length:
-            caption = caption[:max_length - 3] + "..."
+            caption = caption[: max_length - 3] + "..."
 
         return caption
 
@@ -519,7 +533,9 @@ class Reddit:
             max_text_len = 280 - len(hashtag_block)
 
             if len(caption_text) > max_text_len:
-                caption_text = caption_text[:max_text_len - 3].rsplit(" ", 1)[0] + "..."
+                caption_text = (
+                    caption_text[: max_text_len - 3].rsplit(" ", 1)[0] + "..."
+                )
 
             final_caption = f"{caption_text}{hashtag_block}"
 
@@ -553,28 +569,34 @@ class Reddit:
         if not self.posts:
             warning("No posts to display. Run fetch_trending_posts() first.")
             return
-        
+
         from prettytable import PrettyTable
-        
+
         table = PrettyTable()
         table.field_names = ["#", "Subreddit", "Title", "Score", "Type"]
-        
+
         for idx, post in enumerate(self.posts, start=1):
-            title = post.get("title", "")[:40] + "..." if len(post.get("title", "")) > 40 else post.get("title", "")
-            table.add_row([
-                idx,
-                f"r/{post.get('subreddit')}",
-                title,
-                f"{post.get('score', 0):,}",
-                post.get("media_type", "unknown")
-            ])
-        
+            title = (
+                post.get("title", "")[:40] + "..."
+                if len(post.get("title", "")) > 40
+                else post.get("title", "")
+            )
+            table.add_row(
+                [
+                    idx,
+                    f"r/{post.get('subreddit')}",
+                    title,
+                    f"{post.get('score', 0):,}",
+                    post.get("media_type", "unknown"),
+                ]
+            )
+
         print(table)
 
     def get_best_post(self) -> Optional[Dict]:
         """
         Returns the highest upvoted post with media from fetched posts.
-        
+
         This is a convenience method that fetches trending posts and returns
         the top one by score.
 
@@ -584,24 +606,26 @@ class Reddit:
         if not self.posts:
             # Fetch posts if not already fetched
             self.fetch_trending_posts()
-        
+
         if not self.posts:
             if get_verbose():
                 warning("No posts with media found")
             return None
-        
+
         # Return the first post (highest score after sorting)
         best_post = self.posts[0]
-        
+
         if get_verbose():
             info(f" => Best post: {best_post.get('title', '')[:50]}...")
-            info(f"    Score: {best_post.get('score', 0):,} | r/{best_post.get('subreddit')}")
-        
+            info(
+                f"    Score: {best_post.get('score', 0):,} | r/{best_post.get('subreddit')}"
+            )
+
         return best_post
 
     def cleanup(self) -> None:
         """Removes the temporary directory and all downloaded media."""
-        if hasattr(self, 'temp_dir') and os.path.isdir(self.temp_dir):
+        if hasattr(self, "temp_dir") and os.path.isdir(self.temp_dir):
             shutil.rmtree(self.temp_dir, ignore_errors=True)
             if get_verbose():
                 info(" => Cleaned up Reddit temp directory")

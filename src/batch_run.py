@@ -9,14 +9,16 @@ import json
 import time
 from datetime import datetime
 
+from dotenv import load_dotenv
+
 # Add gecko driver to PATH for selenium
 gecko_dir = "/home/anon/.cache/selenium/geckodriver/linux64/0.36.0"
 os.environ["PATH"] = gecko_dir + ":" + os.environ.get("PATH", "")
 
+# Add src to path before local imports
 sys.path.insert(0, os.path.dirname(__file__))
 
-from dotenv import load_dotenv
-
+# Load .env before other imports
 load_dotenv(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 )

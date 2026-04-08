@@ -6,14 +6,13 @@ import json
 import shutil
 import tempfile
 
-from cache import *
-from config import *
-from status import *
+from cache import get_accounts, add_account, remove_account
+from config import get_firefox_profile_path, get_headless, ROOT_DIR
+from status import error, success, info, warning
 from llm_provider import generate_text
 from typing import List, Optional
 from datetime import datetime
 from termcolor import colored
-from selenium_firefox import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.service import Service
@@ -21,7 +20,6 @@ from selenium.webdriver.firefox.options import Options
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from typing import List, Optional
 from urllib.parse import quote
 
 
@@ -123,7 +121,6 @@ class Twitter:
             raise RuntimeError(
                 "Could not find tweet text box. Ensure you are logged into X in this Firefox profile."
             )
-
 
         post_button = None
         post_button_selectors = [
@@ -239,7 +236,7 @@ class Twitter:
     def post_with_media(self, text: str, media_path: str = None) -> bool:
         """
         Posts a tweet with optional media (image/video) attachment.
-        
+
         This method handles cross-posting Reddit content to Twitter with
         images or videos and a caption.
 
@@ -258,13 +255,18 @@ class Twitter:
             bot.get("https://x.com/compose/post")
             time.sleep(2)
 
-            print(colored(" => Posting to Twitter with media:", "blue"), text[:50] + "...")
+            print(
+                colored(" => Posting to Twitter with media:", "blue"), text[:50] + "..."
+            )
 
             # Fill in the text first
             text_box = None
             text_box_selectors = [
                 (By.CSS_SELECTOR, "div[data-testid='tweetTextarea_0'][role='textbox']"),
-                (By.XPATH, "//div[@data-testid='tweetTextarea_0']//div[@role='textbox']"),
+                (
+                    By.XPATH,
+                    "//div[@data-testid='tweetTextarea_0']//div[@role='textbox']",
+                ),
                 (By.XPATH, "//div[@role='textbox']"),
             ]
 
@@ -286,7 +288,7 @@ class Twitter:
             if media_path and os.path.isfile(media_path):
                 if verbose:
                     info(f" => Uploading media: {media_path}")
-                
+
                 # Find the media upload button
                 media_button_selectors = [
                     (By.XPATH, "//input[@type='file']"),
@@ -294,7 +296,7 @@ class Twitter:
                     (By.XPATH, "//button[@data-testid='addFileButton']"),
                     (By.XPATH, "//button[contains(@aria-label, 'Add media')]"),
                 ]
-                
+
                 media_input = None
                 for selector in media_button_selectors:
                     try:
@@ -303,14 +305,14 @@ class Twitter:
                             break
                     except Exception:
                         continue
-                
+
                 if media_input:
                     # Send the file path to the input
                     media_input.send_keys(media_path)
-                    
+
                     # Wait for media to upload
                     time.sleep(3)
-                    
+
                     if verbose:
                         info(" => Media uploaded successfully")
                 else:
@@ -334,20 +336,24 @@ class Twitter:
                     continue
 
             if post_button is None:
-                raise RuntimeError("Could not find the Post button on X compose screen.")
+                raise RuntimeError(
+                    "Could not find the Post button on X compose screen."
+                )
 
             if verbose:
                 print(colored(" => Pressed Post Button on Twitter..", "blue"))
-            
+
             time.sleep(2)
 
             # Add the post to the cache
             now = datetime.now()
-            self.add_post({
-                "content": text, 
-                "media_path": media_path,
-                "date": now.strftime("%m/%d/%Y, %H:%M:%S")
-            })
+            self.add_post(
+                {
+                    "content": text,
+                    "media_path": media_path,
+                    "date": now.strftime("%m/%d/%Y, %H:%M:%S"),
+                }
+            )
 
             success("Posted to Twitter with media successfully!")
             return True
@@ -359,7 +365,7 @@ class Twitter:
     def post_reddit_content(self, reddit_post: dict, media_path: str = None) -> bool:
         """
         Posts Reddit content to Twitter with automatic caption generation.
-        
+
         Convenience method that takes a Reddit post dict and optional media path,
         then posts to Twitter.
 
@@ -372,7 +378,7 @@ class Twitter:
         """
         # Generate caption from Reddit post
         caption = self._generate_reddit_caption(reddit_post)
-        
+
         return self.post_with_media(caption, media_path)
 
     def _generate_reddit_caption(self, reddit_post: dict, max_length: int = 280) -> str:
@@ -427,7 +433,7 @@ class Twitter:
         if len(caption) + len(url) + 2 <= max_length:
             caption += f"\n{url}"
         elif len(caption) > max_length:
-            caption = caption[:max_length - 3] + "..."
+            caption = caption[: max_length - 3] + "..."
 
         return caption
 
@@ -464,7 +470,9 @@ class Twitter:
             "PrequelMemes": "#PrequelMemes #StarWars #prequelmemes",
         }
 
-        hashtags = subreddit_hashtags.get(subreddit, f"#{subreddit} #memes #reddit #viral")
+        hashtags = subreddit_hashtags.get(
+            subreddit, f"#{subreddit} #memes #reddit #viral"
+        )
 
         prompt = (
             f"You are a viral social media copywriter specializing in meme content. "
@@ -494,7 +502,9 @@ class Twitter:
             max_text_len = 280 - len(hashtag_block)
 
             if len(caption_text) > max_text_len:
-                caption_text = caption_text[:max_text_len - 3].rsplit(" ", 1)[0] + "..."
+                caption_text = (
+                    caption_text[: max_text_len - 3].rsplit(" ", 1)[0] + "..."
+                )
 
             final_caption = f"{caption_text}{hashtag_block}"
 

@@ -11,9 +11,17 @@ import requests
 import subprocess
 import platform
 
-from cache import *
-from status import *
-from config import *
+from cache import get_results_cache_path
+from status import info, warning, error, success
+from config import (
+    get_google_maps_scraper_niche,
+    get_email_credentials,
+    get_google_maps_scraper_zip_url,
+    get_outreach_message_subject,
+    get_outreach_message_body_file,
+    get_scraper_timeout,
+    ROOT_DIR,
+)
 
 
 class Outreach:

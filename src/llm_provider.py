@@ -2,14 +2,14 @@ import os
 import json
 import httpx
 
-from config import get_ollama_base_url, get_verbose
+from config import get_verbose
 
 print(
     f"[llm_provider] Importing with CLIPROXY_API_KEY = {os.environ.get('CLIPROXY_API_KEY', 'NOT SET')}"
 )
 
-_API_KEY = os.environ.get("CLIPROXY_API_KEY", "")
-_fallback_models: list[str] = []
+_API_KEY = "sk-dIMp6qoD0oWyMvswe"
+_CLIPROXY_BASE = "http://localhost:8317/v1"
 _selected_model: str | None = None
 
 
@@ -18,31 +18,6 @@ def _get_headers() -> dict:
     if _API_KEY:
         headers["Authorization"] = f"Bearer {_API_KEY}"
     return headers
-
-
-def _get_base_url() -> str:
-    return get_ollama_base_url()
-
-
-def _get_fallback_models() -> list[str]:
-    global _fallback_models
-    if _fallback_models:
-        return _fallback_models
-    try:
-        with open(os.path.join(ROOT_DIR, "config.json"), "r") as f:
-            cfg = json.load(f)
-        _fallback_models = cfg.get("ollama_fallback_models", [])
-    except Exception:
-        _fallback_models = []
-    return _fallback_models
-
-
-def list_models() -> list[str]:
-    base_url = _get_base_url()
-    response = httpx.get(f"{base_url}/v1/models", headers=_get_headers(), timeout=30.0)
-    response.raise_for_status()
-    data = response.json()
-    return sorted(m["id"] for m in data.get("data", []))
 
 
 def select_model(model: str) -> None:
@@ -57,11 +32,10 @@ def get_active_model() -> str | None:
 def _try_generate(prompt: str, model: str, timeout: float = 120.0) -> str | None:
     import time as _time
 
-    base_url = _get_base_url()
     for attempt in range(3):
         try:
             response = httpx.post(
-                f"{base_url}/v1/chat/completions",
+                f"{_CLIPROXY_BASE}/chat/completions",
                 headers=_get_headers(),
                 json={
                     "model": model,
@@ -83,17 +57,31 @@ def _try_generate(prompt: str, model: str, timeout: float = 120.0) -> str | None
     return None
 
 
-def generate_text(prompt: str, model_name: str = None) -> str:
-    primary = model_name or _selected_model
-    if not primary:
-        raise RuntimeError(
-            "No model selected. Call select_model() first or pass model_name."
+def list_models() -> list[str]:
+    """Return list of available models from the API"""
+    try:
+        response = httpx.get(
+            f"{_CLIPROXY_BASE}/models",
+            headers=_get_headers(),
+            timeout=30.0
         )
+        response.raise_for_status()
+        data = response.json()
+        return [model["id"] for model in data.get("data", [])]
+    except Exception as e:
+        print(f"[llm_provider] Failed to fetch models: {type(e).__name__}: {e}")
+        # Fallback known models
+        return ["kilo-auto/free", "gemma4", "llama3.1:8b", "mistral:7b"]
+
+
+def generate_text(prompt: str, model_name: str = None) -> str:
+    # PRIMARY: cliproxyapi kilo-auto/free
+    primary = model_name or _selected_model or "kilo-auto/free"
 
     candidates = [primary]
-    for fb in _get_fallback_models():
-        if fb not in candidates:
-            candidates.append(fb)
+
+    # FALLBACK: llama.cpp gemma4
+    candidates.append("gemma4")
 
     last_error = None
     for model in candidates:
@@ -108,3 +96,12 @@ def generate_text(prompt: str, model_name: str = None) -> str:
         f"All models failed (tried: {', '.join(candidates)}). "
         f"Last error from: {last_error}"
     )
+
+
+# Public exports
+__all__ = [
+    "list_models",
+    "select_model",
+    "get_active_model",
+    "generate_text"
+]
