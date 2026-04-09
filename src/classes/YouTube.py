@@ -735,7 +735,7 @@ Example:
     def generate_image_pollinations(self, prompt: str) -> str:
         """
         Generates an AI image using Pollinations.ai GET endpoint with API key.
-        Uses the simple GET /image/{prompt} endpoint which bypasses Cloudflare blocking.
+        Uses zimage model (0.002 pts/image, ~500/hr budget).
 
         Args:
             prompt (str): Scene description for image generation
@@ -744,50 +744,108 @@ Example:
             path (str): The path to the generated image, or None on failure.
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
-        if not api_key:
-            if get_verbose():
-                warning("POLLINATIONS_API_KEY not set. Skipping Pollinations.")
-            return None
 
         enhanced_prompt = f"{prompt}, Ghibli watercolor"
-        print(f"Generating AI image via Pollinations API: {prompt[:80]}...")
+        print(f"Generating AI image via Pollinations zimage: {prompt[:80]}...")
 
         try:
             import urllib.parse
 
             encoded_prompt = urllib.parse.quote(enhanced_prompt)
-            url = f"https://gen.pollinations.ai/image/{encoded_prompt}?model=flux&width=1080&height=1920&key={api_key}&nologo=true"
+            if api_key:
+                url = f"https://gen.pollinations.ai/image/{encoded_prompt}?model=zimage&width=1080&height=1920&key={api_key}&nologo=true"
+            else:
+                url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=zimage&width=1080&height=1920&nologo=true"
 
             resp = requests.get(url, timeout=120, headers={"User-Agent": "Mozilla/5.0"})
 
             if resp.status_code == 429:
                 if get_verbose():
-                    warning("Pollinations API rate limited (429).")
+                    warning("Pollinations zimage rate limited (429).")
                 return None
 
-            if resp.status_code == 401 or resp.status_code == 403:
+            if resp.status_code in (401, 403):
                 if get_verbose():
-                    warning(f"Pollinations API auth failed ({resp.status_code}).")
+                    warning(f"Pollinations zimage auth failed ({resp.status_code}).")
                 return None
 
             resp.raise_for_status()
 
             if len(resp.content) < 1000:
                 if get_verbose():
-                    warning("Pollinations image too small, likely an error.")
+                    warning("Pollinations zimage image too small, likely an error.")
                 return None
 
-            return self._persist_image(resp.content, "Pollinations API")
+            return self._persist_image(
+                resp.content,
+                "Pollinations API zimage"
+                if api_key
+                else "Pollinations zimage (public)",
+            )
 
         except Exception as e:
             if get_verbose():
                 warning(f"Pollinations image generation failed: {e}")
             return None
 
+    def generate_image_pollinations_flux(self, prompt: str) -> str:
+        """
+        Generates an AI image using Pollinations.ai GET endpoint with flux model.
+        Fallback when zimage is exhausted. Costs 0.001 pts/image (~150/hr from 0.15/hr budget).
+
+        Args:
+            prompt (str): Scene description for image generation
+
+        Returns:
+            path (str): The path to the generated image, or None on failure.
+        """
+        api_key = os.environ.get("POLLINATIONS_API_KEY", "")
+
+        enhanced_prompt = f"{prompt}, Ghibli watercolor"
+        print(f"Generating AI image via Pollinations flux: {prompt[:80]}...")
+
+        try:
+            import urllib.parse
+
+            encoded_prompt = urllib.parse.quote(enhanced_prompt)
+            if api_key:
+                url = f"https://gen.pollinations.ai/image/{encoded_prompt}?model=flux&width=1080&height=1920&key={api_key}&nologo=true"
+            else:
+                url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1080&height=1920&nologo=true"
+
+            resp = requests.get(url, timeout=120, headers={"User-Agent": "Mozilla/5.0"})
+
+            if resp.status_code == 429:
+                if get_verbose():
+                    warning("Pollinations flux rate limited (429).")
+                return None
+
+            if resp.status_code in (401, 403):
+                if get_verbose():
+                    warning(f"Pollinations flux auth failed ({resp.status_code}).")
+                return None
+
+            resp.raise_for_status()
+
+            if len(resp.content) < 1000:
+                if get_verbose():
+                    warning("Pollinations flux image too small, likely an error.")
+                return None
+
+            return self._persist_image(
+                resp.content,
+                "Pollinations API flux" if api_key else "Pollinations flux (public)",
+            )
+
+        except Exception as e:
+            if get_verbose():
+                warning(f"Pollinations flux generation failed: {e}")
+            return None
+
     def generate_image_g4f(self, prompt: str) -> str:
         """
-        Generates an AI image using gpt4free (Pollinations/Flux).
-        Free, no API key needed. Primary image generator.
+        Generates an AI image using gpt4free (Pollinations/zimage).
+        Free, no API key needed. Uses zimage model with flux fallback.
 
         Args:
             prompt (str): Scene description for image generation
@@ -796,19 +854,25 @@ Example:
             path (str): The path to the generated image, or None on failure.
         """
         try:
+            # Skip if already exhausted
+            if self._g4f_quota_exhausted:
+                if get_verbose():
+                    info("g4f already exhausted, skipping zimage...")
+                return None
+
             from g4f.client import Client
         except ImportError:
             if get_verbose():
-                warning("g4f not installed. Cannot use Pollinations/Flux.")
+                warning("g4f not installed. Cannot use Pollinations/zimage.")
             return None
 
         enhanced_prompt = f"{prompt}, Ghibli watercolor"
-        print(f"Generating AI image via g4f (Pollinations/Flux): {prompt[:80]}...")
+        print(f"Generating AI image via g4f (Pollinations zimage): {prompt[:80]}...")
 
         try:
             client = Client()
             response = client.images.generate(
-                model="flux",
+                model="zimage",
                 prompt=enhanced_prompt,
                 response_format="url",
             )
@@ -833,7 +897,7 @@ Example:
                     warning("g4f image too small, likely an error page.")
                 return None
 
-            return self._persist_image(img_resp.content, "g4f Pollinations/Flux")
+            return self._persist_image(img_resp.content, "g4f Pollinations zimage")
 
         except Exception as e:
             err_str = str(e)
@@ -845,6 +909,7 @@ Example:
                 if get_verbose():
                     warning(f"g4f quota exhausted: {e}")
                 self._g4f_quota_exhausted = True
+                return None  # Let caller handle fallback
             elif get_verbose():
                 warning(f"g4f image generation failed: {e}")
             return None
@@ -1114,7 +1179,7 @@ Example:
     def generate_image(self, prompt: str, delay_between: int = 2) -> str:
         """
         Generates an AI Image based on the given prompt.
-        Priority: Cloudflare Image API -> Pollination AI -> warning on failure
+        Priority: Cloudflare Image API -> Pollinations zimage -> g4f zimage -> Pollinations flux
         """
         # 1. Try Cloudflare Image API FIRST
         if get_verbose():
@@ -1124,19 +1189,38 @@ Example:
             time.sleep(delay_between)
             return result
 
-        # 2. Fallback to Pollination AI
+        # 2. Try Pollinations zimage via API key
         if get_verbose():
-            info("Cloudflare failed. Trying Pollination AI...")
+            info("Cloudflare exhausted. Trying Pollinations zimage...")
         result = self.generate_image_pollinations(prompt)
         if result is not None:
             time.sleep(delay_between)
             return result
 
-        # All failed - show proper warning
+        # 3. Try g4f zimage (skip if already exhausted)
+        if not self._g4f_quota_exhausted:
+            if get_verbose():
+                info("Trying g4f zimage...")
+            result = self.generate_image_g4f(prompt)
+            if result is not None:
+                time.sleep(delay_between)
+                return result
+        else:
+            if get_verbose():
+                info("g4f already exhausted, skipping zimage...")
+
+        # 4. Fallback to Pollinations flux (cheaper, 0.001 pts/image)
         if get_verbose():
-            warning(
-                "⚠️ ALL IMAGE GENERATION METHODS FAILED. No image generated for this prompt."
-            )
+            info("zimage failed. Trying Pollinations flux...")
+        result = self.generate_image_pollinations_flux(prompt)
+        if result is not None:
+            time.sleep(delay_between)
+            return result
+
+        # All failed - show proper warning
+        warning(
+            "ALL IMAGE GENERATION METHODS FAILED. No image generated for this prompt."
+        )
         return None
 
     def generate_script_to_speech(self, tts_instance: TTS) -> str:
@@ -1253,12 +1337,16 @@ Example:
         return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
 
     def _parse_srt(self, srt_path: str) -> list:
-        """Parse SRT file and return list of (start, end, text) tuples."""
-        subtitles = []
+        """Parse SRT file and return list of (start, end, text) tuples.
+
+        Merges consecutive SRT blocks into phrase-level chunks to avoid
+        word-by-word subtitle display (Whisper outputs word-level timestamps).
+        """
+        raw_subtitles = []
         with open(srt_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        blocks = content.strip().split("\n\n")
+        blocks = re.split(r"\n\s*\n", content.strip())
         for block in blocks:
             lines = block.strip().split("\n")
             if len(lines) >= 3:
@@ -1269,10 +1357,36 @@ Example:
                     start_str, end_str = time_line.split(" --> ")
                     start = self._parse_timestamp(start_str)
                     end = self._parse_timestamp(end_str)
-                    subtitles.append((start, end, text))
+                    raw_subtitles.append((start, end, text))
                 except Exception:
                     continue
-        return subtitles
+
+        # Merge consecutive blocks into phrase-level chunks
+        # Blocks are merged when gap between them is < 0.15 seconds
+        # (Whisper word-level timestamps have ~0.3s gaps; 0.15s merges only coarticulation)
+        if not raw_subtitles:
+            return []
+
+        merged = []
+        current_start, current_end, current_text = raw_subtitles[0]
+
+        for i in range(1, len(raw_subtitles)):
+            start, end, text = raw_subtitles[i]
+            gap = start - current_end
+            # Only merge if gap is tiny AND resulting segment would be >= 0.8s
+            if gap < 0.15 and current_text and (end - current_start) > 0.8:
+                # Merge: extend current chunk
+                current_end = end
+                current_text = current_text.rstrip() + " " + text
+            else:
+                # Save current and start new chunk
+                merged.append((current_start, current_end, current_text.strip()))
+                current_start, current_end, current_text = start, end, text
+
+        # Don't forget the last chunk
+        merged.append((current_start, current_end, current_text.strip()))
+
+        return merged
 
     def _parse_timestamp(self, ts: str) -> float:
         """Parse SRT timestamp to seconds."""
@@ -1291,7 +1405,9 @@ Example:
 
         draw = ImageDraw.Draw(frame)
         try:
-            font = ImageFont.truetype(font_path, 60)
+            # Scale font to ~2.5% of video height (vertical 9:16 video)
+            font_size = max(28, int(frame.height * 0.028))
+            font = ImageFont.truetype(font_path, font_size)
         except Exception:
             font = ImageFont.load_default()
 
@@ -1300,12 +1416,12 @@ Example:
         text_w = bbox[2] - bbox[0]
         text_h = bbox[3] - bbox[1]
 
-        # Position: center bottom, above the cat
-        x = (1080 - text_w) // 2
-        y = 1920 - text_h - 180  # 180px from bottom to avoid cat
+        # Position: center bottom, 80px from bottom edge
+        x = (frame.width - text_w) // 2
+        y = frame.height - text_h - 80
 
         # Draw stroke/outline
-        stroke_width = 4
+        stroke_width = max(2, font_size // 12)
         for dx in range(-stroke_width, stroke_width + 1, 2):
             for dy in range(-stroke_width, stroke_width + 1, 2):
                 if dx != 0 or dy != 0:
@@ -1387,6 +1503,23 @@ Example:
         threads = get_threads()
         tts_clip = AudioFileClip(self.tts_path)
         max_duration = tts_clip.duration
+
+        # Guard: if no images were generated, create a solid-color placeholder
+        if not self.images:
+            warning("No images generated - creating solid-color placeholder")
+            placeholder_path = os.path.join(ROOT_DIR, ".mp", str(uuid4()) + ".png")
+            try:
+                from PIL import Image
+
+                img = Image.new("RGB", (1080, 1920), color=(30, 30, 60))
+                img.save(placeholder_path)
+                self.images.append(placeholder_path)
+            except ImportError:
+                error("PIL not available - cannot create placeholder image")
+                raise RuntimeError(
+                    "Image generation failed and PIL placeholder unavailable"
+                )
+
         req_dur = max_duration / len(self.images)
 
         # Make a generator that returns a TextClip when called with consecutive
@@ -1469,86 +1602,6 @@ Example:
                 }
             )
 
-        # ── Generate mascot cat overlay (orange cat face, bottom-left) ─────
-        cat_overlay = None
-        cat_pos = None
-        try:
-            from PIL import ImageDraw
-
-            cat_size = 120
-            cat_img = Image.new("RGBA", (cat_size, cat_size), (0, 0, 0, 0))
-            draw = ImageDraw.Draw(cat_img)
-            cx, cy = cat_size // 2, cat_size // 2
-            r_head = 40
-            # Head (orange circle)
-            draw.ellipse(
-                [cx - r_head, cy - r_head, cx + r_head, cy + r_head],
-                fill=(255, 165, 0, 200),
-                outline=(180, 100, 0, 255),
-                width=2,
-            )
-            # Ears (orange triangles)
-            ear_w, ear_h = 18, 24
-            for dx in [-28, 28]:
-                ear_cx = cx + dx
-                draw.polygon(
-                    [
-                        (ear_cx - ear_w // 2, cy - 24),
-                        (ear_cx + ear_w // 2, cy - 24),
-                        (ear_cx, cy - 24 - ear_h),
-                    ],
-                    fill=(255, 165, 0, 200),
-                    outline=(180, 100, 0, 255),
-                )
-                # Inner ear (pink)
-                draw.polygon(
-                    [
-                        (ear_cx - ear_w // 3, cy - 26),
-                        (ear_cx + ear_w // 3, cy - 26),
-                        (ear_cx, cy - 26 - ear_h + 4),
-                    ],
-                    fill=(255, 180, 180, 180),
-                )
-            # Eyes (white + black pupils)
-            for dx in [-14, 14]:
-                ex = cx + dx
-                draw.ellipse([ex - 8, cy - 10, ex + 8, cy + 6], fill="white")
-                draw.ellipse([ex - 4, cy - 6, ex + 4, cy + 2], fill="black")
-                # Highlight
-                draw.ellipse([ex - 2, cy - 6, ex + 1, cy - 3], fill="white")
-            # Nose (pink triangle)
-            draw.polygon(
-                [(cx - 4, cy + 8), (cx + 4, cy + 8), (cx, cy + 13)],
-                fill=(255, 150, 150, 220),
-            )
-            # Mouth (curved lines)
-            draw.arc(
-                [cx - 10, cy + 10, cx, cy + 20],
-                start=0,
-                end=180,
-                fill=(80, 50, 20, 200),
-                width=2,
-            )
-            draw.arc(
-                [cx, cy + 10, cx + 10, cy + 20],
-                start=0,
-                end=180,
-                fill=(80, 50, 20, 200),
-                width=2,
-            )
-            # Whiskers
-            for side in [-1, 1]:
-                for dy in [-2, 3, 8]:
-                    draw.line(
-                        [(cx + side * 10, cy + 10 + dy), (cx + side * 35, cy + 6 + dy)],
-                        fill=(80, 50, 20, 180),
-                        width=1,
-                    )
-            cat_overlay = cat_img
-            cat_pos = (20, OUTPUT_H - cat_size - 20)  # Bottom-left with padding
-        except Exception as e:
-            warning(f"Could not generate mascot cat overlay: {e}")
-
         # Pre-parse subtitles for rendering on frames
         subtitle_data = []
         subtitle_font_path = None
@@ -1560,7 +1613,34 @@ Example:
                 if get_verbose():
                     info(f" => Loaded {len(subtitle_data)} subtitle segments")
         except Exception as e:
-            warning(f"Could not parse subtitles: {e}")
+            warning(f"Whisper subtitle generation failed: {e}")
+
+        # FALLBACK: if no subtitles, use the script text as full-video subtitle
+        if not subtitle_data and hasattr(self, "script") and self.script:
+            script_text = self.script.strip()
+            if script_text:
+                # Split script into sentences for subtitle display
+                import re
+
+                sentences = re.split(r"(?<=[.!?])\s+", script_text)
+                # Estimate ~2 seconds per sentence average
+                total_dur = float(max_duration) if "max_duration" in dir() else 60.0
+                seg_dur = total_dur / max(len(sentences), 1)
+                subtitle_font_path = os.path.join(get_fonts_dir(), get_font())
+                for i, sent in enumerate(sentences):
+                    sent = sent.strip()
+                    if not sent:
+                        continue
+                    # Truncate very long sentences
+                    if len(sent) > 200:
+                        sent = sent[:197] + "..."
+                    start = i * seg_dur
+                    end = min((i + 1) * seg_dur, total_dur)
+                    subtitle_data.append((start, end, sent))
+                if get_verbose():
+                    info(
+                        f" => Using script as fallback subtitles: {len(subtitle_data)} segments"
+                    )
 
         def make_frame(t):
             """Render a frame with Ken Burns pan+zoom effect."""
@@ -1595,10 +1675,6 @@ Example:
             # Crop from source, then resize to output resolution
             cropped = source_images[img_idx].crop((cx, cy, cx + crop_w, cy + crop_h))
             frame = cropped.resize((OUTPUT_W, OUTPUT_H), Image.LANCZOS)
-
-            # Overlay mascot cat in bottom-left corner
-            if cat_overlay is not None:
-                frame.paste(cat_overlay, cat_pos, cat_overlay)
 
             # Render subtitles on frame
             if subtitle_data:
@@ -1922,23 +1998,65 @@ Example:
             if verbose:
                 info("\t=> Setting 'made for kids' option...")
             time.sleep(1)
+            made_for_kids_clicked = False
             try:
-                if not get_is_for_kids():
-                    not_kids = browser.find_element(
-                        By.NAME, YOUTUBE_NOT_MADE_FOR_KIDS_NAME
+                # Try multiple selector strategies for the radio button
+                is_kids = get_is_for_kids()
+                target_name = (
+                    YOUTUBE_MADE_FOR_KIDS_NAME
+                    if is_kids
+                    else YOUTUBE_NOT_MADE_FOR_KIDS_NAME
+                )
+
+                selectors = [
+                    (By.NAME, target_name),
+                    (By.XPATH, f"//*[@name='{target_name}']"),
+                    (By.CSS_SELECTOR, f"input[name='{target_name}']"),
+                    (By.XPATH, f"//*[contains(@name, 'MADE_FOR_KIDS')]"),
+                    (
+                        By.XPATH,
+                        "//ytcp-radio-group[@role='radiogroup']//*[@role='radio']",
+                    ),
+                ]
+
+                for by, selector in selectors:
+                    try:
+                        elements = browser.find_elements(by, selector)
+                        for el in elements:
+                            if el.is_displayed() and el.is_enabled():
+                                browser.execute_script(
+                                    "arguments[0].scrollIntoView({block: 'center'});",
+                                    el,
+                                )
+                                time.sleep(0.5)
+                                try:
+                                    el.click()
+                                except Exception:
+                                    browser.execute_script("arguments[0].click();", el)
+                                time.sleep(1)
+                                if verbose:
+                                    info(
+                                        f"\t=> Made for kids radio clicked: {selector}"
+                                    )
+                                made_for_kids_clicked = True
+                                break
+                        if made_for_kids_clicked:
+                            break
+                    except Exception:
+                        continue
+
+                if not made_for_kids_clicked:
+                    warning(
+                        "Could not find made-for-kids radio button — skipping (YouTube may use last-used setting)"
                     )
-                    browser.execute_script("arguments[0].scrollIntoView();", not_kids)
-                    time.sleep(0.5)
-                    not_kids.click()
+                    if verbose:
+                        info("\t=> Made for kids radio not found, skipping...")
                 else:
-                    kids = browser.find_element(By.NAME, YOUTUBE_MADE_FOR_KIDS_NAME)
-                    browser.execute_script("arguments[0].scrollIntoView();", kids)
-                    time.sleep(0.5)
-                    kids.click()
-                time.sleep(2)
+                    time.sleep(2)
             except Exception as e:
+                error(f"Made for kids click failed: {e}")
                 if verbose:
-                    warning(f"Made for kids click failed: {e}")
+                    warning(f"\t=> Made for kids error: {e}")
 
             time.sleep(1)
 
@@ -2703,14 +2821,14 @@ Example:
     def upload_to_facebook(self) -> tuple:
         """
         Uploads the video to Facebook Reels using Selenium.
-        Uses the same Firefox profile context for authentication.
+        Uses an isolated Firefox profile context for authentication to avoid cookie conflicts.
 
         Returns:
             tuple: (success, url_or_error_message)
         """
         self._ensure_browser()
         browser = self.browser
-        wait = self.wait
+        wait = WebDriverWait(browser, 30)
         verbose = get_verbose()
 
         try:
@@ -3054,7 +3172,7 @@ Example:
                         # This is the most reliable moment to get the URL
                         try:
                             # Try to find the newly posted video via React/client-side data
-                            js_immediate = """
+                            js_immediate = r"""
                             (function() {
                                 // Try to find video from __REACT_DATA__ or similar
                                 var reactRoot = document.querySelector('[data-pagelet]');
@@ -3592,14 +3710,14 @@ Example:
     def upload_to_tiktok(self) -> tuple:
         """
         Uploads the video to TikTok using Selenium.
-        Uses the same Firefox profile context for authentication.
+        Uses an isolated Firefox profile context for authentication to avoid cookie conflicts.
 
         Returns:
             tuple: (success, url_or_error_message)
         """
         self._ensure_browser()
         browser = self.browser
-        wait = self.wait
+        wait = WebDriverWait(browser, 30)
         verbose = get_verbose()
 
         try:
