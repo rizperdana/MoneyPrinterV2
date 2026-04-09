@@ -258,7 +258,7 @@ def get_active_model() -> str:
     """Get the primary model from config."""
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as f:
         cfg = json.load(f)
-    return cfg.get("ollama_model", "xiaomi/mimo-v2-pro:free")
+    return cfg.get("llm_model", "xiaomi/mimo-v2-pro:free")
 
 
 def main_loop(logger: logging.Logger):

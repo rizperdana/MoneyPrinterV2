@@ -17,8 +17,9 @@ from config import (
     get_verbose,
     get_first_time_running,
     assert_folder_structure,
-    get_ollama_model,
+    get_default_model,
 )
+from llm_provider import get_active_model, select_model, list_models
 from status import error, success, info, warning, question
 from constants import (
     OPTIONS,
@@ -655,8 +656,8 @@ if __name__ == "__main__":
     # Fetch MP3 Files
     fetch_songs()
 
-    # Select LLM model — use cliproxyapi free model
-    configured_model = get_ollama_model()
+    # Select LLM model — use cliproxyapi
+    configured_model = get_default_model()
     if configured_model:
         select_model(configured_model)
         success(f"Using configured model: {configured_model}")

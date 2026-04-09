@@ -81,26 +81,26 @@ def get_headless() -> bool:
         return json.load(file)["headless"]
 
 
-def get_ollama_base_url() -> str:
+def get_llm_base_url() -> str:
     """
-    Gets the Ollama base URL.
+    Gets the LLM API base URL.
 
     Returns:
-        url (str): The Ollama base URL
+        url (str): The LLM API base URL
     """
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("ollama_base_url", "http://127.0.0.1:11434")
+        return json.load(file).get("llm_base_url", "http://localhost:8317/v1")
 
 
-def get_ollama_model() -> str:
+def get_default_model() -> str:
     """
-    Gets the Ollama model name from the config file.
+    Gets the default LLM model name from the config file.
 
     Returns:
-        model (str): The Ollama model name, or empty string if not set.
+        model (str): The model name, or empty string if not set.
     """
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("ollama_model", "")
+        return json.load(file).get("llm_model", "")
 
 
 def get_twitter_language() -> str:

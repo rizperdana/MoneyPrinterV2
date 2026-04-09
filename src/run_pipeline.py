@@ -29,7 +29,7 @@ load_dotenv(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 )
 
-from config import ROOT_DIR, get_ollama_model
+from config import ROOT_DIR, get_default_model, get_firefox_profile_path
 from status import error, success, info, warning
 from llm_provider import select_model
 from classes.YouTube import YouTube
@@ -65,7 +65,7 @@ def run_pipeline(
 
     try:
         # Select LLM model
-        model = get_ollama_model()
+        model = get_default_model()
         if model:
             select_model(model)
             info(f"Using LLM model: {model}")

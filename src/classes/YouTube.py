@@ -57,6 +57,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 def _suppress_stderr():
@@ -1350,6 +1351,86 @@ Example:
                 }
             )
 
+        # ── Generate mascot cat overlay (orange cat face, bottom-left) ─────
+        cat_overlay = None
+        cat_pos = None
+        try:
+            from PIL import ImageDraw
+
+            cat_size = 120
+            cat_img = Image.new("RGBA", (cat_size, cat_size), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(cat_img)
+            cx, cy = cat_size // 2, cat_size // 2
+            r_head = 40
+            # Head (orange circle)
+            draw.ellipse(
+                [cx - r_head, cy - r_head, cx + r_head, cy + r_head],
+                fill=(255, 165, 0, 200),
+                outline=(180, 100, 0, 255),
+                width=2,
+            )
+            # Ears (orange triangles)
+            ear_w, ear_h = 18, 24
+            for dx in [-28, 28]:
+                ear_cx = cx + dx
+                draw.polygon(
+                    [
+                        (ear_cx - ear_w // 2, cy - 24),
+                        (ear_cx + ear_w // 2, cy - 24),
+                        (ear_cx, cy - 24 - ear_h),
+                    ],
+                    fill=(255, 165, 0, 200),
+                    outline=(180, 100, 0, 255),
+                )
+                # Inner ear (pink)
+                draw.polygon(
+                    [
+                        (ear_cx - ear_w // 3, cy - 26),
+                        (ear_cx + ear_w // 3, cy - 26),
+                        (ear_cx, cy - 26 - ear_h + 4),
+                    ],
+                    fill=(255, 180, 180, 180),
+                )
+            # Eyes (white + black pupils)
+            for dx in [-14, 14]:
+                ex = cx + dx
+                draw.ellipse([ex - 8, cy - 10, ex + 8, cy + 6], fill="white")
+                draw.ellipse([ex - 4, cy - 6, ex + 4, cy + 2], fill="black")
+                # Highlight
+                draw.ellipse([ex - 2, cy - 6, ex + 1, cy - 3], fill="white")
+            # Nose (pink triangle)
+            draw.polygon(
+                [(cx - 4, cy + 8), (cx + 4, cy + 8), (cx, cy + 13)],
+                fill=(255, 150, 150, 220),
+            )
+            # Mouth (curved lines)
+            draw.arc(
+                [cx - 10, cy + 10, cx, cy + 20],
+                start=0,
+                end=180,
+                fill=(80, 50, 20, 200),
+                width=2,
+            )
+            draw.arc(
+                [cx, cy + 10, cx + 10, cy + 20],
+                start=0,
+                end=180,
+                fill=(80, 50, 20, 200),
+                width=2,
+            )
+            # Whiskers
+            for side in [-1, 1]:
+                for dy in [-2, 3, 8]:
+                    draw.line(
+                        [(cx + side * 10, cy + 10 + dy), (cx + side * 35, cy + 6 + dy)],
+                        fill=(80, 50, 20, 180),
+                        width=1,
+                    )
+            cat_overlay = cat_img
+            cat_pos = (20, OUTPUT_H - cat_size - 20)  # Bottom-left with padding
+        except Exception as e:
+            warning(f"Could not generate mascot cat overlay: {e}")
+
         def make_frame(t):
             """Render a frame with Ken Burns pan+zoom effect."""
             # Determine which segment we're in
@@ -1383,6 +1464,10 @@ Example:
             # Crop from source, then resize to output resolution
             cropped = source_images[img_idx].crop((cx, cy, cx + crop_w, cy + crop_h))
             frame = cropped.resize((OUTPUT_W, OUTPUT_H), Image.LANCZOS)
+
+            # Overlay mascot cat in bottom-left corner
+            if cat_overlay is not None:
+                frame.paste(cat_overlay, cat_pos, cat_overlay)
             return np.array(frame)
 
         final_clip = VideoClip(make_frame, duration=total_dur)
@@ -1489,8 +1574,6 @@ Example:
             (success, result) (tuple[bool, str]): (True, youtube_url) on success,
                                                    (False, error_message) on failure.
         """
-        from selenium.webdriver.common.action_chains import ActionChains
-
         self._ensure_browser()
         browser = self.browser
 
@@ -2585,7 +2668,17 @@ Example:
                     desc = self.metadata.get(
                         "description", self.metadata.get("title", "")
                     )
-                    caption_el.clear()
+                    # contenteditable divs don't respond to .clear() — use keyboard instead
+                    caption_el.click()
+                    time.sleep(0.3)
+                    actions = ActionChains(browser)
+                    actions.key_down(Keys.CONTROL).send_keys("a").key_up(
+                        Keys.CONTROL
+                    ).perform()
+                    time.sleep(0.2)
+                    actions = ActionChains(browser)
+                    actions.send_keys(Keys.DELETE).perform()
+                    time.sleep(0.3)
                     caption_el.send_keys(desc[:2000])  # Facebook limit
                     if verbose:
                         info("\t=> Description set")
@@ -2600,18 +2693,59 @@ Example:
                     (By.XPATH, "//button[contains(text(), 'Share')]"),
                     (By.XPATH, "//button[contains(text(), 'Post')]"),
                     (By.XPATH, "//button[contains(text(), 'Next')]"),
+                    (By.CSS_SELECTOR, 'div[aria-label*="Share"]'),
+                    (By.CSS_SELECTOR, 'div[aria-label*="Post"]'),
+                    (By.XPATH, "//div[@role='button' and contains(text(), 'Share')]"),
+                    (By.XPATH, "//div[@role='button' and contains(text(), 'Post')]"),
                 ]
+                share_clicked = False
                 for by, selector in share_selectors:
                     try:
                         share_btn = wait.until(
                             EC.element_to_be_clickable((by, selector))
                         )
-                        share_btn.click()
+                        # Try normal click first, then JS click as fallback
+                        try:
+                            share_btn.click()
+                        except Exception:
+                            browser.execute_script("arguments[0].click();", share_btn)
                         if verbose:
-                            info("\t=> Share button clicked")
+                            info(f"\t=> Share button clicked: {selector}")
+                        share_clicked = True
                         break
                     except Exception:
                         continue
+
+                # Fallback: find any clickable element with share/post text
+                if not share_clicked:
+                    try:
+                        all_elements = browser.find_elements(
+                            By.XPATH,
+                            "//*[contains(translate(text(), 'SHAREPOST', 'sharepost'), 'share') or contains(translate(text(), 'SHAREPOST', 'sharepost'), 'post')]",
+                        )
+                        for el in all_elements:
+                            if el.is_displayed() and el.tag_name in (
+                                "button",
+                                "div",
+                                "span",
+                                "a",
+                            ):
+                                browser.execute_script(
+                                    "arguments[0].scrollIntoView();", el
+                                )
+                                time.sleep(0.3)
+                                browser.execute_script("arguments[0].click();", el)
+                                if verbose:
+                                    info(
+                                        "\t=> Share button clicked (fallback text search)"
+                                    )
+                                share_clicked = True
+                                break
+                    except Exception:
+                        pass
+
+                if not share_clicked and verbose:
+                    warning("\t=> Could not find Share/Post button")
 
                 # Wait a bit for Facebook to process
                 time.sleep(3)
@@ -3408,7 +3542,16 @@ Example:
 
                 if caption_el:
                     # Clear existing caption (TikTok auto-fills filename with UUID prefix)
-                    caption_el.clear()
+                    # contenteditable divs don't respond to .clear() — use keyboard instead
+                    caption_el.click()
+                    time.sleep(0.3)
+                    actions = ActionChains(browser)
+                    actions.key_down(Keys.CONTROL).send_keys("a").key_up(
+                        Keys.CONTROL
+                    ).perform()
+                    time.sleep(0.2)
+                    actions = ActionChains(browser)
+                    actions.send_keys(Keys.DELETE).perform()
                     time.sleep(0.3)
 
                     # Build proper TikTok caption: Title + clean description + hashtags
