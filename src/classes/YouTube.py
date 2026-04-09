@@ -1362,32 +1362,9 @@ Example:
                 except Exception:
                     continue
 
-        # Merge consecutive blocks into phrase-level chunks
-        # Blocks are merged when gap between them is < 0.15 seconds
-        # (Whisper word-level timestamps have ~0.3s gaps; 0.15s merges only coarticulation)
-        if not raw_subtitles:
-            return []
-
-        merged = []
-        current_start, current_end, current_text = raw_subtitles[0]
-
-        for i in range(1, len(raw_subtitles)):
-            start, end, text = raw_subtitles[i]
-            gap = start - current_end
-            # Only merge if gap is tiny AND resulting segment would be >= 0.8s
-            if gap < 0.15 and current_text and (end - current_start) > 0.8:
-                # Merge: extend current chunk
-                current_end = end
-                current_text = current_text.rstrip() + " " + text
-            else:
-                # Save current and start new chunk
-                merged.append((current_start, current_end, current_text.strip()))
-                current_start, current_end, current_text = start, end, text
-
-        # Don't forget the last chunk
-        merged.append((current_start, current_end, current_text.strip()))
-
-        return merged
+        # Return raw word-level subtitles without merging
+        # Each word displays as its own subtitle entry
+        return raw_subtitles
 
     def _parse_timestamp(self, ts: str) -> float:
         """Parse SRT timestamp to seconds."""
@@ -1406,8 +1383,8 @@ Example:
 
         draw = ImageDraw.Draw(frame)
         try:
-            # Scale font to ~2.5% of video height (vertical 9:16 video)
-            font_size = max(28, int(frame.height * 0.028))
+            # Scale font to ~5% of video height for big readable subtitles
+            font_size = max(48, int(frame.height * 0.050))
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             font = ImageFont.load_default()
