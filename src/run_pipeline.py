@@ -4,13 +4,10 @@ Runs the full YouTube Shorts pipeline end-to-end without user input.
 
 Usage:
     python src/run_pipeline.py [--niche "science facts"] [--language English] [--upload]
-    python src/run_pipeline.py [--niche "science facts"] [--postiz] [--postiz-url URL] [--postiz-key KEY]
 
 Environment:
     CLIPROXY_API_KEY  - Required for LLM text generation
-    GEMINI_API_KEY    - Required for AI image generation (optional, falls back to placeholders)
-    POSTIZ_API_KEY    - Postiz API key (alternative to --postiz-key)
-    POSTIZ_API_URL    - Postiz instance URL (alternative to --postiz-url)
+    GEMINI_API_KEY    - Optional for AI image generation (falls back to placeholders)
 """
 
 import os
@@ -257,13 +254,6 @@ def main():
         "--no-headless", action="store_true", help="Show Firefox browser"
     )
     args = parser.parse_args()
-
-    # Parse Postiz platforms
-    postiz_platforms = None
-    if args.postiz_platforms:
-        postiz_platforms = [
-            p.strip() for p in args.postiz_platforms.split(",") if p.strip()
-        ]
 
     info("=" * 50)
     info("MoneyPrinterV2 - Automated Pipeline")

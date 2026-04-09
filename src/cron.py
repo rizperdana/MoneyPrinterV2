@@ -57,7 +57,7 @@ def main():
     if model:
         select_model(model)
     else:
-        error("No Ollama model specified. Pass model name as third argument.")
+        error("No LLM model specified. Pass model name as third argument.")
         sys.exit(1)
 
     verbose = get_verbose()

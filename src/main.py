@@ -293,10 +293,11 @@ def main():
                         else:
                             break
                     elif user_input == 5:
-                        # Upload to All Platforms
+                        # Generate & Upload to All Platforms (single pipeline)
                         if not TTS_AVAILABLE:
                             error("TTS not available - install edge-tts")
                             break
+                        info("Starting: Generate & Upload to All Platforms...")
                         tts = TTS()
                         youtube.generate_video(tts)
                         # Copy to visible output folder
@@ -308,6 +309,51 @@ def main():
                         output_path = os.path.join(output_dir, video_name)
                         shutil.copy2(youtube.video_path, output_path)
                         success(f"Video saved to: {output_path}")
+                        info("Uploading to all platforms...")
+                        results = youtube.upload_to_all_platforms()
+                        for platform, (success_flag, result) in results.items():
+                            if success_flag:
+                                success(f"  {platform}: {result}")
+                            else:
+                                warning(f"  {platform}: {result}")
+                        # Save results to JSON
+                        import json
+                        from datetime import datetime
+
+                        result_data = {
+                            "timestamp": datetime.now().isoformat(),
+                            "topic": getattr(youtube, "subject", ""),
+                            "title": youtube.metadata.get("title", "")
+                            if hasattr(youtube, "metadata")
+                            else "",
+                            "youtube": {
+                                "success": results.get("youtube", (False, ""))[0],
+                                "url": results.get("youtube", (False, ""))[1]
+                                if results.get("youtube", (False, ""))[0]
+                                else None,
+                            },
+                            "tiktok": {
+                                "success": results.get("tiktok", (False, ""))[0],
+                                "url": results.get("tiktok", (False, ""))[1]
+                                if results.get("tiktok", (False, ""))[0]
+                                else None,
+                            },
+                            "facebook": {
+                                "success": results.get("facebook", (False, ""))[0],
+                                "url": results.get("facebook", (False, ""))[1]
+                                if results.get("facebook", (False, ""))[0]
+                                else None,
+                            },
+                        }
+                        result_path = os.path.join(ROOT_DIR, "upload_results.json")
+                        with open(result_path, "w") as f:
+                            json.dump(result_data, f, indent=2)
+                        info(f"Results saved to: {result_path}")
+                    elif user_input == 6:
+                        # Upload to All Platforms (without generating - uses existing video)
+                        if not hasattr(youtube, "video_path") or not youtube.video_path:
+                            error("No video generated yet. Use 'Generate Video' first.")
+                            break
                         info("Uploading to all platforms...")
                         results = youtube.upload_to_all_platforms()
                         for platform, (success_flag, result) in results.items():
@@ -344,7 +390,7 @@ def main():
                         with open(result_path, "w") as f:
                             json.dump(result_data, f, indent=2)
                         info(f"Results saved to: {result_path}")
-                    elif user_input == 6:
+                    elif user_input == 7:
                         # Upload to Facebook only
                         if not hasattr(youtube, "video_path") or not youtube.video_path:
                             error("No video generated yet. Use 'Generate Video' first.")
@@ -355,7 +401,7 @@ def main():
                             success(f"Facebook upload successful! URL: {fb_url}")
                         else:
                             warning(f"Facebook upload failed: {fb_url}")
-                    elif user_input == 7:
+                    elif user_input == 8:
                         # Upload to TikTok only
                         if not hasattr(youtube, "video_path") or not youtube.video_path:
                             error("No video generated yet. Use 'Generate Video' first.")
@@ -366,7 +412,7 @@ def main():
                             success(f"TikTok upload successful! URL: {tt_url}")
                         else:
                             warning(f"TikTok upload failed: {tt_url}")
-                    elif user_input == 8:
+                    elif user_input == 9:
                         if get_verbose():
                             info(" => Climbing Options Ladder...", False)
                         break

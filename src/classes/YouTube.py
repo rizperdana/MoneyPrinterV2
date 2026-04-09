@@ -18,6 +18,7 @@ from llm_provider import generate_text
 from config import (
     ROOT_DIR,
     get_headless,
+    get_verbose,
     get_script_sentence_length,
     get_stt_provider,
     get_assemblyai_api_key,
@@ -388,11 +389,11 @@ Example (if niche is "cool animal facts"):
             pass
 
         # Filter out topics that are too similar to already used ones
-        def is_similar(new_topic, used_list, threshold=0.4):
+        def isSimilar(new_topic, used_list, threshold=0.35):
             """Check if topic shares too many words with an existing topic."""
-            new_words = set(new_topic.lower().split())
+            new_words = set(re.sub(r"[^\w\s]", "", new_topic.lower()).split())
             for used in used_list:
-                used_words = set(used.lower().split())
+                used_words = set(re.sub(r"[^\w\s]", "", used.lower()).split())
                 if not new_words or not used_words:
                     continue
                 overlap = len(new_words & used_words) / max(
@@ -400,12 +401,17 @@ Example (if niche is "cool animal facts"):
                 )
                 if overlap > threshold:
                     return True
+                # Also check if the key words overlap significantly
+                key_words = [w for w in new_words if len(w) > 4]
+                used_key_words = [w for w in used_words if len(w) > 4]
+                if any(kw in used_key_words for kw in key_words[:2]):
+                    return True
             return False
 
         # Pick the best topic that hasn't been used
         selected = None
         for topic in topics:
-            if not is_similar(topic, used_topics):
+            if not isSimilar(topic, used_topics):
                 selected = topic
                 break
 
@@ -414,15 +420,36 @@ Example (if niche is "cool animal facts"):
             if get_verbose():
                 warning("All generated topics were duplicates. Forcing unique topic...")
             avoid_list = (
-                "\n".join(f"- {t}" for t in used_topics[-20:])
+                "\n".join(f"- {t}" for t in used_topics[-30:])
                 if used_topics
                 else "none"
             )
-            selected = self.generate_response(
-                f"Generate ONE specific, engaging video topic about: {self.niche}.\n"
-                f"DO NOT repeat any of these already-used topics:\n{avoid_list}\n"
-                f"One sentence only. Be creative and pick something completely different."
+            # Generate multiple options and pick the most different one
+            response = self.generate_response(
+                f"""Generate 5 completely different, specific video topics about: {self.niche}
+
+IMPORTANT: Each topic must be about a DIFFERENT aspect or fact of {self.niche}.
+Do NOT repeat these already-used topics:\n{avoid_list}
+
+Format: Just list 5 topics, one per line, numbered 1-5."""
             )
+
+            # Parse all generated topics
+            new_topics = []
+            for line in response.split("\n"):
+                line = line.strip()
+                match = re.match(r"^[\d]+[\.\)\-\s]+(.+)$", line)
+                if match:
+                    topic = match.group(1).strip()
+                    if len(topic) > 20 and not isSimilar(topic, used_topics):
+                        new_topics.append(topic)
+
+            if new_topics:
+                # Pick a random one to add variety
+                selected = random.choice(new_topics)
+            else:
+                # Last resort: pick something completely random
+                selected = f"Amazing {self.niche} facts you never knew!"
 
         if not selected:
             error("Failed to generate Topic.")
@@ -1225,6 +1252,70 @@ Example:
         millis = total_millis % 1000
         return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
 
+    def _parse_srt(self, srt_path: str) -> list:
+        """Parse SRT file and return list of (start, end, text) tuples."""
+        subtitles = []
+        with open(srt_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        blocks = content.strip().split("\n\n")
+        for block in blocks:
+            lines = block.strip().split("\n")
+            if len(lines) >= 3:
+                time_line = lines[1]
+                text = " ".join(lines[2:])
+                # Parse time: "00:00:00,000 --> 00:00:03,000"
+                try:
+                    start_str, end_str = time_line.split(" --> ")
+                    start = self._parse_timestamp(start_str)
+                    end = self._parse_timestamp(end_str)
+                    subtitles.append((start, end, text))
+                except Exception:
+                    continue
+        return subtitles
+
+    def _parse_timestamp(self, ts: str) -> float:
+        """Parse SRT timestamp to seconds."""
+        ts = ts.strip().replace(",", ".")
+        parts = ts.split(":")
+        if len(parts) == 3:
+            h, m, s = parts
+            return int(h) * 3600 + int(m) * 60 + float(s)
+        return 0.0
+
+    def _render_subtitle_on_frame(
+        self, frame: Image.Image, text: str, font_path: str
+    ) -> Image.Image:
+        """Render subtitle text on a PIL Image frame."""
+        from PIL import ImageDraw, ImageFont
+
+        draw = ImageDraw.Draw(frame)
+        try:
+            font = ImageFont.truetype(font_path, 60)
+        except Exception:
+            font = ImageFont.load_default()
+
+        # Get text bbox
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_w = bbox[2] - bbox[0]
+        text_h = bbox[3] - bbox[1]
+
+        # Position: center bottom, above the cat
+        x = (1080 - text_w) // 2
+        y = 1920 - text_h - 180  # 180px from bottom to avoid cat
+
+        # Draw stroke/outline
+        stroke_width = 4
+        for dx in range(-stroke_width, stroke_width + 1, 2):
+            for dy in range(-stroke_width, stroke_width + 1, 2):
+                if dx != 0 or dy != 0:
+                    draw.text((x + dx, y + dy), text, font=font, fill="black")
+
+        # Draw main text
+        draw.text((x, y), text, font=font, fill="white")
+
+        return frame
+
     def generate_subtitles_local_whisper(self, audio_path: str) -> str:
         """
         Generates subtitles using local Whisper (faster-whisper).
@@ -1244,11 +1335,24 @@ Example:
             )
             raise
 
-        model = WhisperModel(
-            get_whisper_model(),
-            device=get_whisper_device(),
-            compute_type=get_whisper_compute_type(),
-        )
+        # Use CPU to avoid CUDA library issues
+        device = "cpu"
+        compute = "int8"
+
+        try:
+            model = WhisperModel(
+                get_whisper_model(),
+                device=device,
+                compute_type=compute,
+            )
+        except Exception as e:
+            warning(f"Whisper model load failed: {e}, retrying with base model...")
+            model = WhisperModel(
+                "base",
+                device=device,
+                compute_type=compute,
+            )
+
         segments, _ = model.transcribe(audio_path, vad_filter=True)
 
         lines = []
@@ -1296,6 +1400,20 @@ Example:
             size=(1080, 1920),
             method="caption",
         )
+
+        # Subtitle generator - proper function for SubtitlesClip
+        def make_subtitle_clip(txt):
+            font_path = os.path.join(get_fonts_dir(), get_font())
+            return TextClip(
+                txt,
+                font=font_path,
+                fontsize=80,
+                color="white",
+                stroke_color="black",
+                stroke_width=3,
+                size=(1080, None),
+                method="caption",
+            )
 
         print(colored("[+] Combining images...", "blue"))
 
@@ -1431,6 +1549,19 @@ Example:
         except Exception as e:
             warning(f"Could not generate mascot cat overlay: {e}")
 
+        # Pre-parse subtitles for rendering on frames
+        subtitle_data = []
+        subtitle_font_path = None
+        try:
+            subtitles_path = self.generate_subtitles(self.tts_path)
+            if subtitles_path and os.path.exists(subtitles_path):
+                subtitle_data = self._parse_srt(subtitles_path)
+                subtitle_font_path = os.path.join(get_fonts_dir(), get_font())
+                if get_verbose():
+                    info(f" => Loaded {len(subtitle_data)} subtitle segments")
+        except Exception as e:
+            warning(f"Could not parse subtitles: {e}")
+
         def make_frame(t):
             """Render a frame with Ken Burns pan+zoom effect."""
             # Determine which segment we're in
@@ -1468,26 +1599,25 @@ Example:
             # Overlay mascot cat in bottom-left corner
             if cat_overlay is not None:
                 frame.paste(cat_overlay, cat_pos, cat_overlay)
+
+            # Render subtitles on frame
+            if subtitle_data:
+                current_subtitle = None
+                for start, end, text in subtitle_data:
+                    if start <= t <= end:
+                        current_subtitle = text
+                        break
+
+                if current_subtitle:
+                    frame = self._render_subtitle_on_frame(
+                        frame, current_subtitle, subtitle_font_path
+                    )
+
             return np.array(frame)
 
         final_clip = VideoClip(make_frame, duration=total_dur)
         final_clip = final_clip.with_fps(30)
         random_song = choose_random_song()
-
-        subtitles = None
-        try:
-            subtitles_path = self.generate_subtitles(self.tts_path)
-            # Skip broken equalize_subtitles function
-            subtitles = SubtitlesClip(subtitles_path, generator)
-            subtitles = subtitles.with_position(
-                ("center", 0.7)
-            )  # Lower position for better visibility
-            subtitles = subtitles.with_duration(total_dur)
-        except Exception as e:
-            warning(f"Failed to generate subtitles, continuing without subtitles: {e}")
-            import traceback
-
-            traceback.print_exc()
 
         random_song_clip = AudioFileClip(random_song).with_fps(44100)
 
@@ -1499,9 +1629,6 @@ Example:
         # Use total_dur (matches frame buffer exactly) instead of tts_clip.duration
         # to avoid black frames when TTS is slightly longer than the frame coverage.
         final_clip = final_clip.with_duration(total_dur)
-
-        if subtitles is not None:
-            final_clip = CompositeVideoClip([final_clip, subtitles])
 
         final_clip.write_videofile(combined_image_path, threads=threads)
 

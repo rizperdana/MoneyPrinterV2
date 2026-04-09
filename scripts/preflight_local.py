@@ -63,23 +63,30 @@ def main() -> int:
     else:
         warn("firefox_profile is empty. Twitter/YouTube automation requires this.")
 
-    # Ollama (LLM)
-    base = str(cfg.get("ollama_base_url", "http://127.0.0.1:11434")).rstrip("/")
-    reachable, detail = check_url(f"{base}/api/tags")
+    # cliproxyapi (LLM)
+    cliproxy_base = str(cfg.get("llm_base_url", "http://localhost:8317/v1")).rstrip("/")
+    reachable, detail = check_url(f"{cliproxy_base}/models", timeout=5)
     if not reachable:
-        fail(f"Ollama is not reachable at {base}: {detail}")
+        fail(f"cliproxyapi is not reachable at {cliproxy_base}: {detail}")
         failures += 1
     else:
-        ok(f"Ollama reachable at {base}")
+        ok(f"cliproxyapi reachable at {cliproxy_base}")
         try:
-            tags = requests.get(f"{base}/api/tags", timeout=5).json()
-            models = [m.get("name") for m in tags.get("models", [])]
+            import httpx
+
+            headers = {}
+            api_key = cfg.get("llm_api_key", os.environ.get("CLIPROXY_API_KEY", ""))
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+            resp = requests.get(f"{cliproxy_base}/models", headers=headers, timeout=5)
+            data = resp.json()
+            models = [m.get("id") for m in data.get("data", [])]
             if models:
-                ok(f"Ollama models available: {', '.join(models[:10])}")
+                ok(f"cliproxyapi models available: {', '.join(models[:10])}")
             else:
-                warn("No models found on Ollama. Pull a model first (e.g. 'ollama pull llama3.2:3b').")
+                warn("No models returned from cliproxyapi.")
         except Exception as exc:
-            warn(f"Could not validate Ollama model list: {exc}")
+            warn(f"Could not validate cliproxyapi model list: {exc}")
 
     # Nano Banana 2 (image generation)
     api_key = cfg.get("nanobanana2_api_key", "") or os.environ.get("GEMINI_API_KEY", "")

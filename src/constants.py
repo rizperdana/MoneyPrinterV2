@@ -23,6 +23,7 @@ YOUTUBE_OPTIONS = [
     "Upload Short",
     "Show all Shorts",
     "Setup CRON Job",
+    "Generate & Upload to All Platforms",
     "Upload to All Platforms (YouTube + Facebook + TikTok)",
     "Upload to Facebook",
     "Upload to TikTok",
