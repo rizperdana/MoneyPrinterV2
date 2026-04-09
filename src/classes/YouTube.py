@@ -12,7 +12,7 @@ import assemblyai as aai
 from PIL import Image
 
 from utils import close_running_selenium_instances, build_url, choose_random_song
-from cache import get_accounts, add_account
+from cache import get_accounts, add_account, get_youtube_cache_path
 from .Tts import TTS
 from llm_provider import generate_text
 from config import (
@@ -35,6 +35,7 @@ from uuid import uuid4
 from constants import (
     YOUTUBE_TEXTBOX_ID,
     YOUTUBE_MADE_FOR_KIDS_NAME,
+    YOUTUBE_NOT_MADE_FOR_KIDS_NAME,
     YOUTUBE_NEXT_BUTTON_ID,
     YOUTUBE_DONE_BUTTON_ID,
 )
@@ -1509,8 +1510,6 @@ Example:
             warning("No images generated - creating solid-color placeholder")
             placeholder_path = os.path.join(ROOT_DIR, ".mp", str(uuid4()) + ".png")
             try:
-                from PIL import Image
-
                 img = Image.new("RGB", (1080, 1920), color=(30, 30, 60))
                 img.save(placeholder_path)
                 self.images.append(placeholder_path)
