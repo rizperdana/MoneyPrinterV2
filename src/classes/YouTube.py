@@ -1417,9 +1417,9 @@ Example:
         text_w = bbox[2] - bbox[0]
         text_h = bbox[3] - bbox[1]
 
-        # Position: center bottom, 80px from bottom edge
+        # Position: center of frame
         x = (frame.width - text_w) // 2
-        y = frame.height - text_h - 80
+        y = (frame.height - text_h) // 2
 
         # Draw stroke/outline
         stroke_width = max(2, font_size // 12)
@@ -1470,21 +1470,24 @@ Example:
                 compute_type=compute,
             )
 
-        segments, _ = model.transcribe(audio_path, vad_filter=True)
+        segments, info = model.transcribe(
+            audio_path, vad_filter=True, word_timestamps=True
+        )
 
         lines = []
-        for idx, segment in enumerate(segments, start=1):
-            start = self._format_srt_timestamp(segment.start)
-            end = self._format_srt_timestamp(segment.end)
-            text = str(segment.text).strip()
-
-            if not text:
-                continue
-
-            lines.append(str(idx))
-            lines.append(f"{start} --> {end}")
-            lines.append(text)
-            lines.append("")
+        idx = 0
+        for segment in segments:
+            for word in segment.words:
+                text = str(word.word).strip()
+                if not text:
+                    continue
+                idx += 1
+                start = self._format_srt_timestamp(word.start)
+                end = self._format_srt_timestamp(word.end)
+                lines.append(str(idx))
+                lines.append(f"{start} --> {end}")
+                lines.append(text)
+                lines.append("")
 
         subtitles = "\n".join(lines)
         srt_path = os.path.join(ROOT_DIR, ".mp", str(uuid4()) + ".srt")
