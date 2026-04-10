@@ -14,7 +14,7 @@ from PIL import Image
 from utils import close_running_selenium_instances, build_url, choose_random_song
 from cache import get_accounts, add_account, get_youtube_cache_path
 from .Tts import TTS
-from llm_provider import generate_text
+from llm_provider import generate_text, get_model_for_job
 from config import (
     ROOT_DIR,
     get_headless,
@@ -112,7 +112,6 @@ class YouTube:
         self._language: str = language
 
         self.images = []
-        self._g4f_quota_exhausted = False
 
         if not os.path.isdir(self._fp_profile_path):
             raise ValueError(
@@ -171,23 +170,145 @@ class YouTube:
         Returns:
             response (str): The generated AI Repsonse.
         """
-        return generate_text(prompt, model_name=model_name)
+        model = model_name or get_model_for_job("script")
+        print(f"[📝 LLM] Using model: {model}")
+        result = generate_text(prompt, model_name=model)
+        print(f"[✅ LLM] Generated {len(result)} chars")
+        return result
 
     def _research_trending_topics(self) -> str:
         """
-        Researches trending topics from Wikipedia API and Google Trends.
-        Returns raw search context to feed into the LLM for topic selection.
-
-        Returns:
-            context (str): Research context with trending keywords and topics.
+        Researches trending topics with dynamic, unique queries.
+        Priority: Tavily -> Exa -> ddgs -> Wikipedia -> Google RSS -> Firecrawl
+        Uses randomized angles to ensure unique results every time.
         """
+        import random
+        from datetime import datetime
+
         context_parts = []
+        now = datetime.now()
 
-        # Method 1: Wikipedia Featured Content API (today's news + trending)
+        # Generate dynamic angle modifiers for unique research
+        angle_modifiers = [
+            f"recently discovered",
+            f"unusual facts",
+            f"lesser-known",
+            f"breaking",
+            f"trending now",
+            f"surprising",
+            f"mysteries",
+            f"latest findings {now.strftime('%B %Y')}",
+            f"hidden gems",
+            f"controversial",
+        ]
+        # Pick random modifier based on time for variety
+        random.seed(int(now.timestamp()) % 10000)
+        angle = random.choice(angle_modifiers)
+
+        # Build dynamic queries
+        base_query = self.niche
+        dynamic_queries = [
+            f"{angle} {base_query}",
+            f"{base_query} {now.year} facts",
+            f"what's trending in {base_query} right now",
+            f"unknown {base_query} secrets",
+            f"{base_query} viral moments",
+        ]
+
+        info("   🔍 Starting dynamic topic research...")
+
+        # Method 1: Tavily
+        info("   🔍 Searching Tavily...")
         try:
-            from datetime import datetime
+            from tavily import TavilyClient
 
-            today = datetime.now().strftime("%Y/%m/%d")
+            api_key = os.environ.get("TAVILY_API_KEY", "")
+            if api_key:
+                # Use different query each time
+                query = random.choice(dynamic_queries)
+                tavily_client = TavilyClient(api_key=api_key)
+                response = tavily_client.search(
+                    query=query,
+                    max_results=8,
+                    include_answer=True,
+                )
+                if response.get("results"):
+                    topics_found = []
+                    for r in response["results"][:8]:
+                        title = r.get("title", "")
+                        content = r.get("content", "")[:150]
+                        if title and content:
+                            topics_found.append(f"{title}: {content}")
+                    if topics_found:
+                        context_parts.append(
+                            f"Tavily ({query[:40]}):\n"
+                            + "\n".join(f"- {t}" for t in topics_found[:8])
+                        )
+                        info(f"   ✅ Tavily: {len(topics_found)} results")
+        except Exception as e:
+            warning(f"Tavily failed: {e}")
+
+        # Method 2: Exa
+        info("   🔍 Searching Exa...")
+        try:
+            from exa_py import Exa
+
+            api_key = os.environ.get("EXA_API_KEY", "")
+            if api_key:
+                query = random.choice(dynamic_queries)
+                exa = Exa(api_key=api_key)
+                response = exa.search(
+                    query,
+                    num_results=8,
+                    type="neural",
+                )
+                if response.results:
+                    topics_found = []
+                    for r in response.results:
+                        text = r.text[:150] if r.text else r.get("extract", "")[:150]
+                        if r.title and text:
+                            topics_found.append(f"{r.title}: {text}")
+                    if topics_found:
+                        context_parts.append(
+                            f"Exa ({query[:40]}):\n"
+                            + "\n".join(f"- {t}" for t in topics_found[:8])
+                        )
+                        info(f"   ✅ Exa: {len(topics_found)} results")
+        except Exception as e:
+            warning(f"Exa failed: {e}")
+
+        # Method 3: ddgs (DuckDuckGo via Bing backend - bypasses Indonesia block)
+        info("   🔍 Searching DuckDuckGo (ddgs)...")
+        try:
+            from ddgs import DDGS
+
+            # Disable proxy
+            for k in ["http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"]:
+                os.environ.pop(k, None)
+
+            ddg = DDGS()
+            query = random.choice(dynamic_queries)
+            results = ddg.text(query, max_results=8)
+            if results:
+                topics_found = []
+                for r in results:
+                    title = r.get("title", "")
+                    body = r.get("body", "")
+                    if title and body:
+                        topics_found.append(f"{title}: {body[:100]}")
+                if topics_found:
+                    context_parts.append(
+                        f"DuckDuckGo ({query[:40]}):\n"
+                        + "\n".join(f"- {t}" for t in topics_found[:8])
+                    )
+                    info(f"   ✅ ddgs: {len(topics_found)} results")
+        except Exception as e:
+            warning(f"ddgs failed: {e}")
+
+        # Method 4: Wikipedia
+        info("   🔍 Fetching Wikipedia...")
+        try:
+            today = now.strftime("%Y/%m/%d")
             wiki_url = f"https://en.wikipedia.org/api/rest_v1/feed/featured/{today}"
             resp = requests.get(
                 wiki_url, timeout=5, headers={"User-Agent": "Mozilla/5.0"}
@@ -195,7 +316,6 @@ class YouTube:
             if resp.status_code == 200:
                 data = resp.json()
 
-                # Today's news
                 news = data.get("news", [])
                 news_items = []
                 for item in news[:8]:
@@ -213,7 +333,6 @@ class YouTube:
                         + "\n".join(f"- {n}" for n in news_items)
                     )
 
-                # Today's featured article
                 tfa = data.get("tfa", {})
                 if tfa:
                     title = tfa.get("titles", {}).get("normalized", "")
@@ -223,7 +342,6 @@ class YouTube:
                             f"Wikipedia Featured Article: {title}\n{extract}"
                         )
 
-                # Most read articles
                 most_read = data.get("mostread", {}).get("articles", [])
                 if most_read:
                     top_titles = [
@@ -236,11 +354,12 @@ class YouTube:
                             "Wikipedia Most Read Today:\n"
                             + "\n".join(f"- {t}" for t in top_titles if t)
                         )
+                info(f"   ✅ Wikipedia: fetched")
         except Exception as e:
-            if get_verbose():
-                warning(f"Wikipedia API failed: {e}")
+            warning(f"Wikipedia API failed: {e}")
 
-        # Method 2: Google Trends RSS
+        # Method 5: Google Trends RSS
+        info("   🔍 Fetching Google Trends...")
         try:
             for geo in ["US", ""]:
                 trends_url = f"https://trends.google.com/trending/rss?geo={geo}"
@@ -259,103 +378,13 @@ class YouTube:
                         context_parts.append(
                             f"{label}:\n" + "\n".join(f"- {t}" for t in relevant[:15])
                         )
+                        info(f"   ✅ Google Trends: {len(relevant)} topics")
                         break
         except Exception as e:
-            if get_verbose():
-                warning(f"Google Trends failed: {e}")
+            warning(f"Google Trends failed: {e}")
 
-        # Method 3: DuckDuckGo for niche-specific topics
-        try:
-            search_query = f"{self.niche} latest news today"
-            ddg_url = "https://api.duckduckgo.com/"
-            params = {
-                "q": search_query,
-                "format": "json",
-                "no_html": 1,
-                "skip_disambig": 1,
-            }
-            resp = requests.get(
-                ddg_url,
-                params=params,
-                timeout=5,
-                headers={"User-Agent": "Mozilla/5.0"},
-                verify=False,
-            )
-            # Verify we got JSON, not HTML (some networks return block page)
-            if resp.status_code == 200 and "application/json" in resp.headers.get(
-                "Content-Type", ""
-            ):
-                data = resp.json()
-                related = data.get("RelatedTopics", [])
-                topics_found = []
-                for item in related[:8]:
-                    if isinstance(item, dict) and item.get("Text"):
-                        topics_found.append(item["Text"][:120])
-                if topics_found:
-                    context_parts.append(
-                        f"DuckDuckGo {self.niche}:\n"
-                        + "\n".join(f"- {t}" for t in topics_found)
-                    )
-        except Exception as e:
-            if get_verbose():
-                warning(f"DuckDuckGo failed: {e}")
-
-        # Method 4: Tavily search (priority)
-        try:
-            from tavily import TavilyClient
-
-            api_key = os.environ.get("TAVILY_API_KEY", "")
-            if api_key:
-                tavily_client = TavilyClient(api_key=api_key)
-                response = tavily_client.search(
-                    query=f"{self.niche} latest interesting facts news",
-                    max_results=8,
-                    include_answer=True,
-                )
-                if response.get("results"):
-                    topics_found = []
-                    for r in response["results"][:8]:
-                        title = r.get("title", "")
-                        content = r.get("content", "")[:150]
-                        if title and content:
-                            topics_found.append(f"{title}: {content}")
-                    if topics_found:
-                        context_parts.append(
-                            f"Tavily ({self.niche}):\n"
-                            + "\n".join(f"- {t}" for t in topics_found[:8])
-                        )
-        except Exception as e:
-            if get_verbose():
-                warning(f"Tavily failed: {e}")
-
-        # Method 5: Exa search (fallback)
-        try:
-            from exa_py import Exa
-
-            api_key = os.environ.get("EXA_API_KEY", "")
-            if api_key and not any("exa" in p.lower() for p in context_parts):
-                exa = Exa(api_key=api_key)
-                response = exa.search(
-                    f"{self.niche} interesting facts latest news",
-                    num_results=8,
-                    type="neural",
-                )
-                if response.results:
-                    topics_found = []
-                    for r in response.results:
-                        text = r.text[:150] if r.text else r.get("extract", "")[:150]
-                        if r.title and text:
-                            topics_found.append(f"{r.title}: {text}")
-                    if topics_found:
-                        context_parts.append(
-                            f"Exa ({self.niche}):\n"
-                            + "\n".join(f"- {t}" for t in topics_found[:8])
-                        )
-        except Exception as e:
-            if get_verbose():
-                warning(f"Exa failed: {e}")
-
-        # Method 6: Firecrawl (last fallback - can do in-depth research)
+        # Method 6: Firecrawl (last fallback)
+        info("   🔍 Searching Firecrawl...")
         try:
             from firecrawl import Firecrawl
 
@@ -363,15 +392,14 @@ class YouTube:
             if api_key and not any(
                 p
                 for p in context_parts
-                if any(x in p.lower() for x in ["tavily", "exa"])
+                if any(x in p.lower() for x in ["tavily", "exa", "duckduckgo", "ddgs"])
             ):
                 firecrawl = Firecrawl(api_key=api_key)
-                # Try a search first
+                query = random.choice(dynamic_queries)
                 search_result = firecrawl.search(
-                    query=f"{self.niche} interesting facts breaking news",
+                    query=query,
                     limit=8,
                 )
-                # Firecrawl returns SearchData with .web attribute
                 if search_result and hasattr(search_result, "web"):
                     web_results = search_result.web or []
                     topics_found = []
@@ -386,12 +414,12 @@ class YouTube:
                             topics_found.append(f"{title}: {desc}")
                     if topics_found:
                         context_parts.append(
-                            f"Firecrawl ({self.niche}):\n"
+                            f"Firecrawl ({query[:40]}):\n"
                             + "\n".join(f"- {t}" for t in topics_found[:8])
                         )
+                        info(f"   ✅ Firecrawl: {len(topics_found)} results")
         except Exception as e:
-            if get_verbose():
-                warning(f"Firecrawl failed: {e}")
+            warning(f"Firecrawl failed: {e}")
 
         if context_parts:
             return "\n\n".join(context_parts)
@@ -459,7 +487,9 @@ Example (if niche is "cool animal facts"):
 2. Tardigrades can survive in the vacuum of outer space
 3. Octopuses have three hearts and blue blood"""
 
-        completion = str(self.generate_response(trend_prompt)).strip()
+        completion = str(
+            self.generate_response(trend_prompt, model_name=get_model_for_job("topic"))
+        ).strip()
 
         # Parse numbered topics
         topics = []
@@ -528,7 +558,8 @@ Example (if niche is "cool animal facts"):
 IMPORTANT: Each topic must be about a DIFFERENT aspect or fact of {self.niche}.
 Do NOT repeat these already-used topics:\n{avoid_list}
 
-Format: Just list 5 topics, one per line, numbered 1-5."""
+Format: Just list 5 topics, one per line, numbered 1-5.""",
+                model_name=get_model_for_job("topic"),
             )
 
             # Parse all generated topics
@@ -571,9 +602,7 @@ Format: Just list 5 topics, one per line, numbered 1-5."""
 
         self.subject = selected
 
-        if get_verbose():
-            info(f" => Trending topic selected: {selected[:80]}...")
-
+        info(f" 🎯 Topic selected: {selected[:80]}...")
         return selected
 
     def generate_script(self) -> str:
@@ -589,6 +618,7 @@ Format: Just list 5 topics, one per line, numbered 1-5."""
         Returns:
             script (str): The script of the video.
         """
+        info(" ✍️ Generating script...")
         sentence_length = get_script_sentence_length()
         prompt = f"""Write a YouTube Shorts script about: {self.subject}
 
@@ -623,7 +653,9 @@ Language: {self.language}
 
 Return ONLY the raw script text. No labels, no numbering."""
 
-        completion = self.generate_response(prompt)
+        completion = self.generate_response(
+            prompt, model_name=get_model_for_job("script")
+        )
 
         # Apply regex to remove *
         completion = re.sub(r"\*", "", completion)
@@ -658,7 +690,8 @@ Return ONLY the raw script text. No labels, no numbering."""
         title = self.generate_response(
             f"Generate a YouTube Shorts title for: {self.subject}. "
             f"Rules: Under 50 characters. Front-load the most important keywords. "
-            f"No hashtags in the title. Return ONLY the title, nothing else."
+            f"No hashtags in the title. Return ONLY the title, nothing else.",
+            model_name=get_model_for_job("title_desc"),
         )
 
         if len(title) > 50:
@@ -669,13 +702,15 @@ Return ONLY the raw script text. No labels, no numbering."""
         description = self.generate_response(
             f"Generate a YouTube Shorts description for the following script: {self.script}. "
             f"Rules: Include 3-5 relevant hashtags. Add a brief, keyword-rich summary of the video content "
-            f"to index properly in YouTube Search. Return ONLY the description, nothing else."
+            f"to index properly in YouTube Search. Return ONLY the description, nothing else.",
+            model_name=get_model_for_job("title_desc"),
         )
 
         # Generate SEO tags
         tags_raw = self.generate_response(
             f"Generate a JSON array of 10-15 YouTube SEO tags (single words or short phrases) for a video about: {self.subject}. "
-            f'Return ONLY a JSON array of strings, e.g. ["tag1", "tag2"]. No other text.'
+            f'Return ONLY a JSON array of strings, e.g. ["tag1", "tag2"]. No other text.',
+            model_name=get_model_for_job("seo_tags"),
         )
 
         tags = []
@@ -739,7 +774,11 @@ Example:
 2. aerial drone view of colorful coral reef teeming with tropical fish from above
 3. deep dark ocean trench with bioluminescent creatures glowing in the abyss"""
 
-        completion = str(self.generate_response(prompt)).strip()
+        completion = str(
+            self.generate_response(
+                prompt, model_name=get_model_for_job("image_prompts")
+            )
+        ).strip()
 
         image_prompts = []
 
@@ -939,215 +978,6 @@ Example:
                 warning(f"Pollinations flux generation failed: {e}")
             return None
 
-    def generate_image_g4f(self, prompt: str) -> str:
-        """
-        Generates an AI image using gpt4free (Pollinations/zimage).
-        Free, no API key needed. Uses zimage model with flux fallback.
-
-        Args:
-            prompt (str): Scene description for image generation
-
-        Returns:
-            path (str): The path to the generated image, or None on failure.
-        """
-        try:
-            # Skip if already exhausted
-            if self._g4f_quota_exhausted:
-                if get_verbose():
-                    info("g4f already exhausted, skipping zimage...")
-                return None
-
-            from g4f.client import Client
-        except ImportError:
-            if get_verbose():
-                warning("g4f not installed. Cannot use Pollinations/zimage.")
-            return None
-
-        enhanced_prompt = f"{prompt}, Ghibli watercolor"
-        print(f"Generating AI image via g4f (Pollinations zimage): {prompt[:80]}...")
-
-        try:
-            client = Client()
-            response = client.images.generate(
-                model="zimage",
-                prompt=enhanced_prompt,
-                response_format="url",
-            )
-
-            if not response or not response.data or len(response.data) == 0:
-                if get_verbose():
-                    warning("g4f returned no image data.")
-                return None
-
-            image_url = response.data[0].url
-            if not image_url:
-                if get_verbose():
-                    warning("g4f returned empty URL.")
-                return None
-
-            # Download the image
-            img_resp = requests.get(image_url, timeout=120)
-            img_resp.raise_for_status()
-
-            if len(img_resp.content) < 1000:
-                if get_verbose():
-                    warning("g4f image too small, likely an error page.")
-                return None
-
-            return self._persist_image(img_resp.content, "g4f Pollinations zimage")
-
-        except Exception as e:
-            err_str = str(e)
-            if (
-                "quota" in err_str.lower()
-                or "exceeded" in err_str.lower()
-                or "429" in err_str
-            ):
-                if get_verbose():
-                    warning(f"g4f quota exhausted: {e}")
-                self._g4f_quota_exhausted = True
-                return None  # Let caller handle fallback
-            elif get_verbose():
-                warning(f"g4f image generation failed: {e}")
-            return None
-
-    def _simplify_prompt_for_pixabay(self, prompt: str) -> str:
-        """
-        Simplifies a verbose image prompt to 2-3 key nouns for better Pixabay search results.
-
-        Args:
-            prompt (str): Full image prompt
-
-        Returns:
-            query (str): Simplified search query
-        """
-        # Remove common filler words and keep key nouns
-        stop_words = {
-            "a",
-            "an",
-            "the",
-            "is",
-            "are",
-            "was",
-            "were",
-            "be",
-            "been",
-            "being",
-            "of",
-            "in",
-            "on",
-            "at",
-            "to",
-            "for",
-            "with",
-            "by",
-            "from",
-            "as",
-            "into",
-            "through",
-            "during",
-            "before",
-            "after",
-            "above",
-            "below",
-            "and",
-            "but",
-            "or",
-            "nor",
-            "not",
-            "so",
-            "yet",
-            "both",
-            "either",
-            "that",
-            "this",
-            "these",
-            "those",
-            "it",
-            "its",
-            "showing",
-            "depicting",
-            "featuring",
-            "beautiful",
-            "stunning",
-            "amazing",
-            "incredible",
-            "dramatic",
-            "view",
-            "scene",
-            "image",
-            "photo",
-            "picture",
-            "background",
-        }
-
-        words = re.sub(r"[^a-zA-Z\s]", "", prompt).split()
-        key_words = [w for w in words if w.lower() not in stop_words and len(w) > 2]
-
-        # Take first 3-4 key nouns for best Pixabay results
-        query = " ".join(key_words[:4])
-        return query if query else prompt[:50]
-
-    def generate_image_pixabay(self, prompt: str) -> str:
-        """
-        Downloads a stock photo from Pixabay matching the prompt.
-        Used as fallback when AI image generation fails.
-
-        Args:
-            prompt (str): Search query for Pixabay
-
-        Returns:
-            path (str): The path to the downloaded image, or None on failure.
-        """
-        api_key = os.environ.get("PIXABAY_API_KEY", "")
-        if not api_key:
-            if get_verbose():
-                warning("PIXABAY_API_KEY not set. Cannot use Pixabay fallback.")
-            return None
-
-        # Simplify prompt to key nouns for better Pixabay results
-        search_query = self._simplify_prompt_for_pixabay(prompt)
-
-        try:
-            params = {
-                "key": api_key,
-                "q": search_query,
-                "image_type": "photo",
-                "orientation": "vertical",
-                "per_page": 3,
-                "safesearch": "true",
-            }
-            resp = requests.get(
-                "https://pixabay.com/api/",
-                params=params,
-                timeout=30,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-
-            hits = data.get("hits", [])
-            if not hits:
-                if get_verbose():
-                    warning(f"Pixabay returned no results for: {search_query}")
-                return None
-
-            # Pick a random result for variety
-            hit = random.choice(hits)
-            image_url = hit.get("largeImageURL") or hit.get("webformatURL")
-            if not image_url:
-                return None
-
-            # Download the image
-            img_resp = requests.get(image_url, timeout=60)
-            img_resp.raise_for_status()
-
-            return self._persist_image(img_resp.content, "Pixabay")
-
-        except Exception as e:
-            if get_verbose():
-                warning(f"Pixabay fallback failed: {e}")
-            return None
-
     def generate_image_cloudflare(self, prompt: str) -> str:
         """
         Generates an AI image using Cloudflare Workers AI.
@@ -1276,7 +1106,7 @@ Example:
     def generate_image(self, prompt: str, delay_between: int = 2) -> str:
         """
         Generates an AI Image based on the given prompt.
-        Priority: Cloudflare Image API -> Pollinations zimage -> g4f zimage -> Pollinations flux
+        Priority: Cloudflare Image API -> Pollinations zimage -> Pollinations flux
         """
         # 1. Try Cloudflare Image API FIRST
         if get_verbose():
@@ -1294,19 +1124,7 @@ Example:
             time.sleep(delay_between)
             return result
 
-        # 3. Try g4f zimage (skip if already exhausted)
-        if not self._g4f_quota_exhausted:
-            if get_verbose():
-                info("Trying g4f zimage...")
-            result = self.generate_image_g4f(prompt)
-            if result is not None:
-                time.sleep(delay_between)
-                return result
-        else:
-            if get_verbose():
-                info("g4f already exhausted, skipping zimage...")
-
-        # 4. Fallback to Pollinations flux (cheaper, 0.001 pts/image)
+        # 3. Fallback to Pollinations flux (cheaper, 0.001 pts/image)
         if get_verbose():
             info("zimage failed. Trying Pollinations flux...")
         result = self.generate_image_pollinations_flux(prompt)
@@ -1797,33 +1615,41 @@ Example:
         Returns:
             path (str): The path to the generated MP4 File.
         """
+        info(" 🎬 Starting video generation...")
+
         # Generate the Topic
+        info(" 📊 Step 1/6: Generating topic...")
         self.generate_topic()
 
         # Generate the Script
+        info(" ✍️ Step 2/6: Generating script...")
         self.generate_script()
 
         # Generate the Metadata
+        info(" 📝 Step 3/6: Generating metadata...")
         self.generate_metadata()
 
         # Generate the Image Prompts
+        info(" 🎨 Step 4/6: Generating image prompts...")
         self.generate_prompts()
 
         # Generate the Images
-        for prompt in self.image_prompts:
+        info(" 🖼️ Step 5/6: Generating images...")
+        for i, prompt in enumerate(self.image_prompts):
+            info(f"   Generating image {i + 1}/{len(self.image_prompts)}...")
             result = self.generate_image(prompt)
             if result:
                 self.images.append(result)
 
         # Generate the TTS
+        info(" 🔊 Step 6/6: Generating speech...")
         self.generate_script_to_speech(tts_instance)
 
         # Combine everything
+        info(" 🎥 Combining into video...")
         path = self.combine()
 
-        if get_verbose():
-            info(f" => Generated Video: {path}")
-
+        success(f" ✅ Video generated: {path}")
         self.video_path = os.path.abspath(path)
 
         return path

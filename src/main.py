@@ -702,46 +702,11 @@ if __name__ == "__main__":
     # Fetch MP3 Files
     fetch_songs()
 
-    # Select LLM model — use cliproxyapi
-    configured_model = get_default_model()
-    if configured_model:
-        select_model(configured_model)
-        success(f"Using configured model: {configured_model}")
-    else:
-        try:
-            models = list_models()
-        except Exception as e:
-            error(f"Could not connect to LLM provider: {e}")
-            sys.exit(1)
-
-        if not models:
-            error("No models found. Check your LLM provider configuration.")
-            sys.exit(1)
-
-        # Prefer free models
-        free_models = [m for m in models if ":free" in m or "free" in m.lower()]
-        display_models = free_models if free_models else models
-
-        info("\n========== AVAILABLE MODELS =========", False)
-        for idx, model_name in enumerate(display_models):
-            tag = " [FREE]" if model_name in free_models else ""
-            print(colored(f" {idx + 1}. {model_name}{tag}", "cyan"))
-        info("==================================\n", False)
-
-        model_choice = None
-        while model_choice is None:
-            raw = input(colored("Select a model: ", "magenta")).strip()
-            try:
-                choice_idx = int(raw) - 1
-                if 0 <= choice_idx < len(display_models):
-                    model_choice = display_models[choice_idx]
-                else:
-                    warning("Invalid selection. Try again.")
-            except ValueError:
-                warning("Please enter a number.")
-
-        select_model(model_choice)
-        success(f"Using model: {model_choice}")
+    # LLM model selection is now handled per-job in YouTube.py via PLAN-SPEC.md
+    # Skip the interactive model selection since we use job-based routing
+    info(
+        "LLM models are selected automatically per job (topic/script/tags/prompts/title)"
+    )
 
     while True:
         main()

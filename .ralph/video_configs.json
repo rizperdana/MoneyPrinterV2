@@ -1,0 +1,152 @@
+[
+  {
+    "topic": "Uncover the true identity of \"The Bloop,\" an ultra-low frequency sound so powerful it was heard across thousands of miles of ocean, still puzzling scientists decades later.",
+    "style": "curiosity_hook",
+    "voice": "en-US-JennyNeural",
+    "edge_tts_config": {
+      "rate": "+12%",
+      "pitch": "+2Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 25,
+    "script_lines": [
+      "This mysterious sound was so loud, it traveled across the entire Pacific Ocean.",
+      "Scientists thought it might be a giant sea monster calling out from the deep.",
+      "But here's the crazy truth: it was ice breaking off from Antarctica.",
+      "So next time you hear a weird ocean sound, it might just be nature's biggest crack!"
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Minimal map of Pacific Ocean with red sound wave lines radiating outward",
+      "Silhouette of mysterious deep sea creature shape in dark blue water",
+      "Massive glacier iceberg breaking apart with ice fragments falling into ocean",
+      "Simple icon of cracked ice with sound wave pattern"
+    ]
+  },
+  {
+    "topic": "The legendary Kraken, a colossal squid-like monster from ancient myths, believed to dwell in the deepest oceans, has never been fully filmed alive despite countless sightings.",
+    "style": "aha_explanation",
+    "voice": "en-US-DavisNeural",
+    "edge_tts_config": {
+      "rate": "+10%",
+      "pitch": "+2Hz",
+      "volume": "+8%"
+    },
+    "target_duration_sec": 30,
+    "script_lines": [
+      "Sailors for centuries told stories of a giant sea monster that could pull ships underwater.",
+      "The Kraken was said to have arms longer than a school bus, grabbing ships like toys.",
+      "In reality, the colossal squid does exist, living miles deep in the ocean.",
+      "We've never filmed one alive, but we've seen dead ones wash up on beaches.",
+      "So the myth was based on truth - just a real creature we still haven't met face to face."
+    ],
+    "image_count": 5,
+    "image_prompts": [
+      "Ancient wooden ship being grabbed by giant tentacles in stormy seas",
+      "Colossal squid diagram showing massive arms and enormous eyes",
+      "Deep ocean scene with dark abyss and subtle creature silhouette",
+      "Beached giant squid on shoreline with scientists examining it",
+      "Side by side comparison: ancient illustration vs scientific drawing"
+    ]
+  },
+  {
+    "topic": "Uncover the terrifying Stygiomedusa gigantea, a jellyfish as big as a human with tentacles longer than a basketball court, lurking in the deep sea and never captured on film alive.",
+    "style": "fact_in_seconds",
+    "voice": "en-US-JasonNeural",
+    "edge_tts_config": {
+      "rate": "+15%",
+      "pitch": "+3Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 20,
+    "script_lines": [
+      "This jellyfish is bigger than you, with tentacles stretching over 100 feet.",
+      "It lives in the deep dark ocean where sunlight never reaches.",
+      "Scientists have only seen it a handful of times - never filmed alive.",
+      "Meet Stygiomedusa gigantea - the ghost of the deep."
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Human-sized jellyfish silhouette next to diver for scale comparison",
+      "Dark deep sea scene with bioluminescent jellyfish glowing",
+      "Long tentacles visible flowing through dark water",
+      "Simple icon of jellyfish with length measurement text"
+    ]
+  },
+  {
+    "topic": "The phonautograph, invented in 1857, could visually record sound waves as intricate squiggly lines on soot-covered paper, predating the phonograph by decades.",
+    "style": "fact_in_seconds",
+    "voice": "en-GB-RyanNeural",
+    "edge_tts_config": {
+      "rate": "+10%",
+      "pitch": "+2Hz",
+      "volume": "+8%"
+    },
+    "target_duration_sec": 22,
+    "script_lines": [
+      "1857: Someone invented a machine that could see sound before anyone could record it.",
+      "It used a horn like a giant ear, shaking a needle that drew wavy lines on soot-covered paper.",
+      "Edison's phonograph came 20 years later and actually played sound back.",
+      "The phonautograph captured voices visually - but nobody could hear them until recently.",
+      "Scientists finally played back the oldest recorded human voice from 1860."
+    ],
+    "image_count": 5,
+    "image_prompts": [
+      "Victorian-era phonautograph machine with ear horn and needle mechanism",
+      "Soot-covered paper with visible squiggly sound wave lines",
+      "Thomas Edison phonograph comparison illustration",
+      "Modern scientist listening to audio equipment with historical paper waveform",
+      "Timeline graphic showing 1857 vs 1877 invention dates"
+    ]
+  },
+  {
+    "topic": "The bizarre synchronized march of millions of red crabs on Christmas Island, where they clog roads and drop from trees in a crimson tide to breed at the sea.",
+    "style": "curiosity_hook",
+    "voice": "en-US-AriaNeural",
+    "edge_tts_config": {
+      "rate": "+12%",
+      "pitch": "+3Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 25,
+    "script_lines": [
+      "Imagine walking down a road and seeing millions of bright red crabs marching toward you.",
+      "They clog car roads, fall from trees, and turn the entire beach crimson.",
+      "This happens every year on Christmas Island when they migrate to the ocean to breed.",
+      "It's one of the most spectacular wildlife migrations on Earth - and completely natural."
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Road covered in red crabs with car trying to drive through",
+      "Trees with crabs dropping down like red rain",
+      "Beach completely covered in red crabs at water's edge",
+      "Aerial view of island showing red crab paths to the ocean"
+    ]
+  },
+  {
+    "topic": "The hidden Metro-2 tunnel system beneath Moscow, a secret underground railway built for Soviet elites during the Cold War, remains shrouded in mystery with only a few entrances ever confirmed.",
+    "style": "aha_explanation",
+    "voice": "en-US-DavisNeural",
+    "edge_tts_config": {
+      "rate": "+8%",
+      "pitch": "+2Hz",
+      "volume": "+8%"
+    },
+    "target_duration_sec": 28,
+    "script_lines": [
+      "Beneath Moscow exists a secret metro system even bigger than the famous tourist one.",
+      "Called Metro-2, it was built for Soviet leaders to escape in case of nuclear war.",
+      "It has its own stations, tunnels, and reportedly trains that travel at high speeds.",
+      "Only a few entrances have ever been confirmed - most of it remains classified.",
+      "If you see an unmarked door in Moscow's subway, it might lead to a secret world."
+    ],
+    "image_count": 5,
+    "image_prompts": [
+      "Cross-section diagram showing regular metro vs hidden Metro-2 below",
+      "Old Soviet-era military style tunnel with railway tracks",
+      "Unmarked mysterious door in subway station wall",
+      "Schematic map of underground Moscow with secret tunnel lines",
+      "Modern Moscow skyline with underground section revealed"
+    ]
+  }
+]

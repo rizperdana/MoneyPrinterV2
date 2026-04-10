@@ -18,3 +18,4 @@ srt_equalizer
 undetected_chromedriver
 platformdirs
 praw
+ddgs
