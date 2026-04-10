@@ -1,19 +1,28 @@
+# Python
 __pycache__
-config.json
-.mp/
+*.pyc
 venv/
 venv312/
-Songs/
-google-maps-scraper-0.9.7/
-niche.txt
-*.exe
-auto.sh
-.DS_Store
+*.egg-info/
+kittentts_pkg/
+.tool-versions
+
+# Environment
 .env
+
+# Generated files
+batch_results.json
+video_scripts_iteration*.json
+.mp/
+output/
+Songs/
 *.wav
 *.mp3
 *.mp4
-kittentts_pkg/
-.tool-versions
+auto.sh
+google-maps-scraper-0.9.7/
 geckodriver.log
+
+# Misc
+.DS_Store
 .docs
