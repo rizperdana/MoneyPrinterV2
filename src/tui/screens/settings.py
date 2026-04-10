@@ -1,5 +1,6 @@
 """Settings Screen - Configuration management."""
 
+import os
 from textual.screen import Screen
 from textual.widgets import Static, Button, Input, Label
 
@@ -7,26 +8,64 @@ from textual.widgets import Static, Button, Input, Label
 class SettingsScreen(Screen):
     """Settings and configuration screen."""
 
+    # Config keys - stored in .env, not editable here
+    API_KEYS = [
+        ("CLIPROXY_API_KEY", "sk-..."),
+        ("TAVILY_API_KEY", "tvly-..."),
+        ("EXA_API_KEY", "..."),
+    ]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._load_config()
+
+    def _load_config(self):
+        """Load current config from config module."""
+        # Import from config module to get current values
+        try:
+            from src.config import (
+                get_tts_voice,
+                get_language,
+                get_script_sentence_length,
+                get_firefox_profile_path,
+                get_imagemagick_path,
+            )
+
+            self._tts_voice = get_tts_voice()
+            self._language = get_language()
+            self._sentence_length = get_script_sentence_length()
+            self._firefox_profile = get_firefox_profile_path()
+            self._imagemagick = get_imagemagick_path()
+        except Exception:
+            self._tts_voice = "en-US-JennyNeural"
+            self._language = "English"
+            self._sentence_length = "4"
+            self._firefox_profile = ""
+            self._imagemagick = "/usr/bin/convert"
+
     def compose(self):
         yield Static("Settings", classes="screen-header")
-        yield Static("API Keys", classes="section-header")
-        yield Label("CLIPROXY_API_KEY:")
-        yield Input(placeholder="sk-...", id="input-cliproxy", password=True)
-        yield Label("TAVILY_API_KEY:")
-        yield Input(placeholder="tvly-...", id="input-tavily", password=True)
-        yield Label("EXA_API_KEY:")
-        yield Input(placeholder="...", id="input-exa", password=True)
+
+        # API Keys - read from .env
+        yield Static("API Keys (set in .env)", classes="section-header")
+        for key, placeholder in self.API_KEYS:
+            value = os.environ.get(key, "")
+            masked = "•••••••��" if value else "(not set)"
+            yield Label(f"{key}:")
+            yield Static(masked, id=f"display-{key.lower()}")
+
         yield Static("Defaults", classes="section-header")
         yield Label("TTS Voice:")
-        yield Input(value="en-US-JennyNeural", id="input-tts-voice")
+        yield Input(value=self._tts_voice, id="input-tts-voice")
         yield Label("Language:")
-        yield Input(value="English", id="input-language")
+        yield Input(value=self._language, id="input-language")
         yield Label("Sentence Length:")
-        yield Input(value="4", id="input-sentence-length")
+        yield Input(value=self._sentence_length, id="input-sentence-length")
         yield Static("Browser", classes="section-header")
         yield Label("Firefox Profile:")
-        yield Input(placeholder="/path/to/profile", id="input-firefox")
+        yield Input(value=self._firefox_profile, id="input-firefox")
         yield Label("ImageMagick:")
-        yield Input(value="/usr/bin/convert", id="input-imagemagick")
-        yield Button("Save Settings", variant="primary", id="btn-save")
-        yield Button("Reset to Defaults", id="btn-reset")
+        yield Input(value=self._imagemagick, id="input-imagemagick")
+        yield Static("", classes="spacer")
+        yield Static("Edit config.json or .env to change values", classes="hint")
+        yield Button("⟳ Reload", variant="primary", id="btn-reload")

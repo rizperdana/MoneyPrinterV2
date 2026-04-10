@@ -176,3 +176,13 @@ DataTable {
 .retry-btn {
     margin: 1;
 }
+
+/* Settings hints */
+.hint {
+    color: #64748b;
+    padding: 1;
+}
+
+.spacer {
+    height: 1;
+}
