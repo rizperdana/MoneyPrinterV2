@@ -10,7 +10,6 @@ from textual.widgets import (
     Button,
     Input,
     Label,
-    Select,
     Static,
     Switch,
 )
@@ -141,15 +140,15 @@ class VideoGenScreen(Screen):
     def compose(self) -> ComposeResult:
         """Compose the video generation screen."""
         # Header
-        yield Static("🎬 Video Generation", classes="screen-header")
+        yield Static("🎬 VIDEO GENERATION", classes="screen-header")
 
         with Vertical(id="form-container"):
-            # Account Selection
+            # Account Selection - use Input instead of Select
             with Horizontal(classes="form-row"):
                 yield Static("Account:", classes="form-label")
-                yield Select(
-                    id="select-account",
+                yield Input(
                     placeholder="Select YouTube account...",
+                    id="input-account",
                     classes="form-input",
                 )
 
@@ -162,13 +161,12 @@ class VideoGenScreen(Screen):
                     classes="form-input",
                 )
 
-            # Language Selection
+            # Language Selection - use Input with placeholder
             with Horizontal(classes="form-row"):
                 yield Static("Language:", classes="form-label")
-                yield Select(
-                    LANGUAGES,
-                    id="select-language",
-                    value="English",
+                yield Input(
+                    placeholder="English",
+                    id="input-language",
                     classes="form-input",
                 )
 
