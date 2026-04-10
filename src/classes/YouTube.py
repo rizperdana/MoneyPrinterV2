@@ -371,13 +371,16 @@ class YouTube:
                     query=f"{self.niche} interesting facts breaking news",
                     limit=8,
                 )
-                if search_result and search_result.data:
+                # Firecrawl returns SearchData with .web attribute
+                if search_result and hasattr(search_result, "web"):
+                    web_results = search_result.web or []
                     topics_found = []
-                    for item in search_result.data[:8]:
-                        title = item.get("title", "")
+                    for item in web_results[:8]:
+                        title = item.title if hasattr(item, "title") else ""
                         desc = (
-                            item.get("description", "")[:120]
-                            or item.get("markdown", "")[:120]
+                            item.description[:120]
+                            if hasattr(item, "description") and item.description
+                            else ""
                         )
                         if title and desc:
                             topics_found.append(f"{title}: {desc}")

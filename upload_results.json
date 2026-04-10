@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-04-09T19:22:09.242528",
-  "topic": "The Venus flytrap can snap shut in just 100 milliseconds to trap unsuspecting insects with its sensitive trigger hairs",
-  "title": "Venus Flytrap Snaps Shut in 100ms to Trap Bugs!",
+  "timestamp": "2026-04-10T00:16:11.667073",
+  "topic": "The Venus flytrap can snap shut in less than a second to trap insects, showing how plants evolved clever hunting tactics like animals.",
+  "title": "Venus Flytrap Snaps Shut in Under a Second!",
   "youtube": {
-    "success": false,
-    "url": null
+    "success": true,
+    "url": "https://www.youtube.com/watch?v=3Iq0b9iJSww"
   },
   "tiktok": {
     "success": false,
@@ -12,6 +12,6 @@
   },
   "facebook": {
     "success": true,
-    "url": "https://web.facebook.com/reel/1483177383391087/?comment_id=969604699357891&__tn__=R]"
+    "url": "https://web.facebook.com/reel/4284621658519287/?comment_id=1953632696029992&__tn__=R]"
   }
 }
