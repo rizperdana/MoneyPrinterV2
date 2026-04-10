@@ -11,23 +11,24 @@ An AI-powered automated video creation and social media publishing system.
 
 ### Video Generation
 - [x] **AI-Powered Shorts Generation** - Automatically creates vertical videos with:
-  - Topic research from Wikipedia, Google Trends, and DuckDuckGo
+  - Topic research from Tavily, Exa, Bing (ddgs), Wikipedia, Google Trends, and Firecrawl
   - AI-generated scripts with high-retention video structure
-  - Dynamic images using Ghibli-style AI generation (Cloudflare, Pollinations)
+  - Dynamic images using Cloudflare Workers AI + Pollinations
   - Ken Burns pan/zoom effect on images
   - **Mascot overlay** - Cute orange cat in bottom-left corner of every frame
-  - AI text-to-speech (KittenTTS)
+  - Text-to-speech (KittenTTS + Edge-TTS)
   - Auto-generated subtitles using Whisper
   - Background music
 
 ### Platform Support
 - [x] **YouTube Shorts** - Full automation with CRON scheduling
-- [x] **TikTok** - Automated uploads with proper caption formatting
-- [x] **Facebook Reels** - Automated uploads with description support
+- [x] **TikTok** - Automated uploads via Post Bridge API
+- [x] **Facebook Reels** - Automated uploads via Post Bridge API
 - [x] **Cross-posting** - Via Post Bridge API to multiple platforms simultaneously
 
 ### Additional Features
 - [x] **Twitter Bot** - Auto-post tweets with CRON scheduling
+- [x] **Reddit Bot** - Auto-post to subreddits
 - [x] **Affiliate Marketing** - Amazon affiliate link promotion
 - [x] **Cold Outreach** - Find local businesses and send promotional emails
 
@@ -65,7 +66,6 @@ Edit `config.json` with your API keys:
 
 ```json
 {
-    "llm_model": "kilo-auto/free",
     "CLIPROXY_API_KEY": "your-api-key",
     "firefox_profile": "/path/to/firefox/profile",
     "stt_provider": "local_whisper",
@@ -74,12 +74,14 @@ Edit `config.json` with your API keys:
 ```
 
 **Required Environment Variables:**
-- `CLIPROXY_API_KEY` - For LLM text generation (uses kilo-auto/free model)
+- `CLIPROXY_API_KEY` - For LLM text generation (uses cliproxyapi with job-specific model routing)
 
 **Optional API Keys:**
 - `GEMINI_API_KEY` - For AI image generation
 - `PIXABAY_API_KEY` - For stock image fallback
 - `POLLINATIONS_API_KEY` - For AI image generation
+- `TAVILY_API_KEY` - For topic research
+- `EXA_API_KEY` - For topic research
 
 ### Running
 
@@ -89,6 +91,9 @@ python src/main.py
 
 # Non-interactive pipeline (automated)
 python src/run_pipeline.py --niche "interesting science facts" --language English --upload
+
+# Batch mode
+python src/batch_run.py --niche "your niche" --count 5
 
 # 24/7 scheduler mode
 python src/scheduler.py start
@@ -104,26 +109,35 @@ MoneyPrinterV2/
 │   ├── main.py              # Interactive CLI application
 │   ├── run_pipeline.py      # Non-interactive video generation pipeline
 │   ├── run_24_7.py         # 24/7 continuous operation mode
-│   ├── scheduler.py        # CRON-based scheduling
-│   ├── cron.py             # CRON job implementation
-│   ├── config.py           # Configuration management
-│   ├── llm_provider.py     # LLM API integration (cliproxyapi)
-│   ├── tracker.py          # Upload tracking and deduplication
-│   ├── cache.py            # Account and data caching
-│   ├── utils.py            # Utility functions
-│   ├── constants.py        # Constants and selectors
-│   ├── status.py           # Status output utilities
-│   ├── classes/
-│   │   ├── YouTube.py      # YouTube Shorts automation
-│   │   ├── Twitter.py      # Twitter bot
-│   │   ├── Tts.py          # Text-to-speech
-│   │   ├── AFM.py          # Affiliate marketing
-│   │   └── Outreach.py     # Business outreach
-│   └── ...
-├── .mp/                    # Generated media cache
-├── output/                 # Output videos
-├── docs/                   # Documentation
-└── scripts/                # Helper scripts
+│   ├── batch_run.py         # Batch video generation
+│   ├── scheduler.py         # CRON-based scheduling
+│   ├── cron.py              # CRON job implementation
+│   ├── config.py            # Configuration management
+│   ├── llm_provider.py      # LLM API integration (cliproxyapi) with model routing
+│   ├── llm_generate.py      # Prompt construction and response parsing
+│   ├── research.py           # Topic research (Tavily, Exa, Bing, Wikipedia, etc.)
+│   ├── db.py                # SQLite in-memory ORM (topics, videos, accounts)
+│   ├── tracker.py           # Upload tracking and deduplication
+│   ├── cache.py             # Account and data caching
+│   ├── utils.py             # Utility functions
+│   ├── constants.py         # Constants and selectors
+│   ├── status.py            # Status output utilities
+│   ├── art.py               # ASCII banner
+│   └── classes/
+│       ├── YouTube.py       # YouTube Shorts automation
+│       ├── Twitter.py        # Twitter bot
+│       ├── Reddit.py         # Reddit bot
+│       ├── PostBridge.py     # Cross-platform posting API
+│       ├── Tts.py           # Text-to-speech (KittenTTS)
+│       ├── EdgeTts.py       # Edge TTS provider
+│       ├── AFM.py           # Affiliate marketing
+│       └── Outreach.py      # Business outreach
+├── .mp/                     # Generated media cache
+├── output/                  # Output videos
+├── docs/                    # Documentation
+├── assets/                  # Static assets
+├── fonts/                   # Font files
+└── scripts/                 # Helper scripts
 ```
 
 ---
@@ -132,7 +146,13 @@ MoneyPrinterV2/
 
 ### Video Generation Pipeline
 
-1. **Topic Research** - Gathers trending topics from Wikipedia, Google Trends, and web searches based on your niche
+1. **Topic Research** - Gathers trending topics from multiple sources:
+   - Tavily AI (primary)
+   - Exa search
+   - Bing via ddgs (fallback, works in Indonesia)
+   - Wikipedia
+   - Google Trends
+   - Firecrawl web scraping
 2. **Script Generation** - Creates engaging scripts using AI with:
    - Hook statement (first 3 seconds)
    - Core delivery (information density)
@@ -144,33 +164,35 @@ MoneyPrinterV2/
    - Pixabay stock images (fallback)
 4. **Ken Burns Effect** - Adds subtle pan/zoom animation to images
 5. **Mascot Overlay** - Places cute orange cat mascot in bottom-left corner
-6. **Text-to-Speech** - Converts script to audio using KittenTTS
+6. **Text-to-Speech** - Converts script to audio using KittenTTS or Edge TTS
 7. **Subtitle Generation** - Creates SRT subtitles using Whisper
 8. **Video Assembly** - Combines everything using MoviePy
 
 ### Platform Upload
 
 - **YouTube** - Selenium-based upload to YouTube Studio
-- **TikTok** - Direct upload via TikTok Studio with proper caption/hashtag formatting
-- **Facebook** - Reels upload with description
+- **TikTok** - Via Post Bridge API
+- **Facebook** - Reels upload via Post Bridge API
 - **Cross-post** - Post Bridge API for simultaneous multi-platform posting
 
 ---
 
 ## LLM Configuration
 
-MoneyPrinterV2 uses **cliproxyapi** as the primary LLM provider with automatic fallback:
+MoneyPrinterV2 uses **cliproxyapi** as the LLM provider with job-specific model routing:
 
-### Primary: cliproxyapi
+| Job | Primary Model | Fallbacks |
+|-----|--------------|-----------|
+| topic | arcee-ai/trinity-large-thinking:free | dola-seed-2.0-pro, minimax-m2.5, nemotron |
+| script | arcee-ai/trinity-large-thinking:free | dola-seed-2.0-pro, minimax-m2.5, nemotron |
+| seo_tags | arcee-ai/trinity-large-thinking:free | dola-seed-2.0-pro, minimax-m2.5 |
+| image_prompts | bytedance-seed/dola-seed-2.0-pro:free | trinity-large-thinking, minimax-m2.5 |
+| title_desc | arcee-ai/trinity-large-thinking:free | dola-seed-2.0-pro, minimax-m2.5, nemotron |
+
 ```bash
 # API endpoint
 http://localhost:8317/v1
-
-# Default model: kilo-auto/free
 ```
-
-### Fallback: llama.cpp
-If cliproxyapi is unavailable, automatically falls back to local llama.cpp with gemma4 model.
 
 ---
 
@@ -180,6 +202,7 @@ If cliproxyapi is unavailable, automatically falls back to local llama.cpp with 
 - Check API keys are set in config.json
 - Ensure cliproxyapi service is running
 - Try running with `--verbose` flag for detailed logs
+- Run `python3 scripts/preflight_local.py` to validate all providers
 
 ### Upload fails
 - Verify Firefox profile is logged into the platform
@@ -189,6 +212,11 @@ If cliproxyapi is unavailable, automatically falls back to local llama.cpp with 
 ### No subtitles
 - Install faster-whisper: `pip install faster-whisper`
 - Or set `stt_provider: "third_party_assemblyai"` with AssemblyAI key
+
+### Research returns no results
+- Check API keys for Tavily/Exa
+- Verify internet connectivity
+- ddgs uses Bing backend (works in Indonesia where DuckDuckGo is blocked)
 
 ---
 
@@ -211,5 +239,6 @@ MoneyPrinterV2 is licensed under **Affero General Public License v3.0**.
 ## Acknowledgments
 
 - [KittenTTS](https://github.com/KittenML/KittenTTS) - Text-to-Speech
-- [gpt4free](https://github.com/xtekky/gpt4free) - Free AI API
 - [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) - Free AI image generation
+- [Pollinations.ai](https://pollinations.ai/) - Free AI image generation
+- [Whisper](https://github.com/openai/whisper) - Speech recognition
