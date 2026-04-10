@@ -300,6 +300,96 @@ class YouTube:
             if get_verbose():
                 warning(f"DuckDuckGo failed: {e}")
 
+        # Method 4: Tavily search (priority)
+        try:
+            from tavily import TavilyClient
+
+            api_key = os.environ.get("TAVILY_API_KEY", "")
+            if api_key:
+                tavily_client = TavilyClient(api_key=api_key)
+                response = tavily_client.search(
+                    query=f"{self.niche} latest interesting facts news",
+                    max_results=8,
+                    include_answer=True,
+                )
+                if response.get("results"):
+                    topics_found = []
+                    for r in response["results"][:8]:
+                        title = r.get("title", "")
+                        content = r.get("content", "")[:150]
+                        if title and content:
+                            topics_found.append(f"{title}: {content}")
+                    if topics_found:
+                        context_parts.append(
+                            f"Tavily ({self.niche}):\n"
+                            + "\n".join(f"- {t}" for t in topics_found[:8])
+                        )
+        except Exception as e:
+            if get_verbose():
+                warning(f"Tavily failed: {e}")
+
+        # Method 5: Exa search (fallback)
+        try:
+            from exa_py import Exa
+
+            api_key = os.environ.get("EXA_API_KEY", "")
+            if api_key and not any("exa" in p.lower() for p in context_parts):
+                exa = Exa(api_key=api_key)
+                response = exa.search(
+                    f"{self.niche} interesting facts latest news",
+                    num_results=8,
+                    type="neural",
+                )
+                if response.results:
+                    topics_found = []
+                    for r in response.results:
+                        text = r.text[:150] if r.text else r.get("extract", "")[:150]
+                        if r.title and text:
+                            topics_found.append(f"{r.title}: {text}")
+                    if topics_found:
+                        context_parts.append(
+                            f"Exa ({self.niche}):\n"
+                            + "\n".join(f"- {t}" for t in topics_found[:8])
+                        )
+        except Exception as e:
+            if get_verbose():
+                warning(f"Exa failed: {e}")
+
+        # Method 6: Firecrawl (last fallback - can do in-depth research)
+        try:
+            from firecrawl import Firecrawl
+
+            api_key = os.environ.get("FIRECRAWL_API_KEY", "")
+            if api_key and not any(
+                p
+                for p in context_parts
+                if any(x in p.lower() for x in ["tavily", "exa"])
+            ):
+                firecrawl = Firecrawl(api_key=api_key)
+                # Try a search first
+                search_result = firecrawl.search(
+                    query=f"{self.niche} interesting facts breaking news",
+                    limit=8,
+                )
+                if search_result and search_result.data:
+                    topics_found = []
+                    for item in search_result.data[:8]:
+                        title = item.get("title", "")
+                        desc = (
+                            item.get("description", "")[:120]
+                            or item.get("markdown", "")[:120]
+                        )
+                        if title and desc:
+                            topics_found.append(f"{title}: {desc}")
+                    if topics_found:
+                        context_parts.append(
+                            f"Firecrawl ({self.niche}):\n"
+                            + "\n".join(f"- {t}" for t in topics_found[:8])
+                        )
+        except Exception as e:
+            if get_verbose():
+                warning(f"Firecrawl failed: {e}")
+
         if context_parts:
             return "\n\n".join(context_parts)
         return ""
