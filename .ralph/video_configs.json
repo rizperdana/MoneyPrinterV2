@@ -148,5 +148,173 @@
       "Schematic map of underground Moscow with secret tunnel lines",
       "Modern Moscow skyline with underground section revealed"
     ]
+  },
+  {
+    "topic": "The Axolotl, a salamander that can regenerate its own heart, spinal cord, and even parts of its brain without any scarring, keeping its juvenile features forever like a permanent Peter Pan.",
+    "style": "fact_in_seconds",
+    "voice": "en-US-JasonNeural",
+    "edge_tts_config": {
+      "rate": "+15%",
+      "pitch": "+3Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 18,
+    "script_lines": [
+      "This creature never grows up. It stays a baby its entire life.",
+      "The axolotl can regrow its heart, spine, and parts of its brain - no scars.",
+      "It's the only vertebrate that can regenerate limbs repeatedly.",
+      "Meet the real-life Wolverine of the animal kingdom."
+    ],
+    "image_count": 3,
+    "image_prompts": [
+      "Cute axolotl with big smile and feathery gills",
+      "Limb regeneration sequence showing new leg growing",
+      "Simple heart icon with regeneration arrows"
+    ]
+  },
+  {
+    "topic": "The Taos Hum, a mysterious low-frequency sound heard by only some people in Taos, New Mexico, that no one can locate or explain - not everyone can even hear it.",
+    "style": "curiosity_hook",
+    "voice": "en-US-JennyNeural",
+    "edge_tts_config": {
+      "rate": "+12%",
+      "pitch": "+2Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 22,
+    "script_lines": [
+      "In one small American town, some people hear a constant low hum - others hear nothing at all.",
+      "It's not electricity. It's not wind. No one knows what it is.",
+      "Only about 2% of the population can even detect this frequency.",
+      "Scientists have tried to find the source for decades with zero success."
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Small town at night with stars, showing mysterious quiet atmosphere",
+      "Sound wave visualization with low frequency rings",
+      "Question mark over topographic map of area",
+      "Silhouette of person with ear vs person with crossed-out ear"
+    ]
+  },
+  {
+    "topic": "The Longyou Caves in China, an underground network of 24 hand-carved caves spanning 30 football fields, were completely unknown to the modern world until 1992 - no one knows who built them or why.",
+    "style": "aha_explanation",
+    "voice": "en-GB-RyanNeural",
+    "edge_tts_config": {
+      "rate": "+10%",
+      "pitch": "+2Hz",
+      "volume": "+8%"
+    },
+    "target_duration_sec": 26,
+    "script_lines": [
+      "These massive caves were hidden underground for over a thousand years.",
+      "Twenty-four chambers, all hand-carved, covering more than 30 football fields.",
+      "Local farmers knew about them but the world didn't - until someone fell into a sinkhole in 1992.",
+      "We still don't know who built them, when, or why. They just appeared."
+    ],
+    "image_count": 5,
+    "image_prompts": [
+      "Vast underground cave chamber with intricate walls",
+      "Ancient tool marks visible on cave surface",
+      "Map showing cave network layout",
+      "Farmer looking into mysterious hole",
+      "Comparison: ancient carving vs modern measurement"
+    ]
+  },
+  {
+    "topic": "Dolphins call each other by unique signature whistles, essentially giving themselves names, and will respond when researchers play back recordings of their own signature call across the ocean.",
+    "style": "curiosity_hook",
+    "voice": "en-US-AriaNeural",
+    "edge_tts_config": {
+      "rate": "+12%",
+      "pitch": "+3Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 20,
+    "script_lines": [
+      "Dolphins have names. They're called signature whistles.",
+      "Each dolphin develops its own unique call - basically a name.",
+      "When researchers play a dolphin's name in the ocean, the dolphin comes right over.",
+      "They remember each other's names for decades. That's deeper than most human friendships."
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Dolphin with sound wave bubbles showing unique pattern",
+      "Two dolphins approaching each other",
+      "Researcher in boat playing underwater speaker",
+      "Simple name tag icon with dolphin silhouette"
+    ]
+  },
+  {
+    "topic": "The Humback Whale's migration from Antarctica to tropical waters is the longest known animal journey on Earth - over 5,000 miles each way, fasting the entire time.",
+    "style": "fact_in_seconds",
+    "voice": "en-US-DavisNeural",
+    "edge_tts_config": {
+      "rate": "+8%",
+      "pitch": "+2Hz",
+      "volume": "+8%"
+    },
+    "target_duration_sec": 18,
+    "script_lines": [
+      "This whale travels over 5,000 miles one way - the longest migration on Earth.",
+      "It swims from Antarctica's freezing waters to warm tropical beaches.",
+      "And here's the wild part: it doesn't eat the entire round trip. Zero food.",
+      "Nature's longest road trip. No snacks allowed."
+    ],
+    "image_count": 3,
+    "image_prompts": [
+      "Map showing route from Antarctica to tropical area",
+      "Whale swimming in ocean with distance counter",
+      "Simple whale icon with minus food sign"
+    ]
+  },
+  {
+    "topic": "The Pioneer Anomaly - mysterious slight deviation in Pioneer 10 and 11 spacecraft trajectories that baffled scientists for years, potentially revealing new physics beyond our understanding.",
+    "style": "aha_explanation",
+    "voice": "en-US-JennyNeural",
+    "edge_tts_config": {
+      "rate": "+12%",
+      "pitch": "+2Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 24,
+    "script_lines": [
+      "Two space probes launched in the 70s are slightly off course. No one knows why.",
+      "They're pulling toward the sun with an extra force equal to a billionth of a billionth of gravity.",
+      "Scientists spent decades searching for the cause - thermal radiation, gravity errors, asteroids.",
+      "The answer might actually be new physics. The probes may have detected dark matter."
+    ],
+    "image_count": 5,
+    "image_prompts": [
+      "Pioneer spacecraft with golden plaque diagram",
+      "Space trajectory path showing slight deviation",
+      "Tiny force arrow pushing toward sun",
+      "Scientist looking at data confused",
+      "Rocket icon with question mark"
+    ]
+  },
+  {
+    "topic": "The Sappho fragment - only 140 words survive from ancient Greece's greatest poet, but those few lines contain such beauty that readers wept upon translating them, preserv inggenius in fragments.",
+    "style": "curiosity_hook",
+    "voice": "en-GB-RyanNeural",
+    "edge_tts_config": {
+      "rate": "+10%",
+      "pitch": "+2Hz",
+      "volume": "+8%"
+    },
+    "target_duration_sec": 20,
+    "script_lines": [
+      "Sappho was called the tenth muse. She wrote nine books of poetry.",
+      "Almost all of it is gone. Just 140 words survive across fragments.",
+      "When scholars finally translated those words, readers wept at the beauty.",
+      "We have less than 1% of her work - but that 1% is timeless."
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Ancient papyrus fragment with faded Greek text",
+      "Beautiful woman writing with quill",
+      "Stack of books with most faded away leaving only one page",
+      "Heart icon with broken pieces"
+    ]
   }
 ]
