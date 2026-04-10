@@ -1,0 +1,165 @@
+[
+  {
+    "topic": "Uncover the true identity of 'The Bloop,' an ultra-low frequency sound so powerful it was heard across thousands of miles of ocean, still puzzling scientists decades later.",
+    "style": "curiosity_hook",
+    "voice": "en-US-JennyNeural",
+    "edge_tts_config": {
+      "rate": "+15%",
+      "pitch": "+3Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 15,
+    "script_lines": [
+      "What if I told you a sound so loud it traveled across the entire Pacific Ocean... was actually just ice breaking?",
+      "Back in 1997, NOAA sensors picked up 'The Bloop' — a massive ultra-low frequency sound, louder than a blue whale, heard thousands of miles away.",
+      "For years, people thought it was a monster. But researchers finally confirmed it: Thousands of tons of ice cracking off Antarctica.",
+      "So next time you hear a mystery rumble... it might just be nature doing its thing!",
+      "Hit follow for more ocean secrets!",
+      "",
+      ""
+    ],
+    "image_count": 3,
+    "image_prompts": [
+      "Simple 2D map of Pacific Ocean with a sound wave emanating from Antarctica, labeled 'The Bloop'.",
+      "Minimal infographic showing ice sheet cracking with large crack lines and sound waves.",
+      "Side-by-side comparison: monster silhouette icon vs ice glacier icon with checkmark on ice."
+    ]
+  },
+  {
+    "topic": "The legendary Kraken, a colossal squid-like monster from ancient myths, believed to dwell in the deepest oceans, has never been fully filmed alive despite countless sightings.",
+    "style": "curiosity_hook",
+    "voice": "en-US-AriaNeural",
+    "edge_tts_config": {
+      "rate": "+12%",
+      "pitch": "+3Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 25,
+    "script_lines": [
+      "Sailors for centuries told tales of a monster that could drag whole ships under the sea. Meet the Kraken.",
+      "The colossal squid — real creature, massive tentacles longer than a school bus, eyes the size of dinner plates.",
+      "We've found dead ones, we've seen babies, we've seen wounds on sperm whales from their battles... but no adult, fully filmed alive. Not once.",
+      "It lives in the twilight zone, 3,000 feet down where sunlight dies. That's probably why.",
+      "The deepest ocean stays its secret. And honestly? That makes it even more terrifying.",
+      "",
+      ""
+    ],
+    "image_count": 5,
+    "image_prompts": [
+      "Dramatic illustration of Kraken silhouette with tentacles emerging from dark water.",
+      "Simple diagram showing scale: tiny human diver next to massive squid outline.",
+      "Icon array showing: dead squid, baby squid, whale scar, question mark — with 'FILMED ALIVE' crossed out.",
+      "Depth chart: surface to 'twilight zone' at 3000ft with squid icon in darkness.",
+      "Final frame: ominous eye glowing in deep blue black water."
+    ]
+  },
+  {
+    "topic": "Uncover the terrifying Stygiomedusa gigantea, a jellyfish as big as a human with tentacles longer than a basketball court, lurking in the deep sea and never captured on film alive.",
+    "style": "aha_explanation",
+    "voice": "en-GB-RyanNeural",
+    "edge_tts_config": {
+      "rate": "+10%",
+      "pitch": "+2Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 20,
+    "script_lines": [
+      "This is the Stygiomedusa gigantea — a jellyfish with a bell bigger than a human, tentacles over 100 feet long.",
+      "That's longer than a basketball court. Just... floating in the dark.",
+      "Unlike most jellyfish, it doesn't sting. It wraps its massive tentacles like fishing nets to trap prey.",
+      "It's been seen only a handful of times. Most footage? Dead specimens pulled up to the surface.",
+      "Alive in its natural habitat? We have basically zero footage. That's how rare it is.",
+      "",
+      ""
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Side-by-side: human silhouette inside jellyfish bell outline to show scale.",
+      "Simple diagram: basketball court outline with 100ft tentacles wrapped around it.",
+      "Illustration of tentacle net wrapped around small fish prey.",
+      "Dark ocean scene with single glowing jellyfish bell — text: 'Never filmed alive.'"
+    ]
+  },
+  {
+    "topic": "The phonautograph, invented in 1857, could visually record sound waves as intricate squiggly lines on soot-covered paper, predating the phonograph by decades.",
+    "style": "fact_in_seconds",
+    "voice": "en-US-DavisNeural",
+    "edge_tts_config": {
+      "rate": "+8%",
+      "pitch": "+1Hz",
+      "volume": "+5%"
+    },
+    "target_duration_sec": 20,
+    "script_lines": [
+      "1857: Thirty years before Edison's phonograph, this device was already recording sound — visually.",
+      "The phonautograph used a horn to collect sound, which moved a needle coated in soot.",
+      "That needle drew squiggly lines on paper. The bigger the sound, the bigger the waves.",
+      "We actually have recordings from 1860 — voices singing. Converted back to sound decades later.",
+      "It was never meant to play back sound. It just visualized it. But it captured history.",
+      "",
+      ""
+    ],
+    "image_count": 4,
+    "image_prompts": [
+      "Victorian-era phonautograph illustration with horn and needle mechanism.",
+      "Soot-covered paper with visible squiggly sound wave lines.",
+      "Simple timeline: 1857 phonautograph → 1877 phonograph with decades gap.",
+      "Modern audio waveform overlaid on old squiggly lines — showing they look similar."
+    ]
+  },
+  {
+    "topic": "The bizarre synchronized march of millions of red crabs on Christmas Island, where they clog roads and drop from trees in a crimson tide to breed at the sea.",
+    "style": "fact_in_seconds",
+    "voice": "en-US-JasonNeural",
+    "edge_tts_config": {
+      "rate": "+15%",
+      "pitch": "+2Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 30,
+    "script_lines": [
+      "3 facts about the red crab migration that'll blow your mind.",
+      "One: Up to 100 million red crabs march in sync. That's more crabs than humans in many countries.",
+      "Two: They clog roads. authorities literally have to close streets. Some crabs fall from trees and land on cars.",
+      "Three: They march to the exact same beach every year to breed, triggered by lunar cycles. Same spot. Same time. Every single year.",
+      "The beaches turn red. The migration is so intense, it's been called 'crabgedon.'",
+      ""
+    ],
+    "image_count": 6,
+    "image_prompts": [
+      "Massive crowd of red dots ( crabs) flowing across island — bird's eye view.",
+      "Road blocked by crabs with 'ROAD CLOSED' sign — simple cartoon style.",
+      "Crab falling from tree icon with 'thud' annotation — comedic timing.",
+      "Moon phase diagram showing lunar trigger for migration.",
+      "Beach transformation: empty beach → crimson red beach full of crabs.",
+      "Giant crab army silhouette with text: '100 MILLION STRONG.'"
+    ]
+  },
+  {
+    "topic": "The hidden Metro-2 tunnel system beneath Moscow, a secret underground railway built for Soviet elites during the Cold War, remains shrouded in mystery with only a few entrances ever confirmed.",
+    "style": "curiosity_hook",
+    "voice": "en-US-JennyNeural",
+    "edge_tts_config": {
+      "rate": "+12%",
+      "pitch": "+3Hz",
+      "volume": "+10%"
+    },
+    "target_duration_sec": 25,
+    "script_lines": [
+      "Beneath Moscow exists a secret metro system. It's called Metro-2. And it's way deeper than the normal metro you can use.",
+      "Built during Stalin's era, it was for Soviet leaders — to escape if核 war happened. Trains that go 75 miles per hour. stations the size of palaces.",
+      "Only a handful of entrances exist. Most are hidden in government buildings. You can't buy a ticket. Ever.",
+      "Rumor has it there's even a bunker down there with enough supplies to last years.",
+      "Is it still operational? The Kremlin won't say. Some say yes. Some say it collapsed. The mystery continues.",
+      ""
+    ],
+    "image_count": 5,
+    "image_prompts": [
+      "Cross-section illustration: normal metro shallow, Metro-2 much deeper below.",
+      "Soviet-era aesthetic: Stalin silhouette with secret tunnel blueprint.",
+      "Fast train icon with '75 MPH' annotation in minimal design.",
+      "Mystery entrance hidden in building outline — with question mark.",
+      "Split screen: empty dark tunnels vs luxurious bunker rooms with supplies."
+    ]
+  }
+]
