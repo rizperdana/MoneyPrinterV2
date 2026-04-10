@@ -1,0 +1,178 @@
+/* MoneyPrinterV2 Dark Theme */
+
+Screen {
+    background: #0f172a;
+    color: #f8fafc;
+}
+
+/* Header and Footer */
+Header {
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+Footer {
+    background: #1e293b;
+    color: #94a3b8;
+}
+
+/* Sidebar */
+#sidebar {
+    background: #1e293b;
+    width: 25;
+}
+
+.sidebar-header {
+    background: #0f172a;
+    color: #94a3b8;
+    text-align: center;
+    padding: 1;
+}
+
+.nav-item {
+    margin: 1;
+}
+
+/* Common widgets */
+Button {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 1 3;
+}
+
+Button:hover {
+    background: #818cf8;
+}
+
+Button:focus {
+    background: #818cf8;
+}
+
+/* Input fields */
+Input {
+    background: #334155;
+    color: #f8fafc;
+    border: solid #475569;
+    padding: 1 2;
+}
+
+Input:focus {
+    border: solid #6366f1;
+}
+
+/* Labels */
+Label {
+    color: #f8fafc;
+}
+
+/* Static text */
+Static {
+    color: #f8fafc;
+}
+
+/* DataTable */
+DataTable {
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+/* Screen headers */
+.screen-header {
+    background: #0f172a;
+    padding: 2;
+    color: #f8fafc;
+}
+
+/* Form labels */
+.form-label {
+    color: #94a3b8;
+    width: 15;
+}
+
+/* Stats */
+.stat-card {
+    background: #1e293b;
+    border: solid #334155;
+    padding: 2;
+}
+
+.stat-card-title {
+    color: #94a3b8;
+}
+
+.stat-card-value {
+    color: #f8fafc;
+}
+
+/* Pipeline steps */
+.step-pending {
+    color: #64748b;
+}
+
+.step-active {
+    color: #6366f1;
+}
+
+.step-complete {
+    color: #22c55e;
+}
+
+.step-error {
+    color: #ef4444;
+}
+
+/* Section headers */
+.section-header {
+    color: #94a3b8;
+    padding: 1;
+}
+
+/* Main layout: sidebar + content area */
+#main-layout {
+    layout: horizontal;
+    height: 100%;
+    width: 100%;
+}
+
+#sidebar {
+    background: #1e293b;
+    width: 20;
+    min-width: 20;
+    max-width: 20;
+    height: 100%;
+}
+
+#content-area {
+    layout: vertical;
+    width: 1fr;
+    height: 100%;
+    background: #0f172a;
+}
+
+/* Toast / notification overlay */
+.toast-container {
+    width: 40;
+    height: auto;
+    align: center top;
+    background: #1e293b;
+    border: solid #475569;
+    padding: 1;
+}
+
+.toast-error {
+    color: #ef4444;
+}
+
+.toast-success {
+    color: #22c55e;
+}
+
+.toast-info {
+    color: #6366f1;
+}
+
+/* Retry button */
+.retry-btn {
+    margin: 1;
+}

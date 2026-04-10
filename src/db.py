@@ -279,3 +279,61 @@ def get_accounts(platform: Optional[str] = None) -> list[dict]:
     result = [dict(row) for row in rows]
     info(f"Retrieved {len(result)} accounts")
     return result
+
+
+def update_account(account_id: int, updates: dict) -> bool:
+    """
+    Update an existing account record.
+
+    Args:
+        account_id: The account ID to update
+        updates: Dictionary of fields to update
+
+    Returns:
+        True if updated, False if not found
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+
+    # Build update query dynamically
+    valid_fields = {"platform", "username", "nickname", "profile_path"}
+    update_fields = {k: v for k, v in updates.items() if k in valid_fields}
+
+    if not update_fields:
+        return False
+
+    set_clause = ", ".join(f"{k} = ?" for k in update_fields.keys())
+    values = list(update_fields.values()) + [account_id]
+
+    cursor.execute(
+        f"UPDATE accounts SET {set_clause} WHERE id = ?",
+        values,
+    )
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        success(f"Updated account ID {account_id}")
+        return True
+    return False
+
+
+def delete_account(account_id: int) -> bool:
+    """
+    Delete an account record.
+
+    Args:
+        account_id: The account ID to delete
+
+    Returns:
+        True if deleted, False if not found
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        success(f"Deleted account ID {account_id}")
+        return True
+    return False
