@@ -9,9 +9,12 @@ from config import ROOT_DIR
 
 
 class EdgeTTS:
-    def __init__(self, voice: str = "en-US-AriaNeural") -> None:
+    def __init__(self, voice: str = "en-US-JennyNeural") -> None:
         print(f"EdgeTTS __init__: voice={voice}")
         self._voice = voice
+        self._rate = "+10%"
+        self._volume = "+10%"
+        self._pitch = "+2Hz"
         print("EdgeTTS __init__ completed")
 
     def synthesize(
@@ -35,6 +38,12 @@ class EdgeTTS:
         return output_file
 
     async def _generate_mp3(self, text: str, output_path: str) -> None:
+        # Use SSML for natural-sounding speech
+        ssml = f"""<speak>
+  <prosody rate="{self._rate}" pitch="{self._pitch}" volume="{self._volume}">
+    {text}
+  </prosody>
+</speak>"""
         print(f"EdgeTTS _generate_mp3: text={text[:50]}, voice={self._voice}")
-        communicate = edge_tts.Communicate(text, self._voice)
+        communicate = edge_tts.Communicate(ssml, self._voice)
         await communicate.save(output_path)

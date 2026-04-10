@@ -270,7 +270,7 @@ def get_tts_voice() -> str:
         voice (str): The TTS voice
     """
     with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("tts_voice", "Jasper")
+        return json.load(file).get("tts_voice", "en-US-JennyNeural")
 
 
 def get_assemblyai_api_key() -> str:

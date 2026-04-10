@@ -88,31 +88,32 @@ def generate_script_response(subject: str, language: str, sentence_length: int) 
     """
     prompt = f"""Write a YouTube Shorts script about: {subject}
 
-CRITICAL RULE — EXPLAIN LIKE THE VIEWER IS 5 YEARS OLD:
-- Use ONLY words a 5-year-old knows. No jargon. No technical terms unless you immediately explain them with a simple analogy.
-- Every concept must be compared to something from daily life: "It's like when you blow up a balloon and it pops" or "Imagine stacking LEGO blocks really fast"
-- If the topic is technical (software, engineering, science), translate EVERY concept into a physical, visual, everyday comparison.
-- BAD: "The load balancer distributes traffic across servers" → GOOD: "Imagine a pizza shop with one door. A thousand people try to enter at once. So they open ten doors and split the crowd evenly"
-- BAD: "The infrastructure handles millions of concurrent connections" → GOOD: "Picture a million people all talking on the phone at the same time — somehow nobody gets disconnected"
-- Each sentence must paint a CLEAR picture in the viewer's mind. If a kid can't visualize it, rewrite it.
+AUDIENCE: Elementary school children (ages 6-10)
 
-STRUCTURE (strict):
-1. HOOK (sentence 1): A shocking or surprising statement that makes people stop scrolling. Example: "This shrimp punches so fast the water catches fire."
-2. CORE DELIVERY (sentences 2-{sentence_length - 1}): Each sentence = one clear visual scene. Explain ONE thing per sentence. Use analogies. Be specific with numbers and comparisons.
-3. CLIMAX/PAYOFF (sentence {sentence_length - 1} or {sentence_length}): The most mind-blowing fact, delivered simply.
-4. SEAMLESS LOOP (last sentence): Must grammatically connect back to the first sentence so the video loops seamlessly.
+CRITICAL RULES — WRITE LIKE YOU'RE TALKING TO A CURIOUS 7-YEAR-OLD:
+1. Use ONLY simple words. If a word has more than 2 syllables, find a simpler word.
+2. Every sentence should paint a picture they can see in their head.
+3. Use everyday comparisons they know: "like a playground swing", "like stacking blocks", "like your pet dog"
+4. NO big words. "Fast" not "rapid", "big" not "enormous", "begin" not "commence"
+5. Ask questions they can answer: "Have you ever wondered...?", "Did you know...?"
 
-RULES:
-- Total: {sentence_length} sentences maximum
-- 70-120 words total (short, punchy, no rambling)
-- First sentence is a HOOK STATEMENT, NOT a title or label
-- Each sentence describes a visual scene (what we SEE on screen)
-- NO markdown, NO formatting, NO section labels
-- NO "welcome to this video" or "in this video"
-- NO call to action, NO "like and subscribe"
+STRUCTURE (simple, clear flow):
+1. HOOK (sentence 1): Something surprising or that makes them say "Whoa!" Example: "There's a creature that can punch so hard it makes the water BOIL!"
+2. TELL THE STORY (sentences 2-{sentence_length - 1}): One fact per sentence. Each fact = one simple idea. Use "It's like..." and "Imagine..." comparisons. Be SPECIFIC: "100 years" not "a long time", "faster than a car" not "really fast".
+3. COOL FINISH (last sentence): The most amazing fact, simple enough for a kid to remember and tell their friend.
+
+CONSTRAINTS:
+- Total: {sentence_length} sentences
+- Each sentence: 8-12 words maximum (keep it SHORT for kids)
+- Total: 60-100 words
+- First sentence: GRAB their attention immediately with something surprising
+- Each sentence = ONE clear idea
+- NO technical words, NO jargon, NO fancy vocabulary
+- NO "welcome", NO "in this video", NO "subscribe"
+- NO markdown, NO numbers like "1. 2.", just plain sentences
 - Write in {language}
-- Each sentence punchy (under 15 words)
-- SPECIFIC over VAGUE: say "300 million years ago" not "a long time ago", say "as fast as a bullet" not "very fast"
+- Make it SOUND LIKE A PERSON TALKING, not a textbook
+- Add simple sound effects in brackets if it helps: [sound: BOOM!], [sound: splish splash]
 
 Subject: {subject}
 Language: {language}
