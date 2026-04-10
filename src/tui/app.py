@@ -10,8 +10,12 @@ import asyncio
 # Setup paths - app.py is in src/tui/, so go up 2 levels to get project root
 _app_dir = os.path.dirname(os.path.abspath(__file__))  # src/tui
 _project_root = os.path.dirname(os.path.dirname(_app_dir))  # project root
-if _project_root not in sys.path:
-    sys.path.insert(0, _project_root)
+_src_dir = os.path.join(_project_root, "src")  # src/ directory
+
+# Add both project root and src/ to path for legacy imports (from config, from db, etc.)
+for _path in [_project_root, _src_dir]:
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
 
 # Get absolute path for CSS
 _css_path = os.path.join(_app_dir, "styles/dark.tcss")
