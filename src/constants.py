@@ -40,6 +40,15 @@ YOUTUBE_NEXT_BUTTON_ID = "next-button"
 YOUTUBE_RADIO_BUTTON_XPATH = '//*[@id="radioLabel"]'
 YOUTUBE_DONE_BUTTON_ID = "done-button"
 
+# TikTok Section
+TIKTOK_UPLOAD_BUTTON = 'button[data-e2e="upload-button"]'
+TIKTOK_TEXTBOX_ID = 'div[class*="DraftEditor"]'
+TIKTOK_NEXT_BUTTON = 'button[data-e2e="next-button"]'
+TIKTOK_DONE_BUTTON = 'button:contains("Post")'
+TIKTOK_TITLE_INPUT = 'input[placeholder*="title"]'
+TIKTOK_DESCRIPTION = 'textarea[placeholder*="description"]'
+TIKTOK_HASHTAGS = 'input[placeholder*="hashtags"]'
+
 # Amazon Section (AFM)$
 AMAZON_PRODUCT_TITLE_ID = "productTitle"
 AMAZON_FEATURE_BULLETS_ID = "feature-bullets"
