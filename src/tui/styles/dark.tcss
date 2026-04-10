@@ -33,20 +33,20 @@ Footer {
     margin: 1;
 }
 
-/* Common widgets */
+/* Common widgets - Flexoki Cyan */
 Button {
-    background: #5E6AD2;
+    background: #24837B;
     color: white;
     border: none;
     padding: 1 3;
 }
 
 Button:hover {
-    background: #7B83EB;
+    background: #3AA99F;
 }
 
 Button:focus {
-    background: #7B83EB;
+    background: #3AA99F;
 }
 
 /* Input fields */
@@ -58,7 +58,7 @@ Input {
 }
 
 Input:focus {
-    border: solid #5E6AD2;
+    border: solid #24837B;
 }
 
 /* Labels */
@@ -162,15 +162,15 @@ DataTable {
 }
 
 .toast-error {
-    color: #EF4444;
+    color: #AF3029;
 }
 
 .toast-success {
-    color: #10B981;
+    color: #66800B;
 }
 
 .toast-info {
-    color: #5E6AD2;
+    color: #24837B;
 }
 
 /* Retry button */

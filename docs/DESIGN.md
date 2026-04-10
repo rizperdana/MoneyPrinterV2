@@ -24,14 +24,18 @@ Ultra-minimal terminal interface with purple accent, terminal-native feel. Clean
 | Surface Elevated | Dark Gray | `#262626` | Hover states, inputs |
 | Border | Subtle Gray | `#333333` | Dividers, outlines |
 
-### Accent Colors
+### Accent Colors (Flexoki)
 | Role | Color | Hex | Usage |
 |------|-------|-----|------|
-| Primary | Electric Purple | `#5E6AD2` | Buttons, links, focus |
-| Primary Hover | Light Purple | `#7B83EB` | Hover states |
-| Success | Emerald | `#10B981` | Completed steps, success |
-| Warning | Amber | `#F59E0B` | In progress, warnings |
-| Error | Rose | `#EF4444` | Errors, failures |
+| Primary | Cyan | `#24837B` | Buttons, links, focus |
+| Primary Hover | Light Cyan | `#3AA99F` | Hover states |
+| Success | Green | `#66800B` | Completed steps |
+| Success Light | Light Green | `#879A39` | Success text |
+| Warning | Yellow | `#AD8301` | In progress |
+| Warning Light | Light Yellow | `#D0A215` | Warning text |
+| Error | Red | `#AF3029` | Errors, failures |
+| Error Light | Light Red | `#D14D41` | Error text |
+| Accent | Blue | `#205EA6` | Links, secondary accent |
 
 ### Text Colors
 | Role | Color | Hex | Usage |
