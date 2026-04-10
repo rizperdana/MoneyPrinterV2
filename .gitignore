@@ -7,6 +7,9 @@ venv312/
 kittentts_pkg/
 .tool-versions
 
+# Worktrees
+.worktrees
+
 # Environment
 .env
 
