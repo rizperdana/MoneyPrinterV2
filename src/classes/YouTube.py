@@ -281,7 +281,10 @@ class YouTube:
                 headers={"User-Agent": "Mozilla/5.0"},
                 verify=False,
             )
-            if resp.status_code == 200:
+            # Verify we got JSON, not HTML (some networks return block page)
+            if resp.status_code == 200 and "application/json" in resp.headers.get(
+                "Content-Type", ""
+            ):
                 data = resp.json()
                 related = data.get("RelatedTopics", [])
                 topics_found = []

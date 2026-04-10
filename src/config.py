@@ -5,7 +5,8 @@ import srt_equalizer
 
 from termcolor import colored
 
-ROOT_DIR = os.path.dirname(sys.path[0])
+# Always use project root (parent of src folder)
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def assert_folder_structure() -> None:
