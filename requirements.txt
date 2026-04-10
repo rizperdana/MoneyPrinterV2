@@ -1,4 +1,5 @@
 wheel
+textual>=0.90.0
 termcolor
 schedule
 requests
