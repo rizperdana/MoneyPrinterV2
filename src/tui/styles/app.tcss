@@ -1,0 +1,393 @@
+/* === MoneyPrinterV2 TUI — app.tcss === */
+/* Single source of truth for all styles. No inline styles in Python. */
+
+/* === VARIABLES === */
+$bg-base:        #0a0e1a;
+$bg-surface:     #111827;
+$bg-raised:      #1a2235;
+$bg-overlay:     #1f2d42;
+$border:         #1e3a5f;
+$border-focus:   #3b82f6;
+$text-primary:   #e2e8f0;
+$text-secondary: #64748b;
+$text-dim:       #374151;
+$state-running:  #3b82f6;
+$state-done:     #10b981;
+$state-warn:     #f59e0b;
+$state-error:    #ef4444;
+$state-pending:  #374151;
+$accent:         #6366f1;
+$accent-dim:     #312e81;
+
+/* === GLOBAL === */
+Screen {
+    background: $bg-base;
+    color: $text-primary;
+}
+
+Header {
+    background: $bg-surface;
+    color: $text-primary;
+}
+
+Footer {
+    background: $bg-surface;
+    color: $text-secondary;
+}
+
+/* === ROOT LAYOUT === */
+#main-layout {
+    layout: horizontal;
+    height: 1fr;
+    width: 100%;
+}
+
+#content-area {
+    width: 1fr;
+    height: 100%;
+    background: $bg-base;
+    overflow-y: auto;
+    padding: 1 2;
+}
+
+/* === SIDEBAR === */
+#sidebar {
+    width: 14;
+    min-width: 14;
+    max-width: 14;
+    height: 100%;
+    background: $bg-surface;
+    border-right: tall $border;
+    padding: 1 0;
+}
+
+.sidebar-header {
+    background: transparent;
+    color: $text-secondary;
+    text-align: left;
+    padding: 0 1;
+    height: 2;
+}
+
+#sidebar Button {
+    background: transparent;
+    color: $text-secondary;
+    border: none;
+    text-align: left;
+    width: 100%;
+    padding: 0 1;
+    height: 1;
+    min-height: 1;
+}
+
+#sidebar Button:hover {
+    background: $bg-raised;
+    color: $text-primary;
+}
+
+#sidebar Button:focus {
+    background: $bg-raised;
+    color: $text-primary;
+}
+
+#sidebar .nav-active {
+    color: $text-primary;
+    border-left: tall $state-running;
+}
+
+#sidebar .nav-separator {
+    color: $border;
+    height: 1;
+    padding: 0 1;
+}
+
+/* === JOB TICKER (footer) === */
+#job-ticker {
+    height: 1;
+    min-height: 1;
+    max-height: 1;
+    background: $bg-surface;
+    border-top: tall $border;
+    padding: 0 2;
+    color: $text-secondary;
+    dock: bottom;
+}
+
+#job-ticker .ticker-running {
+    color: $state-running;
+}
+
+#job-ticker .ticker-done {
+    color: $state-done;
+}
+
+#job-ticker .ticker-error {
+    color: $state-error;
+}
+
+#job-ticker .ticker-idle {
+    color: $text-dim;
+}
+
+/* === SCREEN HEADERS === */
+.screen-title {
+    color: $text-primary;
+    text-style: bold;
+    height: auto;
+    padding: 0 0 1 0;
+}
+
+.section-divider {
+    color: $text-secondary;
+    height: 1;
+    padding: 0;
+}
+
+/* === PIPELINE PANEL === */
+PipelinePanel {
+    height: auto;
+    padding: 0;
+}
+
+.pipeline-step {
+    height: 1;
+    color: $text-secondary;
+    padding: 0;
+}
+
+.pipeline-step.step-running {
+    color: $state-running;
+}
+
+.pipeline-step.step-done {
+    color: $state-done;
+}
+
+.pipeline-step.step-error {
+    color: $state-error;
+}
+
+.pipeline-step.step-pending {
+    color: $state-pending;
+}
+
+/* === LOG VIEWER === */
+LogViewer {
+    height: 12;
+    min-height: 6;
+    background: $bg-surface;
+    border: tall $border;
+    padding: 0 1;
+}
+
+/* === STAT CARDS === */
+StatCard {
+    background: $bg-surface;
+    border: tall $border;
+    padding: 1 2;
+    width: 1fr;
+    height: 5;
+}
+
+.stat-value {
+    color: $state-running;
+    text-style: bold;
+}
+
+.stat-label {
+    color: $text-secondary;
+}
+
+/* === INPUTS === */
+Input {
+    background: $bg-raised;
+    color: $text-primary;
+    border: tall $border;
+}
+
+Input:focus {
+    border: tall $border-focus;
+}
+
+Select {
+    background: $bg-raised;
+    border: tall $border;
+}
+
+Switch {
+    background: $bg-raised;
+}
+
+/* === BUTTONS === */
+Button {
+    background: $bg-raised;
+    color: $text-primary;
+    border: tall $border;
+    min-width: 10;
+}
+
+Button:hover {
+    background: $bg-overlay;
+}
+
+Button#generate-btn {
+    background: $accent;
+    color: white;
+    min-width: 16;
+    border: none;
+}
+
+Button#generate-btn:hover {
+    background: $accent-dim;
+}
+
+Button#stop-btn {
+    background: $state-error;
+    color: white;
+    border: none;
+}
+
+Button#stop-btn:hover {
+    opacity: 0.8;
+}
+
+Button.action-primary {
+    background: $accent;
+    color: white;
+    border: none;
+}
+
+Button.action-primary:hover {
+    background: $accent-dim;
+}
+
+/* === DATA TABLE === */
+DataTable {
+    background: $bg-surface;
+    border: tall $border;
+}
+
+DataTable > .datatable--cursor {
+    background: $bg-overlay;
+    color: $text-primary;
+}
+
+DataTable > .datatable--header {
+    background: $bg-surface;
+    color: $text-secondary;
+    text-style: none;
+}
+
+/* === FORM LAYOUT === */
+.form-row {
+    height: auto;
+    width: 100%;
+    padding: 0;
+}
+
+.form-label {
+    color: $text-secondary;
+    width: 14;
+    padding: 1 1 0 0;
+}
+
+.form-input {
+    width: 1fr;
+}
+
+/* === STATS ROW === */
+.stats-row {
+    height: auto;
+    width: 100%;
+    layout: horizontal;
+}
+
+/* === ACTIVITY SECTION === */
+.activity-section {
+    height: 1fr;
+    background: $bg-surface;
+    border: tall $border;
+    padding: 1;
+}
+
+/* === QUICK ACTIONS === */
+.quick-actions {
+    height: auto;
+    width: 100%;
+    layout: horizontal;
+    align: left middle;
+    padding: 0;
+}
+
+/* === BUTTON ROW === */
+.button-row {
+    height: auto;
+    width: 100%;
+    align: right middle;
+    padding: 1 0 0 0;
+}
+
+/* === OUTPUT SECTION === */
+.output-section {
+    height: auto;
+    background: $bg-surface;
+    border: tall $border;
+    padding: 1;
+}
+
+/* === LOG SECTION === */
+.log-section {
+    height: 1fr;
+    min-height: 8;
+}
+
+/* === ELAPSED TIMER === */
+.elapsed-label {
+    color: $text-secondary;
+    text-align: right;
+}
+
+/* === TOOLBAR === */
+.toolbar {
+    height: auto;
+    width: 100%;
+    layout: horizontal;
+    padding: 0 0 1 0;
+}
+
+/* === DETAIL PANEL === */
+.detail-field {
+    color: $text-secondary;
+    padding: 0;
+}
+
+/* === MODAL === */
+ConfirmModal {
+    background: $bg-overlay;
+    border: tall $border-focus;
+    padding: 2 4;
+    width: 50;
+    height: auto;
+    align: center middle;
+}
+
+/* === MISC === */
+.hint {
+    color: $text-dim;
+    padding: 0;
+}
+
+.spacer {
+    height: 1;
+}
+
+/* === STUB SCREEN === */
+.stub-content {
+    color: $text-secondary;
+    padding: 2;
+}
+
+.stub-features {
+    color: $text-dim;
+    padding: 0 4;
+}

@@ -184,34 +184,34 @@ JOBS = {
 MODEL_ROUTING = {
     # Priority: fast/reliable models first, slow/unreliable models last
     "topic": [
-        "arcee-ai/trinity-large-thinking:free",
+        "minimax-m2.5-free",
         "bytedance-seed/dola-seed-2.0-pro:free",
-        "minimax/minimax-m2.5:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",  # too slow, last resort
+        "qwen/qwen3-next-80b-a3b-instruct:free",
+        "arcee-ai/trinity-large-thinking:free",
     ],
     "script": [
-        "arcee-ai/trinity-large-thinking:free",
+        "minimax-m2.5-free",
+        "qwen/qwen3-next-80b-a3b-instruct:free",
         "bytedance-seed/dola-seed-2.0-pro:free",
-        "minimax/minimax-m2.5:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",  # too slow, last resort
+        "arcee-ai/trinity-large-thinking:free",
     ],
     "seo_tags": [
-        "arcee-ai/trinity-large-thinking:free",
+        "minimax-m2.5-free",
+        "qwen/qwen3-next-80b-a3b-instruct:free",
         "bytedance-seed/dola-seed-2.0-pro:free",
-        "minimax/minimax-m2.5:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",
+        "arcee-ai/trinity-large-thinking:free",
     ],
     "image_prompts": [
-        "arcee-ai/trinity-large-thinking:free",
-        "minimax/minimax-m2.5:free",
+        "minimax-m2.5-free",
+        "qwen/qwen3-next-80b-a3b-instruct:free",
         "bytedance-seed/dola-seed-2.0-pro:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",
+        "arcee-ai/trinity-large-thinking:free",
     ],
     "title_desc": [
-        "arcee-ai/trinity-large-thinking:free",
+        "minimax-m2.5-free",
+        "qwen/qwen3-next-80b-a3b-instruct:free",
         "bytedance-seed/dola-seed-2.0-pro:free",
-        "minimax/minimax-m2.5:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",  # too slow, last resort
+        "arcee-ai/trinity-large-thinking:free",
     ],
 }
 

@@ -113,6 +113,7 @@ class YouTube:
 
         self.images = []
         self._browser_initialized: bool = False
+        self._progress_callback = None
 
         # Validate profile path exists (but don't init browser yet)
         if self._fp_profile_path and not os.path.isdir(self._fp_profile_path):
@@ -124,6 +125,15 @@ class YouTube:
         self._browser: Optional[webdriver.Firefox] = None
         self._wait: Optional[WebDriverWait] = None
         self._temp_profile_dir: Optional[str] = None
+
+    def set_progress_callback(self, cb):
+        """Set a callback for pipeline progress events."""
+        self._progress_callback = cb
+
+    def _progress(self, step: str, status: str, progress: float | None = None, detail: str = ""):
+        """Emit a progress event if a callback is registered."""
+        if self._progress_callback:
+            self._progress_callback(step, status, progress, detail)
 
     def _ensure_browser(self) -> None:
         """Lazy initialization of the browser - only created when needed."""
@@ -1641,36 +1651,52 @@ Example:
         info(" 🎬 Starting video generation...")
 
         # Generate the Topic
-        info(" 📊 Step 1/6: Generating topic...")
+        info(" 📊 Step 1/7: Generating topic...")
+        self._progress("topic", "running")
         self.generate_topic()
+        self._progress("topic", "done", detail=self.subject[:60] if self.subject else "")
 
         # Generate the Script
-        info(" ✍️ Step 2/6: Generating script...")
+        info(" ✍️ Step 2/7: Generating script...")
+        self._progress("script", "running")
         self.generate_script()
+        self._progress("script", "done", detail=f"{len(self.script)} chars")
 
         # Generate the Metadata
-        info(" 📝 Step 3/6: Generating metadata...")
+        info(" 📝 Step 3/7: Generating metadata...")
+        self._progress("metadata", "running")
         self.generate_metadata()
+        self._progress("metadata", "done", detail=self.metadata.get('title', '')[:40])
 
         # Generate the Image Prompts
-        info(" 🎨 Step 4/6: Generating image prompts...")
+        info(" 🎨 Step 4/7: Generating image prompts...")
+        self._progress("image_prompts", "running")
         self.generate_prompts()
+        self._progress("image_prompts", "done", detail=f"{len(self.image_prompts)} prompts")
 
         # Generate the Images
-        info(" 🖼️ Step 5/6: Generating images...")
+        info(" 🖼️ Step 5/7: Generating images...")
+        self._progress("images", "running")
+        total = len(self.image_prompts)
         for i, prompt in enumerate(self.image_prompts):
-            info(f"   Generating image {i + 1}/{len(self.image_prompts)}...")
+            info(f"   Generating image {i + 1}/{total}...")
             result = self.generate_image(prompt)
             if result:
                 self.images.append(result)
+            self._progress("images", "running", progress=(i + 1) / total, detail=f"{i + 1}/{total}")
+        self._progress("images", "done", detail=f"{len(self.images)} images")
 
         # Generate the TTS
-        info(" 🔊 Step 6/6: Generating speech...")
+        info(" 🔊 Step 6/7: Generating speech...")
+        self._progress("tts", "running")
         self.generate_script_to_speech(tts_instance)
+        self._progress("tts", "done")
 
         # Combine everything
-        info(" 🎥 Combining into video...")
+        info(" 🎥 Step 7/7: Combining into video...")
+        self._progress("combine", "running")
         path = self.combine()
+        self._progress("combine", "done")
 
         success(f" ✅ Video generated: {path}")
         self.video_path = os.path.abspath(path)

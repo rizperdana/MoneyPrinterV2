@@ -1,0 +1,59 @@
+"""
+FastAPI application factory.
+
+Registers all routers, CORS middleware, and serves the built frontend.
+"""
+
+import os
+import sys
+
+# Ensure src/ is importable
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_src_dir = os.path.join(_project_root, "src")
+for _p in [_project_root, _src_dir]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+from dotenv import load_dotenv
+load_dotenv(os.path.join(_project_root, ".env"))
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from api.routers import generate, upload, accounts, settings
+from api.ws import router as ws_router
+
+# Initialize the database on startup
+from db import init_db
+
+app = FastAPI(title="MoneyPrinterV2", version="2.0.0")
+
+
+@app.on_event("startup")
+async def startup():
+    init_db()
+
+
+# CORS for Vite dev server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# API routers
+app.include_router(generate.router, prefix="/api", tags=["generate"])
+app.include_router(upload.router, prefix="/api", tags=["upload"])
+app.include_router(accounts.router, prefix="/api", tags=["accounts"])
+app.include_router(settings.router, prefix="/api", tags=["settings"])
+
+# WebSocket router (no prefix — /ws/jobs/{id})
+app.include_router(ws_router, tags=["websocket"])
+
+# Serve built frontend in production (only if web/dist exists)
+_dist_dir = os.path.join(_project_root, "web", "dist")
+if os.path.isdir(_dist_dir):
+    from fastapi.staticfiles import StaticFiles
+    app.mount("/", StaticFiles(directory=_dist_dir, html=True), name="static")

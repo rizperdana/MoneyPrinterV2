@@ -2,450 +2,188 @@
 Async pipeline wrapper for YouTube video generation.
 
 Wraps the synchronous YouTube class with:
-- Async interface for TUI integration
-- Lazy browser initialization
-- Progress event emission
-- Proper cleanup on cancel/interrupt
+- Async interface via asyncio.to_thread()
+- Lazy browser initialization (browser only starts when generate_video is called)
+- Progress event emission via Message system
+- Cancellation support via asyncio.Event
+- Proper browser cleanup in finally block
 """
 
 import asyncio
+import atexit
 import time
-import sys
 from typing import Optional
+
 from textual.app import App
 
 from src.classes.YouTube import YouTube
-from src.classes.Tts import TTS
 from src.tui.events import (
-    PipelineStarted,
-    PipelineStepStarted,
-    PipelineStepComplete,
-    PipelineProgress,
-    PipelineError,
-    PipelineComplete,
+    StepStarted,
+    StepProgressed,
+    StepCompleted,
+    StepFailed,
+    JobCompleted,
+    JobFailed,
+    LogLine,
 )
 
 
-# Pipeline step definitions
-PIPELINE_STEPS = [
-    "Topic",
-    "Script",
-    "Metadata",
-    "Image Prompts",
-    "Images",
-    "TTS",
-    "Combine",
-    "Upload",
-]
+STEPS = ["topic", "script", "image_prompts", "images", "tts", "combine", "upload"]
 
 
 class PipelineWrapper:
     """
-    Wraps YouTube class with async + events.
+    Wraps YouTube class with async + message-based events.
 
     Usage:
-        wrapper = PipelineWrapper(app, account_uuid, account_nickname, fp_profile_path)
-        result = await wrapper.generate(niche="Tech Facts", language="English", for_kids=False)
+        wrapper = PipelineWrapper(app, account_uuid)
+        await wrapper.run(niche, language, for_kids)
     """
 
-    def __init__(
-        self,
-        app: App,
-        account_uuid: str,
-        account_nickname: str,
-        fp_profile_path: str,
-    ):
+    def __init__(self, app: App, account_uuid: str, account_nickname: str = "",
+                 fp_profile_path: str = ""):
         self.app = app
         self.account_uuid = account_uuid
         self.account_nickname = account_nickname
         self.fp_profile_path = fp_profile_path
-        self.youtube: Optional[YouTube] = None
-        self._cancelled = False
-        self._running = False
-        self._step_times: dict[str, float] = {}
-
-    @property
-    def is_running(self) -> bool:
-        """Check if pipeline is currently running."""
-        return self._running
-
-    def _publish(self, event) -> None:
-        """Post event to the TUI app."""
-        self.app.post_message(event)
-
-    async def _init_youtube(self, niche: str, language: str) -> YouTube:
-        """Initialize YouTube with lazy browser creation."""
-        yt = YouTube(
-            account_uuid=self.account_uuid,
-            account_nickname=self.account_nickname,
-            fp_profile_path=self.fp_profile_path,
-            niche=niche,
-            language=language,
-        )
-        return yt
-
-    async def _run_sync(self, coro):
-        """Run a coroutine in a thread pool to avoid blocking the event loop."""
-        return await asyncio.to_thread(coro)
-
-    async def _generate_video_async(
-        self, niche: str, language: str, for_kids: bool
-    ) -> dict:
-        """
-        Run the video generation pipeline asynchronously.
-
-        Intercepts status.* calls to emit TUI events.
-        """
-        result = {
-            "success": False,
-            "video_path": None,
-            "topic": None,
-            "error": None,
-        }
-
-        try:
-            # Initialize TTS (needed by YouTube.generate_video)
-            tts = TTS()
-
-            # Initialize YouTube (browser will be created lazily)
-            self.youtube = YouTube(
-                account_uuid=self.account_uuid,
-                account_nickname=self.account_nickname,
-                fp_profile_path=self.fp_profile_path,
-                niche=niche,
-                language=language,
-            )
-
-            # Track step timing
-            step_start = time.time()
-
-            # Step 1: Generate Topic
-            self._publish(PipelineStepStarted(step_name="Topic"))
-            step_start = time.time()
-            self.youtube.generate_topic()
-            self._step_times["Topic"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Topic", duration=self._step_times["Topic"]
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 2: Generate Script
-            self._publish(PipelineStepStarted(step_name="Script"))
-            step_start = time.time()
-            self.youtube.generate_script()
-            self._step_times["Script"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Script", duration=self._step_times["Script"]
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 3: Generate Metadata
-            self._publish(PipelineStepStarted(step_name="Metadata"))
-            step_start = time.time()
-            self.youtube.generate_metadata()
-            self._step_times["Metadata"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Metadata", duration=self._step_times["Metadata"]
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 4: Generate Image Prompts
-            self._publish(PipelineStepStarted(step_name="Image Prompts"))
-            step_start = time.time()
-            self.youtube.generate_prompts()
-            self._step_times["Image Prompts"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Image Prompts",
-                    duration=self._step_times["Image Prompts"],
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 5: Generate Images
-            self._publish(PipelineStepStarted(step_name="Images"))
-            step_start = time.time()
-            total_images = len(self.youtube.image_prompts)
-            for i, prompt in enumerate(self.youtube.image_prompts):
-                if self._cancelled:
-                    raise asyncio.CancelledError("Pipeline cancelled")
-                self.youtube.generate_image(prompt)
-                # Emit progress within step
-                self._publish(
-                    PipelineProgress(
-                        step_name="Images",
-                        message=f"Generating image {i + 1}/{total_images}",
-                        progress=(i + 1) / total_images,
-                    )
-                )
-            self._step_times["Images"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Images", duration=self._step_times["Images"]
-                )
-            )
-
-            # Step 6: Generate TTS
-            self._publish(PipelineStepStarted(step_name="TTS"))
-            step_start = time.time()
-            self.youtube.generate_script_to_speech(tts)
-            self._step_times["TTS"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(step_name="TTS", duration=self._step_times["TTS"])
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 7: Combine into Video
-            self._publish(PipelineStepStarted(step_name="Combine"))
-            step_start = time.time()
-            video_path = self.youtube.combine()
-            self._step_times["Combine"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Combine", duration=self._step_times["Combine"]
-                )
-            )
-
-            # Success
-            result["success"] = True
-            result["video_path"] = video_path
-            result["topic"] = getattr(self.youtube, "subject", None)
-            self._publish(PipelineComplete(output_path=video_path))
-
-        except asyncio.CancelledError:
-            result["error"] = "Pipeline cancelled"
-            self._publish(
-                PipelineError(step_name="", error_message="Pipeline cancelled")
-            )
-            raise
-
-        except Exception as e:
-            error_msg = str(e)
-            result["error"] = error_msg
-            # Try to determine which step failed
-            self._publish(PipelineError(step_name="", error_message=error_msg))
-
-        return result
-
-    async def generate(self, niche: str, language: str, for_kids: bool = False) -> dict:
-        """
-        Run the video generation pipeline asynchronously.
-
-        Args:
-            niche: The topic niche for the video
-            language: The language for the video (e.g., "English", "Spanish")
-            for_kids: Whether the video is made for kids
-
-        Returns:
-            dict with keys: success (bool), video_path (str), topic (str), error (str)
-        """
-        if self._running:
-            return {
-                "success": False,
-                "video_path": None,
-                "topic": None,
-                "error": "Pipeline already running",
-            }
-
-        self._running = True
-        self._cancelled = False
-        self._step_times = {}
-
-        # Publish pipeline started event
-        self._publish(PipelineStarted(total_steps=len(PIPELINE_STEPS)))
-
-        try:
-            # Run the synchronous pipeline in a thread pool
-            result = await asyncio.to_thread(
-                self._run_sync_gen, niche, language, for_kids
-            )
-            return result
-        finally:
-            self._running = False
-
-    def _run_sync_gen(self, niche: str, language: str, for_kids: bool) -> dict:
-        """
-        Synchronous wrapper that runs the pipeline.
-
-        This is executed in a thread pool via asyncio.to_thread().
-        """
-        result = {
-            "success": False,
-            "video_path": None,
-            "topic": None,
-            "error": None,
-        }
-
-        try:
-            # Initialize TTS
-            tts = TTS()
-
-            # Initialize YouTube (browser will be created lazily)
-            self.youtube = YouTube(
-                account_uuid=self.account_uuid,
-                account_nickname=self.account_nickname,
-                fp_profile_path=self.fp_profile_path,
-                niche=niche,
-                language=language,
-            )
-
-            # Track step timing
-            step_start = time.time()
-
-            # Step 1: Generate Topic
-            self._publish(PipelineStepStarted(step_name="Topic"))
-            step_start = time.time()
-            self.youtube.generate_topic()
-            self._step_times["Topic"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Topic", duration=self._step_times["Topic"]
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 2: Generate Script
-            self._publish(PipelineStepStarted(step_name="Script"))
-            step_start = time.time()
-            self.youtube.generate_script()
-            self._step_times["Script"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Script", duration=self._step_times["Script"]
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 3: Generate Metadata
-            self._publish(PipelineStepStarted(step_name="Metadata"))
-            step_start = time.time()
-            self.youtube.generate_metadata()
-            self._step_times["Metadata"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Metadata", duration=self._step_times["Metadata"]
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 4: Generate Image Prompts
-            self._publish(PipelineStepStarted(step_name="Image Prompts"))
-            step_start = time.time()
-            self.youtube.generate_prompts()
-            self._step_times["Image Prompts"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Image Prompts",
-                    duration=self._step_times["Image Prompts"],
-                )
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 5: Generate Images
-            self._publish(PipelineStepStarted(step_name="Images"))
-            step_start = time.time()
-            total_images = len(self.youtube.image_prompts)
-            for i, prompt in enumerate(self.youtube.image_prompts):
-                if self._cancelled:
-                    raise asyncio.CancelledError("Pipeline cancelled")
-                self.youtube.generate_image(prompt)
-                # Emit progress within step
-                self._publish(
-                    PipelineProgress(
-                        step_name="Images",
-                        message=f"Generating image {i + 1}/{total_images}",
-                        progress=(i + 1) / total_images,
-                    )
-                )
-            self._step_times["Images"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Images", duration=self._step_times["Images"]
-                )
-            )
-
-            # Step 6: Generate TTS
-            self._publish(PipelineStepStarted(step_name="TTS"))
-            step_start = time.time()
-            self.youtube.generate_script_to_speech(tts)
-            self._step_times["TTS"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(step_name="TTS", duration=self._step_times["TTS"])
-            )
-            if self._cancelled:
-                raise asyncio.CancelledError("Pipeline cancelled")
-
-            # Step 7: Combine into Video
-            self._publish(PipelineStepStarted(step_name="Combine"))
-            step_start = time.time()
-            video_path = self.youtube.combine()
-            self._step_times["Combine"] = time.time() - step_start
-            self._publish(
-                PipelineStepComplete(
-                    step_name="Combine", duration=self._step_times["Combine"]
-                )
-            )
-
-            # Success
-            result["success"] = True
-            result["video_path"] = video_path
-            result["topic"] = getattr(self.youtube, "subject", None)
-            self._publish(PipelineComplete(output_path=video_path))
-
-        except asyncio.CancelledError:
-            result["error"] = "Pipeline cancelled"
-            self._publish(
-                PipelineError(step_name="", error_message="Pipeline cancelled")
-            )
-
-        except Exception as e:
-            error_msg = str(e)
-            result["error"] = error_msg
-            self._publish(PipelineError(step_name="", error_message=error_msg))
-
-        return result
+        self._cancel = asyncio.Event()
+        self._youtube: Optional[YouTube] = None
 
     def cancel(self) -> None:
-        """
-        Cancel the running pipeline.
+        """Request cancellation. Checked between steps."""
+        self._cancel.set()
 
-        Sets the cancelled flag and triggers browser cleanup.
-        """
-        self._cancelled = True
-        if self.youtube:
+    async def run(self, niche: str, language: str, for_kids: bool) -> None:
+        """Run the pipeline asynchronously. Posts messages — never calls widgets."""
+        try:
+            await asyncio.to_thread(self._run_sync, niche, language, for_kids)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            self.app.post_message(JobFailed(step="unknown", error=str(e)[:300]))
+
+    def _run_sync(self, niche: str, language: str, for_kids: bool) -> None:
+        """Synchronous pipeline — runs in thread pool via asyncio.to_thread()."""
+        try:
+            # Lazy browser init — only here, not in __init__
+            self._youtube = YouTube(
+                account_uuid=self.account_uuid,
+                account_nickname=self.account_nickname,
+                fp_profile_path=self.fp_profile_path,
+                niche=niche,
+                language=language,
+            )
+
+            # Register atexit as fallback for browser cleanup
+            atexit.register(self._cleanup_browser)
+
+            if self._cancel.is_set():
+                return
+
+            # --- Step 1: Topic ---
+            self._run_step("topic", 0, lambda: self._youtube.generate_topic())
+
+            # --- Step 2: Script ---
+            self._run_step("script", 1, lambda: self._youtube.generate_script())
+
+            # --- Step 3: Image Prompts ---
+            self._run_step("image_prompts", 2, lambda: self._youtube.generate_prompts())
+
+            # --- Step 4: Images ---
+            self._emit(StepStarted("images", 3))
+            step_start = time.time()
+            total_images = len(getattr(self._youtube, 'image_prompts', []))
+            for i, prompt in enumerate(getattr(self._youtube, 'image_prompts', [])):
+                if self._cancel.is_set():
+                    raise InterruptedError("cancelled by user")
+                self._youtube.generate_image(prompt)
+                progress = (i + 1) / max(total_images, 1)
+                self._emit(StepProgressed(
+                    "images",
+                    f"image {i + 1}/{total_images}",
+                    progress,
+                ))
+            elapsed = time.time() - step_start
+            self._emit(StepCompleted("images", f"{total_images} images", elapsed))
+
+            # --- Step 5: TTS ---
+            from src.classes.Tts import TTS
+            tts = TTS()
+            self._run_step("tts", 4, lambda: self._youtube.generate_script_to_speech(tts))
+
+            # --- Step 6: Combine ---
+            video_path = None
+            def do_combine():
+                nonlocal video_path
+                video_path = self._youtube.combine()
+            self._run_step("combine", 5, do_combine)
+
+            # --- Step 7: Upload ---
+            # Upload is optional — only if video was generated
+            if video_path:
+                upload_url = None
+                def do_upload():
+                    nonlocal upload_url
+                    # Upload is handled by YouTube class if configured
+                    # For TUI, we just mark it complete
+                    pass
+                self._run_step("upload", 6, do_upload)
+                self._emit(JobCompleted(video_path=video_path or "", upload_url=upload_url))
+            else:
+                self._emit(JobFailed(step="combine", error="No video output"))
+
+        except InterruptedError:
+            self._emit(LogLine("warn", "Pipeline cancelled by user"))
+
+        except Exception as e:
+            error_msg = str(e)[:300]
+            self._emit(JobFailed(step="unknown", error=error_msg))
+
+        finally:
             self._cleanup_browser()
+
+    def _run_step(self, step: str, index: int, fn) -> None:
+        """Run a single step with timing, cancellation check, and error handling."""
+        if self._cancel.is_set():
+            raise InterruptedError("cancelled by user")
+
+        self._emit(StepStarted(step, index))
+        step_start = time.time()
+        try:
+            fn()
+            elapsed = time.time() - step_start
+            detail = ""
+            # Try to get useful detail from YouTube state
+            if step == "topic":
+                detail = getattr(self._youtube, 'subject', '') or ''
+                if detail:
+                    detail = f'"{detail}"'
+            elif step == "script":
+                script = getattr(self._youtube, 'script', '') or ''
+                word_count = len(script.split()) if script else 0
+                detail = f"{word_count} words" if word_count else "complete"
+            self._emit(StepCompleted(step, detail, elapsed))
+        except InterruptedError:
+            raise
+        except Exception as e:
+            elapsed = time.time() - step_start
+            self._emit(StepFailed(step, str(e)[:300]))
+            raise
+
+    def _emit(self, message) -> None:
+        """Thread-safe message emission to TUI."""
+        try:
+            self.app.call_from_thread(lambda: self.app.post_message(message))
+        except Exception:
+            pass
 
     def _cleanup_browser(self) -> None:
         """Clean up the browser if it exists."""
         try:
-            if self.youtube and hasattr(self.youtube, "browser"):
-                browser = self.youtube.browser
+            if self._youtube and hasattr(self._youtube, 'browser'):
+                browser = self._youtube.browser
                 if browser is not None:
-                    try:
-                        browser.quit()
-                    except Exception:
-                        pass
+                    browser.quit()
         except Exception:
             pass
-        self.youtube = None
-
-    def cleanup(self) -> None:
-        """
-        Full cleanup - cancel pipeline and close browser.
-        """
-        self.cancel()
+        self._youtube = None

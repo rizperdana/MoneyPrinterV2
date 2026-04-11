@@ -1,100 +1,68 @@
 """
 MoneyPrinterV2 TUI Application
-Main entry point for the Textual-based Terminal User Interface
+Main entry point for the Textual-based Terminal User Interface.
+
+Layout: Header + [Sidebar | Content Area] + JobTicker
+Navigation: Dashboard uses switch_screen; all others use push_screen.
 """
 
 import os
 import sys
-import asyncio
 
-# Setup paths - app.py is in src/tui/, so go up 2 levels to get project root
+# Setup paths — app.py is in src/tui/, so go up 2 levels to get project root
 _app_dir = os.path.dirname(os.path.abspath(__file__))  # src/tui
 _project_root = os.path.dirname(os.path.dirname(_app_dir))  # project root
 _src_dir = os.path.join(_project_root, "src")  # src/ directory
 
-# Add both project root and src/ to path for legacy imports (from config, from db, etc.)
+# Add both project root and src/ to path for legacy imports
 for _path in [_project_root, _src_dir]:
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-# Get absolute path for CSS
-_css_path = os.path.join(_app_dir, "styles/dark.tcss")
+# Absolute path for CSS
+_css_path = os.path.join(_app_dir, "styles", "app.tcss")
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal
-from textual.widgets import Header, Footer, Static, Button
+from textual.containers import Horizontal
 from textual.screen import Screen
 from textual import events
 from typing import Optional
 
 # Initialize database tables
 from src.db import init_db
-
 init_db()
 
+# Import widgets
+from src.tui.widgets.sidebar import Sidebar
+from src.tui.widgets.job_ticker import JobTicker
 
-class SidebarItem(Button):
-    """A single item in the sidebar navigation."""
-
-    def __init__(self, label: str, target: str, **kwargs):
-        super().__init__(label, **kwargs)
-        self.target = target
-
-
-class Sidebar(Static):
-    """Navigation sidebar for the TUI."""
-
-    NAV_ITEMS = [
-        ("📊 Dashboard", "dashboard"),
-        ("🎬 Video Gen", "video_gen"),
-        ("👤 Accounts", "accounts"),
-        ("🐦 Twitter", "twitter"),
-        ("💰 AFM", "afm"),
-        ("📧 Outreach", "outreach"),
-        ("⚙️ Settings", "settings"),
-    ]
-
-    BINDINGS = [
-        Binding("g", "navigate_first()", "Nav", show=False),
-    ]
-
-    def compose(self) -> ComposeResult:
-        yield Static("NAVIGATE", classes="sidebar-header")
-        for label, target in self.NAV_ITEMS:
-            yield SidebarItem(label, target, variant="default", classes="nav-item")
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle nav clicks."""
-        button = event.button
-        if hasattr(button, "target"):
-            self.app.action_go_to(button.target)
+# Import events
+from src.tui.events import (
+    StepStarted, StepProgressed, StepCompleted, StepFailed,
+    LogLine, JobCompleted, JobFailed, LibraryChanged,
+)
 
 
 class MoneyPrinterApp(App):
     """MoneyPrinterV2 Terminal User Interface."""
 
     CSS_PATH = _css_path
-    TITLE = "MoneyPrinterV2"
+    TITLE = "MONEYPRINTER"
 
-    # Title bar shortcuts
     BINDINGS = [
-        # Navigation shortcuts
-        Binding("g d", "go_to('dashboard')", "Dashboard", show=True),
-        Binding("g v", "go_to('video_gen')", "Video", show=True),
-        Binding("g a", "go_to('accounts')", "Accounts", show=True),
-        Binding("g t", "go_to('twitter')", "Twitter", show=True),
-        Binding("g f", "go_to('afm')", "AFM", show=True),
-        Binding("g o", "go_to('outreach')", "Outreach", show=True),
-        Binding("g s", "go_to('settings')", "Settings", show=True),
-        # Navigation within screen stack
-        Binding("escape", "pop_screen_or_home()", "Back", show=True),
-        # Quit
-        Binding("q", "quit", "Quit", show=True),
-        # Ctrl+C to stop pipeline (handled in on_key)
+        Binding("g d", "go_to('dashboard')", "Dashboard", show=False),
+        Binding("g v", "go_to('video_gen')", "Video", show=False),
+        Binding("g a", "go_to('accounts')", "Accounts", show=False),
+        Binding("g t", "go_to('twitter')", "Twitter", show=False),
+        Binding("g f", "go_to('afm')", "AFM", show=False),
+        Binding("g o", "go_to('outreach')", "Outreach", show=False),
+        Binding("g s", "go_to('settings')", "Settings", show=False),
+        Binding("escape", "pop_screen_or_home", "Back", show=False),
+        Binding("q", "quit", "Quit", show=False),
     ]
 
-    # Screen name → import path mapping
+    # Screen name → module path mapping (lazy loading)
     SCREEN_MODULES = {
         "dashboard": "src.tui.screens.dashboard",
         "video_gen": "src.tui.screens.video_gen",
@@ -105,172 +73,189 @@ class MoneyPrinterApp(App):
         "settings": "src.tui.screens.settings",
     }
 
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._screen_cache: dict = {}
-        self._install_screens()
+        self._current_screen_name: str = "dashboard"
+        self._pending_key: Optional[str] = None
+        # Pre-load screen classes into SCREENS for Textual's lazy instantiation
+        self._register_screens()
 
-    def _install_screens(self) -> None:
-        """Pre-install all screens so push_screen works reliably."""
-        for name in self.SCREEN_MODULES:
-            self._load_screen(name)
-
-    def _load_screen(self, name: str):
-        """Load and cache a screen by name."""
-        if name in self._screen_cache:
-            return self._screen_cache[name]
-
-        try:
-            mod_path = self.SCREEN_MODULES[name]
-            parts = mod_path.rsplit(".", 1)
-            mod = __import__(mod_path, fromlist=[parts[1] if len(parts) > 1 else ""])
-
-            # Build expected class name: "settings" -> "SettingsScreen"
-            expected_name = f"{name.title().replace('_', '')}Screen"
-            screen_cls = getattr(mod, expected_name, None)
-
-            # If exact match not found, search for any Screen subclass
-            if screen_cls is None:
-                for attr_name in dir(mod):
-                    attr = getattr(mod, attr_name, None)
-                    if (
-                        attr
-                        and isinstance(attr, type)
-                        and issubclass(attr, Screen)
-                        and attr is not Screen
-                    ):
-                        # Found a Screen subclass
-                        screen_cls = attr
-                        break
-
-            if screen_cls:
-                instance = screen_cls()
-                self._screen_cache[name] = instance
-                self.install_screen(instance, name)
-                return instance
-        except Exception as e:
-            print(f"Error loading screen {name}: {e}", file=sys.stderr)
-        return None
+    def _register_screens(self) -> None:
+        """Import all screen classes and register them with Textual."""
+        for name, mod_path in self.SCREEN_MODULES.items():
+            try:
+                parts = mod_path.rsplit(".", 1)
+                mod = __import__(mod_path, fromlist=[parts[1] if len(parts) > 1 else ""])
+                expected_name = name.title().replace("_", "") + "Screen"
+                screen_cls = getattr(mod, expected_name, None)
+                if screen_cls is None:
+                    for attr_name in dir(mod):
+                        attr = getattr(mod, attr_name, None)
+                        if (attr and isinstance(attr, type) and
+                                issubclass(attr, Screen) and attr is not Screen):
+                            screen_cls = attr
+                            break
+                if screen_cls:
+                    self.install_screen(screen_cls, name)
+            except Exception as e:
+                pass  # Will fail to navigate but won't crash
 
     def compose(self) -> ComposeResult:
-        """Create the main layout with sidebar + content area."""
-        yield Header()
+        """Create the main layout: Sidebar + Content Area + JobTicker."""
         with Horizontal(id="main-layout"):
             yield Sidebar(id="sidebar")
-            with Container(id="content-area"):
-                # Initial screen will be pushed here
-                pass
-        yield Footer()
+        yield JobTicker(id="job-ticker")
 
     def on_mount(self) -> None:
-        """Initialize the app - push dashboard."""
+        """Initialize the app — attach interceptor, push dashboard."""
+        # Attach status interceptor to capture status.* calls
+        try:
+            from src.tui.wrappers import status_interceptor
+            status_interceptor.attach(self)
+        except Exception as e:
+            self.log.error(f"Failed to attach status interceptor: {e}")
+
+        # Push dashboard as initial screen
         try:
             self.push_screen("dashboard")
+            self._update_sidebar("dashboard")
         except Exception as e:
-            self._handle_error("on_mount", e)
+            self.log.error(f"Failed to push dashboard: {e}")
+
+    def on_unmount(self) -> None:
+        """Cleanup — detach status interceptor."""
+        try:
+            from src.tui.wrappers import status_interceptor
+            status_interceptor.detach()
+        except Exception:
+            pass
+
 
     def action_go_to(self, screen_name: str) -> None:
-        """Navigate to a screen by name."""
-        try:
-            if screen_name not in self.SCREEN_MODULES:
-                return
-            # Load screen if not cached
-            self._load_screen(screen_name)
-            self.push_screen(screen_name)
-        except Exception as e:
-            self._handle_error(f"go_to({screen_name})", e)
+        """Navigate to a screen by name.
 
-    def action_navigate_first(self) -> None:
-        """After 'g', wait for second key. Show navigation hint."""
-        pass
+        Per DESIGN Section 4:
+        - Dashboard: pop to root
+        - All others: pop to root, then push
+        """
+        if screen_name not in self.SCREEN_MODULES:
+            return
+
+        try:
+            if screen_name == "dashboard":
+                # Pop back to root
+                while len(self.screen_stack) > 1:
+                    self.pop_screen()
+            else:
+                # Don't stack the same screen twice
+                if (len(self.screen_stack) > 1 and
+                        self._current_screen_name == screen_name):
+                    return
+                # Pop to root first, then push
+                while len(self.screen_stack) > 1:
+                    self.pop_screen()
+                self.push_screen(screen_name)
+
+            self._current_screen_name = screen_name
+            self._update_sidebar(screen_name)
+
+        except Exception as e:
+            self.log.error(f"Navigation error go_to({screen_name}): {e}")
 
     def action_pop_screen_or_home(self) -> None:
         """Pop current screen, or go to dashboard if at root."""
         try:
-            screens = self.screen_stack
-            if len(screens) > 1:
+            if len(self.screen_stack) > 1:
                 self.pop_screen()
+                self._current_screen_name = "dashboard"
+                self._update_sidebar("dashboard")
             else:
-                # Already at root - navigate to dashboard
-                self.push_screen("dashboard")
+                self.action_go_to("dashboard")
         except Exception as e:
-            self._handle_error("pop_screen_or_home", e)
+            self.log.error(f"Pop screen error: {e}")
 
-    # Track multi-key shortcuts
-    _pending_key: Optional[str] = None
+    def _update_sidebar(self, screen_name: str) -> None:
+        """Update sidebar active state."""
+        try:
+            sidebar = self.query_one("#sidebar", Sidebar)
+            sidebar.set_active(screen_name)
+        except Exception:
+            pass
+
+    # --- Key handling ---
 
     def on_key(self, event: events.Key) -> None:
-        """Handle keyboard shortcuts."""
-        # Ctrl+C - request pipeline stop
-        if event.key == "ctrl_c":
+        """Handle keyboard shortcuts including 'g' prefix navigation."""
+        # Ctrl+C — stop pipeline
+        if event.key == "ctrl+c":
             self._handle_ctrl_c()
+            event.stop()
             return
 
-        # Two-key shortcuts: 'g' prefix → go_to
-        # g+d, g+v, g+a, g+t, g+f, g+o, g+s
         key_map = {
-            "d": "dashboard",
-            "v": "video_gen",
-            "a": "accounts",
-            "t": "twitter",
-            "f": "afm",
-            "o": "outreach",
-            "s": "settings",
+            "d": "dashboard", "v": "video_gen", "a": "accounts",
+            "t": "twitter", "f": "afm", "o": "outreach", "s": "settings",
         }
 
-        # Handle 'g' prefix for navigation
         if event.key == "g":
             self._pending_key = "g"
+            event.stop()
             return
 
-        # If we have a pending 'g', check for second key
         if self._pending_key == "g" and event.key in key_map:
             self.action_go_to(key_map[event.key])
             self._pending_key = None
+            event.stop()
             return
 
-        # Clear pending key if not a valid combo
         self._pending_key = None
 
     def _handle_ctrl_c(self) -> None:
-        """Handle Ctrl+C - stop pipeline and return to dashboard."""
+        """Handle Ctrl+C — stop pipeline and return to dashboard."""
         try:
-            # Try to find and cancel pipeline in current video_gen screen
             current = self.screen
-            if hasattr(current, "_pipeline") and current._pipeline:
-                current._pipeline.cancel()
-            # Pop back to dashboard
-            while len(self.screen_stack) > 1:
-                self.pop_screen()
+            if hasattr(current, "_wrapper") and current._wrapper:
+                current._wrapper.cancel()
         except Exception:
             pass
 
-    def _handle_error(self, context: str, error: Exception) -> None:
-        """Log errors to the current screen's log viewer if available."""
-        error_msg = f"[red][ERROR][/red] {context}: {str(error)}"
-        # Try to find a LogViewer in current screen
+    # --- Message handlers (route to job ticker) ---
+
+    def on_step_started(self, message: StepStarted) -> None:
+        """Route step events to job ticker."""
         try:
-            current = self.screen
-            if hasattr(current, "query_one"):
-                try:
-                    log = current.query_one("#log-viewer LogViewer", None)
-                    if log:
-                        log.write_entry(f"{context}: {str(error)}", "ERROR")
-                    else:
-                        log = current.query_one("LogViewer", None)
-                        if log:
-                            log.write_entry(f"{context}: {str(error)}", "ERROR")
-                except Exception:
-                    pass
+            ticker = self.query_one("#job-ticker", JobTicker)
+            ticker.set_running(message.step, f"step {message.index + 1}/7")
         except Exception:
             pass
 
-    def on_screen_layout(self, event) -> None:
-        """Handle screen layout changes with error handling."""
+    def on_step_progressed(self, message: StepProgressed) -> None:
+        """Route progress to job ticker."""
         try:
-            pass  # Layout updates handled by Textual
-        except Exception as e:
-            self._handle_error("screen_layout", e)
+            ticker = self.query_one("#job-ticker", JobTicker)
+            ticker.set_running(message.step, message.detail)
+        except Exception:
+            pass
+
+    def on_job_completed(self, message: JobCompleted) -> None:
+        """Route job completion to ticker."""
+        try:
+            ticker = self.query_one("#job-ticker", JobTicker)
+            ticker.set_complete(
+                os.path.basename(message.video_path),
+                f"uploaded to YouTube" if message.upload_url else "local",
+            )
+        except Exception:
+            pass
+
+    def on_job_failed(self, message: JobFailed) -> None:
+        """Route job failure to ticker."""
+        try:
+            ticker = self.query_one("#job-ticker", JobTicker)
+            ticker.set_failed(message.step, message.error[:80])
+        except Exception:
+            pass
 
 
 # Entry point

@@ -1,475 +1,322 @@
-"""Video Generation Screen - Full pipeline with progress tracking."""
+"""Video Generation Screen — Full pipeline with progress tracking.
+
+PRIORITY screen per DESIGN.md Section 5.2.
+Form → Pipeline Panel → Output → Log Viewer.
+Worker pattern per Section 10.
+"""
 
 import os
-from pathlib import Path
+import time
 
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import (
-    Button,
-    Input,
-    Label,
-    Static,
-    Switch,
-)
+from textual.widgets import Button, Input, Static, Switch
+from textual.reactive import reactive
 
 from src.db import get_accounts
 from src.tui.events import (
-    PipelineStarted,
-    PipelineStepStarted,
-    PipelineStepComplete,
-    PipelineProgress,
-    PipelineError,
-    PipelineComplete,
+    StepStarted, StepProgressed, StepCompleted, StepFailed,
+    LogLine, JobCompleted, JobFailed,
 )
-from src.tui.widgets.progress import PipelineProgress as PipelineProgressWidget
-from src.tui.widgets.log_viewer import LogViewerWithControls
+from src.tui.widgets.pipeline_panel import PipelinePanel
+from src.tui.widgets.log_viewer import LogViewer
 from src.tui.wrappers.pipeline import PipelineWrapper
-
-
-# Supported languages
-LANGUAGES = [
-    ("English", "English"),
-    ("Spanish", "Spanish"),
-    ("French", "French"),
-    ("German", "German"),
-    ("Portuguese", "Portuguese"),
-    ("Italian", "Italian"),
-    ("Japanese", "Japanese"),
-    ("Korean", "Korean"),
-    ("Chinese", "Chinese"),
-    ("Hindi", "Hindi"),
-]
 
 
 class VideoGenScreen(Screen):
     """Video generation pipeline screen with real-time progress."""
 
-    CSS = """
-    VideoGenScreen {
-        layout: vertical;
-        height: 100%;
-        padding: 1;
-    }
+    BINDINGS = [
+        ("escape", "cancel_or_back", "Back"),
+        ("ctrl+l", "clear_log", "Clear log"),
+        ("ctrl+s", "toggle_scroll_lock", "Scroll lock"),
+    ]
 
-    .screen-header {
-        width: 100%;
-        height: auto;
-        content-align: center middle;
-        text-style: bold;
-        color: $accent;
-        padding-bottom: 1;
-    }
+    # Reactive state per DESIGN Section 11
+    is_running: reactive[bool] = reactive(False)
+    current_step: reactive[str] = reactive("")
 
-    .section-header {
-        width: 100%;
-        height: auto;
-        text-style: bold;
-        color: $primary;
-        padding-top: 1;
-        padding-bottom: 1;
-    }
-
-    .form-row {
-        height: auto;
-        width: 100%;
-        padding: 0 0;
-    }
-
-    .form-label {
-        width: 1fr;
-        height: auto;
-        content-align: left middle;
-        color: $text-muted;
-    }
-
-    .form-input {
-        width: 2fr;
-        height: auto;
-    }
-
-    .progress-section {
-        height: auto;
-        min-height: 3;
-        max-height: 12;
-        border: solid $primary;
-        padding: 1;
-        margin: 1 0;
-    }
-
-    .log-section {
-        height: 1fr;
-        border: solid $primary;
-        padding: 1;
-        margin: 1 0;
-    }
-
-    .output-section {
-        height: auto;
-        min-height: 3;
-        border: solid $primary;
-        padding: 1;
-        margin: 1 0;
-    }
-
-    .button-row {
-        height: auto;
-        width: 100%;
-        align: center middle;
-    }
-
-    #btn-stop {
-        display: none;
-    }
-
-    .btn-disabled {
-        opacity: 0.5;
-    }
-    """
-
-    def __init__(self, app=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._app = app
-        self._pipeline: PipelineWrapper = None
-        self._running_task = None
+        self._wrapper: PipelineWrapper | None = None
         self._accounts: list[dict] = []
-        self._selected_account: dict = None
+        self._start_time: float = 0.0
+        self._elapsed_timer = None
 
     def compose(self) -> ComposeResult:
-        """Compose the video generation screen."""
-        # Header
-        yield Static("🎬 VIDEO GENERATION", classes="screen-header")
+        # Title + elapsed timer
+        with Horizontal():
+            yield Static("[bold #e2e8f0]VIDEO GENERATION[/]", classes="screen-title")
+            yield Static("", id="elapsed-label", classes="elapsed-label")
 
-        with Vertical(id="form-container"):
-            # Account Selection - use Input instead of Select
-            with Horizontal(classes="form-row"):
-                yield Static("Account:", classes="form-label")
-                yield Input(
-                    placeholder="Select YouTube account...",
-                    id="input-account",
-                    classes="form-input",
-                )
+        # Form
+        with Horizontal(classes="form-row"):
+            yield Static("account", classes="form-label")
+            yield Input(placeholder="Select YouTube account...", id="input-account",
+                        classes="form-input")
 
-            # Niche Input
-            with Horizontal(classes="form-row"):
-                yield Static("Niche:", classes="form-label")
-                yield Input(
-                    placeholder="e.g., Tech Facts, Space Wonders, Animal Kingdom",
-                    id="input-niche",
-                    classes="form-input",
-                )
+        with Horizontal(classes="form-row"):
+            yield Static("niche", classes="form-label")
+            yield Input(placeholder="e.g., space mysteries for beginners",
+                        id="input-niche", classes="form-input")
 
-            # Language Selection - use Input with placeholder
-            with Horizontal(classes="form-row"):
-                yield Static("Language:", classes="form-label")
-                yield Input(
-                    placeholder="English",
-                    id="input-language",
-                    classes="form-input",
-                )
+        with Horizontal(classes="form-row"):
+            yield Static("language", classes="form-label")
+            yield Input(placeholder="English", id="input-language", classes="form-input")
 
-            # For Kids Toggle
-            with Horizontal(classes="form-row"):
-                yield Static("For Kids:", classes="form-label")
-                yield Switch(id="switch-for-kids", classes="form-input")
+        with Horizontal(classes="form-row"):
+            yield Static("for kids", classes="form-label")
+            yield Switch(id="switch-kids")
 
-        # Pipeline Progress
-        with Container(classes="progress-section"):
-            yield PipelineProgressWidget(
-                steps=[
-                    "Topic",
-                    "Script",
-                    "Metadata",
-                    "Image Prompts",
-                    "Images",
-                    "TTS",
-                    "Combine",
-                ],
-                id="pipeline-progress",
-            )
-
-        # Button Row
+        # Buttons
         with Horizontal(classes="button-row"):
-            yield Button("Generate Video", variant="primary", id="btn-generate")
-            yield Button("Stop", variant="error", id="btn-stop")
+            yield Button("▶ GENERATE", id="generate-btn", classes="action-primary")
+            yield Button("⏹ STOP", id="stop-btn")
 
-        # Output Section
+        # Pipeline panel
+        yield Static("[#64748b]─── pipeline ──────────────────────────────────────────[/]",
+                      classes="section-divider")
+        yield PipelinePanel(id="pipeline-panel")
+
+        # Output section
+        yield Static("[#64748b]─── output ───────────────────────────────────────────[/]",
+                      classes="section-divider")
         with Vertical(classes="output-section"):
-            yield Static("Output", classes="section-header")
-            yield Static("No output yet", id="output-path")
-            yield Static("", id="output-size")
-            with Horizontal():
-                yield Button("Play", variant="success", id="btn-play", disabled=True)
-                yield Button(
-                    "Upload", variant="primary", id="btn-upload", disabled=True
-                )
+            yield Static("[#374151](no output yet)[/]", id="output-info")
 
-        # Log Viewer
-        with Container(classes="log-section"):
-            yield LogViewerWithControls(id="log-viewer")
+        # Log viewer
+        yield Static("[#64748b]─── log ──────────────────────────────────────────────[/]",
+                      classes="section-divider")
+        yield LogViewer(id="log-viewer")
 
     def on_mount(self) -> None:
-        """Handle screen mount - load accounts."""
+        """Load accounts and set initial state."""
         self._load_accounts()
-        self._setup_log(
-            "Video Generation screen ready. Select an account and enter a niche to begin."
-        )
+        # Hide stop button initially
+        self.query_one("#stop-btn", Button).display = False
+        self.query_one("#elapsed-label", Static).display = False
 
     def _load_accounts(self) -> None:
         """Load YouTube accounts from database."""
         try:
-            accounts = get_accounts(platform="youtube")
-            self._accounts = accounts
-
-            # Show account count in the input placeholder
+            self._accounts = get_accounts(platform="youtube")
             input_acc = self.query_one("#input-account", Input)
-            if accounts:
-                account_names = ", ".join([acc["username"] for acc in accounts[:3]])
-                if len(accounts) > 3:
-                    account_names += f" (+{len(accounts) - 3} more)"
-                input_acc.placeholder = f"Accounts: {account_names}"
-                self._setup_log(f"Loaded {len(accounts)} YouTube account(s)")
+            if self._accounts:
+                names = ", ".join(a["username"] for a in self._accounts[:3])
+                if len(self._accounts) > 3:
+                    names += f" (+{len(self._accounts) - 3} more)"
+                input_acc.placeholder = f"Accounts: {names}"
             else:
-                input_acc.placeholder = "No YouTube accounts - add one first"
-                self._setup_log(
-                    "No YouTube accounts found. Please add an account first.", "WARN"
-                )
-        except Exception as e:
-            self._setup_log(f"Error loading accounts: {e}", "ERROR")
-
-    def _get_account_details(self, account_id) -> dict:
-        """Get account details by ID."""
-        for acc in self._accounts:
-            if acc["id"] == account_id:
-                return acc
-        return None
-
-    def _setup_log(self, message: str, level: str = "INFO") -> None:
-        """Write to the log viewer."""
-        try:
-            log_viewer = self.query_one("#log-viewer", LogViewerWithControls)
-            log_viewer.log_viewer.write_entry(message, level)
+                input_acc.placeholder = "No YouTube accounts — add one first"
         except Exception:
             pass
 
-    def _set_controls_enabled(self, enabled: bool) -> None:
-        """Enable or disable form controls during pipeline execution."""
-        generate_btn = self.query_one("#btn-generate", Button)
-        stop_btn = self.query_one("#btn-stop", Button)
-        input_acc = self.query_one("#input-account", Input)
-        input_niche = self.query_one("#input-niche", Input)
-        input_lang = self.query_one("#input-language", Input)
-        switch_kids = self.query_one("#switch-for-kids", Switch)
+    # --- Reactive watchers (DESIGN Section 11) ---
 
-        generate_btn.display = enabled
-        stop_btn.display = not enabled
-
-        input_acc.disabled = not enabled
-        input_niche.disabled = not enabled
-        input_lang.disabled = not enabled
-        switch_kids.disabled = not enabled
-
-    def _show_output(self, video_path: str) -> None:
-        """Display the output video information."""
-        output_path = self.query_one("#output-path", Static)
-        output_size = self.query_one("#output-size", Static)
-        btn_play = self.query_one("#btn-play", Button)
-        btn_upload = self.query_one("#btn-upload", Button)
-
-        output_path.update(f"📁 {video_path}")
-
-        # Get file size
-        if os.path.exists(video_path):
-            size_bytes = os.path.getsize(video_path)
-            if size_bytes < 1024 * 1024:
-                size_str = f"{size_bytes / 1024:.1f} KB"
-            else:
-                size_str = f"{size_bytes / (1024 * 1024):.1f} MB"
-            output_size.update(f"📊 Size: {size_str}")
-
-            btn_play.disabled = False
-            btn_upload.disabled = False
-        else:
-            output_size.update("⚠️ File not found")
-            btn_play.disabled = True
-            btn_upload.disabled = True
-
-    def _reset_output(self) -> None:
-        """Reset the output section."""
-        output_path = self.query_one("#output-path", Static)
-        output_size = self.query_one("#output-size", Static)
-        btn_play = self.query_one("#btn-play", Button)
-        btn_upload = self.query_one("#btn-upload", Button)
-
-        output_path.update("No output yet")
-        output_size.update("")
-        btn_play.disabled = True
-        btn_upload.disabled = True
-
-    async def _on_generate_click(self) -> None:
-        """Handle Generate button click."""
-        # Get form values
-        input_acc = self.query_one("#input-account", Input)
-        input_niche = self.query_one("#input-niche", Input)
-        input_lang = self.query_one("#input-language", Input)
-        switch_kids = self.query_one("#switch-for-kids", Switch)
-
-        # Parse account ID from input (format: "id:username")
-        account_input = input_acc.value.strip()
-
-        # Validate inputs
-        if not account_input:
-            self._setup_log("Please select a YouTube account", "WARN")
-            return
-
-        if not input_niche.value.strip():
-            self._setup_log("Please enter a niche/topic", "WARN")
-            return
-
-        # Parse account - either "id:username" or just select from the list
+    def watch_is_running(self, running: bool) -> None:
+        """Toggle generate/stop buttons and elapsed timer."""
         try:
-            # Try to find account by ID
-            account = None
-            for acc in self._accounts:
-                if str(acc["id"]) == account_input or acc["username"] == account_input:
-                    account = acc
-                    break
+            self.query_one("#generate-btn", Button).display = not running
+            self.query_one("#stop-btn", Button).display = running
+            self.query_one("#elapsed-label", Static).display = running
 
-            if not account:
-                # Use first available account
-                if self._accounts:
-                    account = self._accounts[0]
-                else:
-                    self._setup_log("No YouTube accounts available", "ERROR")
-                    return
-        except Exception as e:
-            self._setup_log(f"Invalid account: {e}", "ERROR")
+            # Disable form during generation
+            for iid in ("#input-account", "#input-niche", "#input-language"):
+                self.query_one(iid, Input).disabled = running
+            self.query_one("#switch-kids", Switch).disabled = running
+        except Exception:
+            pass
+
+    # --- Button handlers ---
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        bid = event.button.id
+        if bid == "generate-btn":
+            self._on_generate()
+        elif bid == "stop-btn":
+            self._on_stop()
+
+    def _on_generate(self) -> None:
+        """Handle Generate button — start pipeline worker."""
+        # Validate
+        niche = self.query_one("#input-niche", Input).value.strip()
+        if not niche:
+            self._log("warn", "Please enter a niche/topic")
             return
 
-        niche = input_niche.value.strip()
-        language = input_lang.value.strip() or "English"
-        for_kids = switch_kids.value
-
-        # Get account details
+        # Resolve account
+        account_input = self.query_one("#input-account", Input).value.strip()
+        account = None
+        for acc in self._accounts:
+            if str(acc["id"]) == account_input or acc["username"] == account_input:
+                account = acc
+                break
+        if not account and self._accounts:
+            account = self._accounts[0]
         if not account:
-            self._setup_log("Invalid account selected", "ERROR")
+            self._log("error", "No YouTube accounts — add one first")
             return
 
-        # Reset output and progress
-        self._reset_output()
-        progress = self.query_one("#pipeline-progress", PipelineProgressWidget)
-        progress.reset()
+        language = self.query_one("#input-language", Input).value.strip() or "English"
+        for_kids = self.query_one("#switch-kids", Switch).value
 
-        # Disable controls and show stop button
-        self._set_controls_enabled(False)
-        self._setup_log(f"Starting pipeline for niche: {niche}", "INFO")
+        # Reset pipeline panel and output
+        self.query_one("#pipeline-panel", PipelinePanel).reset()
+        self.query_one("#output-info", Static).update("[#374151](generating...)[/]")
 
-        # Create pipeline wrapper
-        self._pipeline = PipelineWrapper(
+        # Create wrapper (DESIGN Section 10)
+        self._wrapper = PipelineWrapper(
             app=self.app,
             account_uuid=str(account["id"]),
             account_nickname=account.get("nickname", account["username"]),
             fp_profile_path=account.get("profile_path", ""),
         )
 
-        # Start async generation
-        self._running_task = self.app.call_later(
-            self._run_pipeline, niche, language, for_kids
+        # Start elapsed timer
+        self._start_time = time.time()
+        self._elapsed_timer = self.set_interval(1.0, self._tick_elapsed)
+
+        self.is_running = True
+        self._log("info", f"Starting pipeline: {niche}")
+
+        # Run worker (DESIGN Section 10 pattern)
+        self.run_worker(
+            self._pipeline_worker(niche, language, for_kids),
+            exclusive=True,
+            name="pipeline",
         )
 
-    async def _run_pipeline(self, niche: str, language: str, for_kids: bool) -> None:
-        """Run the pipeline asynchronously."""
+    async def _pipeline_worker(self, niche: str, language: str, for_kids: bool) -> None:
+        """Worker coroutine — posts messages, never calls widgets directly."""
         try:
-            result = await self._pipeline.generate(niche, language, for_kids)
-
-            if result["success"]:
-                self._setup_log(
-                    f"✅ Pipeline complete! Video: {result['video_path']}", "INFO"
-                )
-                self._show_output(result["video_path"])
-            else:
-                error_msg = result.get("error", "Unknown error")
-                self._setup_log(f"❌ Pipeline failed: {error_msg}", "ERROR")
-
+            await self._wrapper.run(niche, language, for_kids)
         except Exception as e:
-            self._setup_log(f"❌ Unexpected error: {e}", "ERROR")
-        finally:
-            self._set_controls_enabled(True)
-            self._running_task = None
+            self.app.post_message(JobFailed(step="worker", error=str(e)[:300]))
 
-    def _on_stop_click(self) -> None:
-        """Handle Stop button click."""
-        if self._pipeline:
-            self._setup_log("Stopping pipeline...", "WARN")
-            self._pipeline.cancel()
-            self._setup_log("Pipeline stop requested", "INFO")
+    def _on_stop(self) -> None:
+        """Handle Stop button — cancel pipeline."""
+        if self._wrapper:
+            self._log("warn", "Stopping pipeline...")
+            self._wrapper.cancel()
 
-    def _on_play_click(self) -> None:
-        """Handle Play button click - open video in default player."""
-        output_path = self.query_one("#output-path", Static)
-        video_path = output_path.renderable.strip()
+    # --- Elapsed timer ---
 
-        if video_path and os.path.exists(video_path):
+    def _tick_elapsed(self) -> None:
+        """Update elapsed time display."""
+        if self.is_running:
+            elapsed = time.time() - self._start_time
+            mins = int(elapsed // 60)
+            secs = int(elapsed % 60)
             try:
-                import subprocess
+                self.query_one("#elapsed-label", Static).update(
+                    f"[#64748b]elapsed: {mins:02d}:{secs:02d}[/]"
+                )
+            except Exception:
+                pass
 
-                # Open with default video player
-                if sys.platform == "darwin":
-                    subprocess.run(["open", video_path])
-                elif sys.platform == "linux":
-                    subprocess.run(["xdg-open", video_path])
-                elif sys.platform == "win32":
-                    subprocess.run(["start", "", video_path], shell=True)
-                self._setup_log(f"Opening video: {video_path}", "INFO")
-            except Exception as e:
-                self._setup_log(f"Failed to open video: {e}", "ERROR")
+    def _stop_elapsed(self) -> None:
+        """Stop elapsed timer."""
+        if self._elapsed_timer:
+            self._elapsed_timer.stop()
+            self._elapsed_timer = None
+
+    # --- Message handlers (DESIGN Section 11) ---
+
+    def on_step_started(self, message: StepStarted) -> None:
+        """Route step start to pipeline panel."""
+        self.current_step = message.step
+        try:
+            self.query_one("#pipeline-panel", PipelinePanel).set_active(message.step)
+        except Exception:
+            pass
+
+    def on_step_progressed(self, message: StepProgressed) -> None:
+        """Route progress to pipeline panel."""
+        try:
+            self.query_one("#pipeline-panel", PipelinePanel).update_step(
+                message.step, message.detail, message.progress
+            )
+        except Exception:
+            pass
+
+    def on_step_completed(self, message: StepCompleted) -> None:
+        """Route step completion to pipeline panel."""
+        try:
+            self.query_one("#pipeline-panel", PipelinePanel).complete_step(
+                message.step, message.detail, message.elapsed
+            )
+        except Exception:
+            pass
+
+    def on_step_failed(self, message: StepFailed) -> None:
+        """Route step failure to pipeline panel (DESIGN Section 14 rule)."""
+        try:
+            self.query_one("#pipeline-panel", PipelinePanel).fail_step(
+                message.step, message.error
+            )
+        except Exception:
+            pass
+
+    def on_log_line(self, message: LogLine) -> None:
+        """Route log lines to log viewer."""
+        self._log(message.level, message.text)
+
+    def on_job_completed(self, message: JobCompleted) -> None:
+        """Pipeline finished successfully."""
+        self._stop_elapsed()
+        self.is_running = False
+
+        # Update output section
+        try:
+            video_path = message.video_path
+            parts = []
+            parts.append(f"file    [#3b82f6]{video_path}[/]")
+            if os.path.exists(video_path):
+                size = os.path.getsize(video_path)
+                if size < 1024 * 1024:
+                    parts.append(f"size    [#3b82f6]{size / 1024:.1f} KB[/]")
+                else:
+                    parts.append(f"size    [#3b82f6]{size / (1024 * 1024):.1f} MB[/]")
+            if message.upload_url:
+                parts.append(f"url     [#3b82f6]{message.upload_url}[/]")
+            self.query_one("#output-info", Static).update("\n".join(parts))
+        except Exception:
+            pass
+        self._log("success", f"Pipeline complete: {message.video_path}")
+
+    def on_job_failed(self, message: JobFailed) -> None:
+        """Pipeline failed."""
+        self._stop_elapsed()
+        self.is_running = False
+        self._log("error", f"Pipeline failed at {message.step}: {message.error}")
+
+    # --- Log helper ---
+
+    def _log(self, level: str, text: str) -> None:
+        """Write to the log viewer."""
+        try:
+            self.query_one("#log-viewer", LogViewer).write_line(text, level)
+        except Exception:
+            pass
+
+    # --- Key actions ---
+
+    def action_cancel_or_back(self) -> None:
+        """Escape: stop pipeline if running, else go back."""
+        if self.is_running and self._wrapper:
+            self._wrapper.cancel()
         else:
-            self._setup_log("Video file not found", "WARN")
+            self.app.action_pop_screen_or_home()
 
-    def _on_upload_click(self) -> None:
-        """Handle Upload button click - navigate to upload screen."""
-        self._setup_log("Navigate to Upload screen to upload the video", "INFO")
-        # TODO: Navigate to upload screen when implemented
-        # self.app.push_screen("upload")
+    def action_clear_log(self) -> None:
+        try:
+            self.query_one("#log-viewer", LogViewer).clear()
+        except Exception:
+            pass
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle all button press events."""
-        button_id = event.button.id
-
-        if button_id == "btn-generate":
-            self.app.call_later(self._on_generate_click)
-        elif button_id == "btn-stop":
-            self._on_stop_click()
-        elif button_id == "btn-play":
-            self._on_play_click()
-        elif button_id == "btn-upload":
-            self._on_upload_click()
-
-    # Pipeline event handlers
-    def on_pipeline_started(self, event: PipelineStarted) -> None:
-        """Handle pipeline started event."""
-        self._setup_log(f"Pipeline started ({event.total_steps} steps)", "INFO")
-
-    def on_pipeline_step_started(self, event: PipelineStepStarted) -> None:
-        """Handle pipeline step started event."""
-        self._setup_log(f"→ {event.step_name} started", "INFO")
-
-    def on_pipeline_step_complete(self, event: PipelineStepComplete) -> None:
-        """Handle pipeline step complete event."""
-        self._setup_log(f"✓ {event.step_name} complete ({event.duration:.1f}s)", "INFO")
-
-    def on_pipeline_progress(self, event: PipelineProgress) -> None:
-        """Handle pipeline progress event."""
-        self._setup_log(f"  {event.message} ({event.progress:.0%})", "INFO")
-
-    def on_pipeline_error(self, event: PipelineError) -> None:
-        """Handle pipeline error event."""
-        self._setup_log(f"✗ Error: {event.error_message}", "ERROR")
-
-    def on_pipeline_complete(self, event: PipelineComplete) -> None:
-        """Handle pipeline complete event."""
-        if event.output_path:
-            self._setup_log(f"Pipeline complete: {event.output_path}", "INFO")
-        else:
-            self._setup_log("Pipeline complete", "INFO")
+    def action_toggle_scroll_lock(self) -> None:
+        try:
+            self.query_one("#log-viewer", LogViewer).toggle_scroll_lock()
+        except Exception:
+            pass

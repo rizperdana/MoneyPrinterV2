@@ -1,206 +1,134 @@
-"""Accounts Screen - Full platform account management."""
+"""Accounts Screen — per DESIGN.md Section 5.3."""
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, Container
+from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen, Screen
-from textual.widgets import Static, Button, DataTable
-from textual.message import Message
+from textual.widgets import Static, Button, DataTable, Input
 from typing import Optional
 
 from src.db import get_accounts, add_account, update_account, delete_account
-from src.tui.widgets.account_table import AccountTable, AccountRowSelected
-from src.tui.widgets.account_form import AccountForm, AccountFormSubmitted
-from src.tui.widgets.confirm_dialog import ConfirmDialog
-
-
-class AccountFormModal(ModalScreen):
-    """Modal screen for the account form."""
-
-    def __init__(self, account: Optional[dict] = None, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self._account = account
-
-    def compose(self) -> ComposeResult:
-        """Compose the modal form."""
-        yield Container(
-            AccountForm(account=self._account),
-            id="form-container",
-        )
+from src.tui.events import LibraryChanged
 
 
 class AccountsScreen(Screen):
-    """Full account management screen with table, details, and actions."""
+    """Account management screen with table and detail panel."""
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._selected_account: Optional[dict] = None
+        self._accounts: list[dict] = []
+        self._selected: Optional[dict] = None
 
     def compose(self) -> ComposeResult:
-        """Compose the accounts screen layout."""
-        # Header
-        yield Static("Accounts", classes="screen-header")
+        yield Static("[bold #e2e8f0]ACCOUNTS[/]", classes="screen-title")
 
         # Toolbar
         with Horizontal(classes="toolbar"):
-            yield Button("+ Add Account", variant="primary", id="btn-add")
-            yield Button("Edit", id="btn-edit", disabled=True)
-            yield Button("Delete", id="btn-delete", variant="error", disabled=True)
-            yield Button("Test Connection", id="btn-test", disabled=True)
+            yield Input(placeholder="search...", id="search-input")
+            yield Button("+ add account", id="btn-add", classes="action-primary")
 
-        # Main content area
-        with Horizontal(id="main-content"):
-            # Left: Account table
-            with Vertical(id="table-panel"):
-                yield AccountTable(id="account-table")
+        # Table
+        yield DataTable(id="accounts-table")
 
-            # Right: Account details
-            with Vertical(id="details-panel"):
-                yield Static("Account Details", classes="section-header")
-                yield Static("Select an account to view details", id="account-details")
-                yield Static("", id="detail-platform", classes="detail-field")
-                yield Static("", id="detail-username", classes="detail-field")
-                yield Static("", id="detail-nickname", classes="detail-field")
-                yield Static("", id="detail-profile", classes="detail-field")
+        # Detail panel
+        yield Static("[#64748b]─── details ────────────────────────────────────────────[/]",
+                      classes="section-divider")
+        yield Static("[#374151]Select an account to view details[/]", id="detail-panel")
+
+        # Actions
+        with Horizontal(classes="button-row"):
+            yield Button("test connection", id="btn-test", disabled=True)
+            yield Button("edit", id="btn-edit", disabled=True)
+            yield Button("delete", id="btn-delete", disabled=True)
 
     def on_mount(self) -> None:
-        """Load accounts on mount."""
-        self._refresh_accounts()
+        """Setup table and load accounts."""
+        table = self.query_one("#accounts-table", DataTable)
+        table.add_columns("platform", "username", "status", "uploads")
+        table.cursor_type = "row"
+        self._refresh()
 
-    def _refresh_accounts(self) -> None:
+    def _refresh(self) -> None:
         """Reload accounts from database."""
-        table = self.query_one("#account-table", AccountTable)
-        accounts = get_accounts()
-        table.load_accounts(accounts)
-
-    def on_account_row_selected(self, event: AccountRowSelected) -> None:
-        """Handle account row selection."""
-        self._selected_account = event.account
-        self._update_details(event.account)
-        self._update_button_states(True)
-
-    def _update_details(self, account: dict) -> None:
-        """Update the details panel."""
-        self.query_one("#account-details", Static).update(
-            f"@{account.get('username', '')}"
-        )
-        self.query_one("#detail-platform", Static).update(
-            f"Platform: {account.get('platform', 'N/A')}"
-        )
-        self.query_one("#detail-username", Static).update(
-            f"Username: {account.get('username', 'N/A')}"
-        )
-        self.query_one("#detail-nickname", Static).update(
-            f"Nickname: {account.get('nickname', 'N/A')}"
-        )
-        self.query_one("#detail-profile", Static).update(
-            f"Profile: {account.get('profile_path', 'N/A')}"
-        )
-
-    def _update_button_states(self, has_selection: bool) -> None:
-        """Enable/disable buttons based on selection."""
-        self.query_one("#btn-edit", Button).disabled = not has_selection
-        self.query_one("#btn-delete", Button).disabled = not has_selection
-        self.query_one("#btn-test", Button).disabled = not has_selection
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle toolbar button presses."""
-        button_id = event.button.id
-
-        if button_id == "btn-add":
-            self._show_add_form()
-
-        elif button_id == "btn-edit":
-            if self._selected_account:
-                self._show_edit_form(self._selected_account)
-
-        elif button_id == "btn-delete":
-            if self._selected_account:
-                self._show_delete_confirmation()
-
-        elif button_id == "btn-test":
-            if self._selected_account:
-                self._test_connection()
-
-    def _show_add_form(self) -> None:
-        """Show the add account form."""
-        self.app.push_screen(AccountFormModal(), self._on_form_complete)
-
-    def _show_edit_form(self, account: dict) -> None:
-        """Show the edit account form."""
-        self.app.push_screen(AccountFormModal(account=account), self._on_form_complete)
-
-    def _on_form_complete(self, submitted: AccountFormSubmitted) -> None:
-        """Handle form submission."""
-        if submitted and submitted.data:
-            data = submitted.data
-            if self._selected_account and "id" in self._selected_account:
-                # Update existing
-                update_account(
-                    self._selected_account["id"],
-                    {
-                        "platform": data.platform,
-                        "username": data.username,
-                        "nickname": data.nickname or None,
-                        "profile_path": data.profile_path or None,
-                    },
-                )
-            else:
-                # Add new
-                add_account(
-                    platform=data.platform,
-                    username=data.username,
-                    nickname=data.nickname or None,
-                    profile_path=data.profile_path or None,
-                )
-            self._refresh_accounts()
-            self._clear_selection()
-
-    def _show_delete_confirmation(self) -> None:
-        """Show delete confirmation dialog."""
-        if not self._selected_account:
-            return
-
-        username = self._selected_account.get("username", "this account")
-        dialog = ConfirmDialog(
-            title="Delete Account?",
-            message=f"Are you sure you want to delete @{username}?",
-            yes_label="Delete",
-            no_label="Cancel",
-        )
-
-        def on_confirm(dialog_event):
-            if isinstance(dialog_event, ConfirmDialog.Yes):
-                self._delete_account()
-
-        self.mount(dialog)
-        self.listen(ConfirmDialog.Yes, on_confirm)
-        self.listen(ConfirmDialog.No, lambda _: dialog.remove())
-
-    def _delete_account(self) -> None:
-        """Delete the selected account."""
-        if self._selected_account and "id" in self._selected_account:
-            delete_account(self._selected_account["id"])
-            self._refresh_accounts()
-            self._clear_selection()
-
-    def _test_connection(self) -> None:
-        """Test connection for selected account."""
-        if self._selected_account:
-            profile_path = self._selected_account.get("profile_path", "")
-            # TODO: Implement actual browser test
-            # For now, show a placeholder
-            self.app.notify(
-                f"Testing connection for @{self._selected_account.get('username')}..."
+        table = self.query_one("#accounts-table", DataTable)
+        table.clear()
+        self._accounts = get_accounts()
+        for acc in self._accounts:
+            status = "[#10b981]● active[/]" if acc.get("profile_path") else "[#374151]● no profile[/]"
+            table.add_row(
+                acc.get("platform", ""),
+                f"@{acc.get('username', '')}",
+                status,
+                "0",
+                key=str(acc.get("id", "")),
             )
 
-    def _clear_selection(self) -> None:
-        """Clear the current selection."""
-        self._selected_account = None
-        self._update_button_states(False)
-        self.query_one("#account-details", Static).update(
-            "Select an account to view details"
-        )
-        self.query_one("#detail-platform", Static).update("")
-        self.query_one("#detail-username", Static).update("")
-        self.query_one("#detail-nickname", Static).update("")
-        self.query_one("#detail-profile", Static).update("")
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Handle row selection."""
+        row_key = event.row_key
+        if row_key and row_key.value:
+            for acc in self._accounts:
+                if str(acc.get("id", "")) == str(row_key.value):
+                    self._selected = acc
+                    self._show_detail(acc)
+                    self._set_buttons(True)
+                    break
+
+    def _show_detail(self, acc: dict) -> None:
+        """Update detail panel."""
+        lines = [
+            f"  profile path    {acc.get('profile_path', 'not set')}",
+            f"  created         {acc.get('created_at', 'unknown')[:10]}",
+            f"  nickname        {acc.get('nickname', '-')}",
+        ]
+        self.query_one("#detail-panel", Static).update("\n".join(lines))
+
+    def _set_buttons(self, enabled: bool) -> None:
+        for bid in ("#btn-test", "#btn-edit", "#btn-delete"):
+            self.query_one(bid, Button).disabled = not enabled
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        bid = event.button.id
+        if bid == "btn-add":
+            self._add_account()
+        elif bid == "btn-delete" and self._selected:
+            self._delete_selected()
+        elif bid == "btn-test" and self._selected:
+            self.app.notify(
+                f"Testing @{self._selected.get('username', '')}..."
+            )
+
+    def _add_account(self) -> None:
+        """Quick-add an account (placeholder)."""
+        add_account(platform="youtube", username="new_channel")
+        self._refresh()
+        self.app.post_message(LibraryChanged())
+
+    def _delete_selected(self) -> None:
+        """Delete selected account."""
+        if self._selected and "id" in self._selected:
+            delete_account(self._selected["id"])
+            self._selected = None
+            self._set_buttons(False)
+            self.query_one("#detail-panel", Static).update(
+                "[#374151]Select an account to view details[/]"
+            )
+            self._refresh()
+            self.app.post_message(LibraryChanged())
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Filter accounts by search."""
+        if event.input.id == "search-input":
+            search = event.value.lower()
+            table = self.query_one("#accounts-table", DataTable)
+            table.clear()
+            for acc in self._accounts:
+                searchable = f"{acc.get('username', '')} {acc.get('platform', '')} {acc.get('nickname', '')}".lower()
+                if search in searchable:
+                    status = "[#10b981]● active[/]" if acc.get("profile_path") else "[#374151]● no profile[/]"
+                    table.add_row(
+                        acc.get("platform", ""),
+                        f"@{acc.get('username', '')}",
+                        status,
+                        "0",
+                        key=str(acc.get("id", "")),
+                    )
