@@ -117,7 +117,6 @@ class VideoGenScreen(Screen):
         height: auto;
         width: 100%;
         align: center middle;
-        spacing: 1;
     }
 
     #btn-stop {

@@ -64,7 +64,6 @@ class TwitterScreen(Screen):
         height: auto;
         width: 100%;
         layout: horizontal;
-        spacing: 1;
         padding: 1 0;
     }
 

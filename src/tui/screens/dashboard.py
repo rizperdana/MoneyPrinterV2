@@ -55,7 +55,6 @@ class DashboardScreen(Screen):
         width: 100%;
         layout: horizontal;
         align: center middle;
-        spacing: 1;
         padding: 1;
     }
     """
