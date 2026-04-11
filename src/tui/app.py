@@ -129,10 +129,22 @@ class MoneyPrinterApp(App):
             )
             screen_cls = getattr(mod, class_name, None)
             if screen_cls is None:
-                # Try exact match
+                # Try exact case-insensitive match: "settings" matches "SettingsScreen"
                 for attr_name in dir(mod):
                     if attr_name.lower() == name.lower() + "screen":
                         screen_cls = getattr(mod, attr_name)
+                        break
+            if screen_cls is None:
+                # Last resort: look for any Screen subclass in the module
+                for attr_name in dir(mod):
+                    attr = getattr(mod, attr_name, None)
+                    if (
+                        attr
+                        and isinstance(attr, type)
+                        and issubclass(attr, Screen)
+                        and attr_name.endswith("Screen")
+                    ):
+                        screen_cls = attr
                         break
             if screen_cls:
                 instance = screen_cls()

@@ -112,18 +112,33 @@ class YouTube:
         self._language: str = language
 
         self.images = []
+        self._browser_initialized: bool = False
 
-        if not os.path.isdir(self._fp_profile_path):
+        # Validate profile path exists (but don't init browser yet)
+        if self._fp_profile_path and not os.path.isdir(self._fp_profile_path):
             raise ValueError(
                 f"Firefox profile path does not exist or is not a directory: {self._fp_profile_path}"
             )
 
-        self.options: Options = Options()
-        if get_headless():
-            self.options.add_argument("--headless")
+        self._options: Optional[Options] = None
+        self._browser: Optional[webdriver.Firefox] = None
+        self._wait: Optional[WebDriverWait] = None
+        self._temp_profile_dir: Optional[str] = None
 
-        self.options.add_argument("-profile")
-        self.options.add_argument(self._fp_profile_path)
+    def _ensure_browser(self) -> None:
+        """Lazy initialization of the browser - only created when needed."""
+        if self._browser_initialized:
+            return
+
+        if not self._fp_profile_path:
+            raise ValueError(f"Firefox profile path is required for browser operations")
+
+        self._options = Options()
+        if get_headless():
+            self._options.add_argument("--headless")
+
+        self._options.add_argument("-profile")
+        self._options.add_argument(self._fp_profile_path)
 
         gecko_path = "/home/anon/.cache/selenium/geckodriver/linux64/0.36.0/geckodriver"
         # Add gecko driver to PATH for selenium
@@ -131,14 +146,22 @@ class YouTube:
         if gecko_dir not in os.environ.get("PATH", ""):
             os.environ["PATH"] = gecko_dir + ":" + os.environ.get("PATH", "")
 
-        self.browser: webdriver.Firefox = webdriver.Firefox(options=self.options)
-        self.wait: WebDriverWait = WebDriverWait(self.browser, 30)
-        self.page = self.browser
+        self._browser = webdriver.Firefox(options=self._options)
+        self._wait = WebDriverWait(self._browser, 30)
+        self.page = self._browser
+        self._browser_initialized = True
 
-        self._temp_profile_dir = None
+    @property
+    def browser(self):
+        """Property for backward compatibility - triggers lazy init."""
+        self._ensure_browser()
+        return self._browser
 
-    def _ensure_browser(self):
-        pass
+    @property
+    def wait(self):
+        """Property for backward compatibility - triggers lazy init."""
+        self._ensure_browser()
+        return self._wait
 
     @property
     def niche(self) -> str:
@@ -4114,8 +4137,10 @@ Example:
     def cleanup(self) -> None:
         """Closes the Selenium browser and cleans up temp profile."""
         try:
-            if self.browser:
-                self.browser.quit()
+            if self._browser:
+                self._browser.quit()
+                self._browser = None
+                self._browser_initialized = False
         except Exception:
             pass
 
