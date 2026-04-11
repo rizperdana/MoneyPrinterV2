@@ -222,18 +222,16 @@ class VideoGenScreen(Screen):
             accounts = get_accounts(platform="youtube")
             self._accounts = accounts
 
-            select = self.query_one("#select-account", Select)
-            options = [
-                (f"{acc['username']} ({acc.get('nickname', 'N/A')})", acc["id"])
-                for acc in accounts
-            ]
-
-            if options:
-                select.clear()
-                for label, value in options:
-                    select.add_option(Select.Option(label, value))
+            # Show account count in the input placeholder
+            input_acc = self.query_one("#input-account", Input)
+            if accounts:
+                account_names = ", ".join([acc["username"] for acc in accounts[:3]])
+                if len(accounts) > 3:
+                    account_names += f" (+{len(accounts) - 3} more)"
+                input_acc.placeholder = f"Accounts: {account_names}"
                 self._setup_log(f"Loaded {len(accounts)} YouTube account(s)")
             else:
+                input_acc.placeholder = "No YouTube accounts - add one first"
                 self._setup_log(
                     "No YouTube accounts found. Please add an account first.", "WARN"
                 )
@@ -259,17 +257,17 @@ class VideoGenScreen(Screen):
         """Enable or disable form controls during pipeline execution."""
         generate_btn = self.query_one("#btn-generate", Button)
         stop_btn = self.query_one("#btn-stop", Button)
-        select_acc = self.query_one("#select-account", Select)
+        input_acc = self.query_one("#input-account", Input)
         input_niche = self.query_one("#input-niche", Input)
-        select_lang = self.query_one("#select-language", Select)
+        input_lang = self.query_one("#input-language", Input)
         switch_kids = self.query_one("#switch-for-kids", Switch)
 
         generate_btn.display = enabled
         stop_btn.display = not enabled
 
-        select_acc.disabled = not enabled
+        input_acc.disabled = not enabled
         input_niche.disabled = not enabled
-        select_lang.disabled = not enabled
+        input_lang.disabled = not enabled
         switch_kids.disabled = not enabled
 
     def _show_output(self, video_path: str) -> None:
@@ -312,27 +310,48 @@ class VideoGenScreen(Screen):
     async def _on_generate_click(self) -> None:
         """Handle Generate button click."""
         # Get form values
-        select_acc = self.query_one("#select-account", Select)
+        input_acc = self.query_one("#input-account", Input)
         input_niche = self.query_one("#input-niche", Input)
-        select_lang = self.query_one("#select-language", Select)
+        input_lang = self.query_one("#input-language", Input)
         switch_kids = self.query_one("#switch-for-kids", Switch)
 
-        account_id = select_acc.value
-        niche = input_niche.value.strip()
-        language = select_lang.value or "English"
-        for_kids = switch_kids.value
+        # Parse account ID from input (format: "id:username")
+        account_input = input_acc.value.strip()
 
         # Validate inputs
-        if not account_id:
+        if not account_input:
             self._setup_log("Please select a YouTube account", "WARN")
             return
 
-        if not niche:
+        if not input_niche.value.strip():
             self._setup_log("Please enter a niche/topic", "WARN")
             return
 
+        # Parse account - either "id:username" or just select from the list
+        try:
+            # Try to find account by ID
+            account = None
+            for acc in self._accounts:
+                if str(acc["id"]) == account_input or acc["username"] == account_input:
+                    account = acc
+                    break
+
+            if not account:
+                # Use first available account
+                if self._accounts:
+                    account = self._accounts[0]
+                else:
+                    self._setup_log("No YouTube accounts available", "ERROR")
+                    return
+        except Exception as e:
+            self._setup_log(f"Invalid account: {e}", "ERROR")
+            return
+
+        niche = input_niche.value.strip()
+        language = input_lang.value.strip() or "English"
+        for_kids = switch_kids.value
+
         # Get account details
-        account = self._get_account_details(account_id)
         if not account:
             self._setup_log("Invalid account selected", "ERROR")
             return

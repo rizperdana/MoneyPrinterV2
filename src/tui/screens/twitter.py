@@ -91,7 +91,6 @@ class TwitterScreen(Screen):
             yield TextArea(
                 placeholder="What's happening?",
                 id="tweet-composer",
-                height=4,
             )
             yield Label(
                 f"0/{self.MAX_CHARS} characters",

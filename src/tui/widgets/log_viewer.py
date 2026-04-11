@@ -106,13 +106,13 @@ class LogViewerWithControls(Vertical):
         """Compose controls and log viewer."""
         with Horizontal(classes="log-controls"):
             yield Static("Filter:", classes="form-label")
-            yield Button("ALL", id="filter-all", variant="primary", size=1)
-            yield Button("INFO", id="filter-info", variant="default", size=1)
-            yield Button("WARN", id="filter-warn", variant="default", size=1)
-            yield Button("ERROR", id="filter-error", variant="default", size=1)
-            yield Button("Clear", id="clear-log", variant="default", size=1)
-            yield Button("Export", id="export-log", variant="default", size=1)
-            yield Button("Auto", id="toggle-scroll", variant="primary", size=1)
+            yield Button("ALL", id="filter-all", variant="primary")
+            yield Button("INFO", id="filter-info", variant="default")
+            yield Button("WARN", id="filter-warn", variant="default")
+            yield Button("ERROR", id="filter-error", variant="default")
+            yield Button("Clear", id="clear-log", variant="default")
+            yield Button("Export", id="export-log", variant="default")
+            yield Button("Auto", id="toggle-scroll", variant="primary")
         yield self._log_viewer
 
     @property

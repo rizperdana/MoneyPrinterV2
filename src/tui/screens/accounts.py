@@ -83,18 +83,18 @@ class AccountsScreen(Screen):
         self.query_one("#account-details", Static).update(
             f"@{account.get('username', '')}"
         )
-        self.query_one(
-            "#detail-platform", Static
-        ).update = f"Platform: {account.get('platform', 'N/A')}"
-        self.query_one(
-            "#detail-username", Static
-        ).update = f"Username: {account.get('username', 'N/A')}"
-        self.query_one(
-            "#detail-nickname", Static
-        ).update = f"Nickname: {account.get('nickname', 'N/A')}"
-        self.query_one(
-            "#detail-profile", Static
-        ).update = f"Profile: {account.get('profile_path', 'N/A')}"
+        self.query_one("#detail-platform", Static).update(
+            f"Platform: {account.get('platform', 'N/A')}"
+        )
+        self.query_one("#detail-username", Static).update(
+            f"Username: {account.get('username', 'N/A')}"
+        )
+        self.query_one("#detail-nickname", Static).update(
+            f"Nickname: {account.get('nickname', 'N/A')}"
+        )
+        self.query_one("#detail-profile", Static).update(
+            f"Profile: {account.get('profile_path', 'N/A')}"
+        )
 
     def _update_button_states(self, has_selection: bool) -> None:
         """Enable/disable buttons based on selection."""

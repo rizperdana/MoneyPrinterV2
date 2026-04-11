@@ -1,0 +1,49 @@
+{
+  "iterations": [
+    {
+      "iteration": 1,
+      "startedAt": "2026-04-11T00:22:19.264Z",
+      "endedAt": "2026-04-11T00:29:57.725Z",
+      "durationMs": 458282,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/tui/app.py",
+        "src/tui/screens/video_gen.py",
+        "src/tui/widgets/account_table.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "print(f'Error: {type(e).__name__}: {e}')",
+        "ModuleNotFoundError: No module named 'config'",
+        "OperationalError: no such table: accounts",
+        "sqlite3.OperationalError: no such table: accounts",
+        "KeyError: None",
+        "print(f'✗ Widget error: {e}')",
+        "print(f'✗ Button error: {e}')",
+        "print(f'✗ Log viewer error: {e}')",
+        "TypeError: add_video() missing 1 required positional argument: 'platform'",
+        "except asyncio.TimeoutError:"
+      ]
+    }
+  ],
+  "totalDurationMs": 458282,
+  "struggleIndicators": {
+    "repeatedErrors": {
+      "print(f'Error: {type(e).__name__}: {e}')": 1,
+      "ModuleNotFoundError: No module named 'config'": 1,
+      "OperationalError: no such table: accounts": 1,
+      "sqlite3.OperationalError: no such table: accounts": 1,
+      "KeyError: None": 1,
+      "print(f'✗ Widget error: {e}')": 1,
+      "print(f'✗ Button error: {e}')": 1,
+      "print(f'✗ Log viewer error: {e}')": 1,
+      "TypeError: add_video() missing 1 required positional argument: 'platform'": 1,
+      "except asyncio.TimeoutError:": 1
+    },
+    "noProgressIterations": 0,
+    "shortIterations": 0
+  }
+}

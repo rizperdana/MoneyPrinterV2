@@ -172,7 +172,6 @@ class OutreachScreen(Screen):
                     yield TextArea(
                         placeholder="Dear {{COMPANY_NAME}},\n\n...\n\nBest regards",
                         id="template-body",
-                        height=8,
                     )
                     with Horizontal(classes="button-row"):
                         yield Button("Save Template", id="btn-save-template")

@@ -161,7 +161,6 @@ class AFMScreen(Screen):
                     yield TextArea(
                         placeholder="Generated pitch will appear here...",
                         id="pitch-output",
-                        height=4,
                         read_only=True,
                     )
 

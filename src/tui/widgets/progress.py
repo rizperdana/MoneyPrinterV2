@@ -45,7 +45,7 @@ class ProgressStep(Widget):
 
     def __init__(self, name: str, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.name = name
+        self._step_name = name
         self._state: str = "pending"
         self._duration: Optional[float] = None
         self._progress: float = 0.0
@@ -77,7 +77,7 @@ class ProgressStep(Widget):
 
     def _build_text(self) -> str:
         """Build the display text for this step."""
-        parts = [f"[{self.css_class}]{self.icon}[/{self.css_class}] {self.name}"]
+        parts = [f"[{self.css_class}]{self.icon}[/{self.css_class}] {self._step_name}"]
         if self._state == "active" and self._progress > 0:
             parts.append(f" [{self._progress:.0%}]")
         if self._duration is not None:

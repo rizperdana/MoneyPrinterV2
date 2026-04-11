@@ -25,6 +25,12 @@ from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.widgets import Header, Footer, Static, Button
 from textual import events
+from typing import Optional
+
+# Initialize database tables
+from src.db import init_db
+
+init_db()
 
 
 class SidebarItem(Button):
@@ -181,6 +187,9 @@ class MoneyPrinterApp(App):
         except Exception as e:
             self._handle_error("pop_screen_or_home", e)
 
+    # Track multi-key shortcuts
+    _pending_key: Optional[str] = None
+
     def on_key(self, event: events.Key) -> None:
         """Handle keyboard shortcuts."""
         # Ctrl+C - request pipeline stop
@@ -191,18 +200,28 @@ class MoneyPrinterApp(App):
         # Two-key shortcuts: 'g' prefix → go_to
         # g+d, g+v, g+a, g+t, g+f, g+o, g+s
         key_map = {
-            "g d": "dashboard",
-            "g v": "video_gen",
-            "g a": "accounts",
-            "g t": "twitter",
-            "g f": "afm",
-            "g o": "outreach",
-            "g s": "settings",
+            "d": "dashboard",
+            "v": "video_gen",
+            "a": "accounts",
+            "t": "twitter",
+            "f": "afm",
+            "o": "outreach",
+            "s": "settings",
         }
-        key_str = f"{event.character}" if event.key.startswith("g") else None
-        # Check if it's a two-char 'gX' combo
-        if hasattr(event, "key") and event.key in key_map:
+
+        # Handle 'g' prefix for navigation
+        if event.key == "g":
+            self._pending_key = "g"
+            return
+
+        # If we have a pending 'g', check for second key
+        if self._pending_key == "g" and event.key in key_map:
             self.action_go_to(key_map[event.key])
+            self._pending_key = None
+            return
+
+        # Clear pending key if not a valid combo
+        self._pending_key = None
 
     def _handle_ctrl_c(self) -> None:
         """Handle Ctrl+C - stop pipeline and return to dashboard."""

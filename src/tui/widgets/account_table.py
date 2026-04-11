@@ -112,14 +112,17 @@ class AccountTable(Static):
 
             filtered.append(account)
 
-        # Add rows
+        # Add rows (guard against empty or invalid keys)
         for account in filtered:
+            account_id = account.get("id")
+            if account_id is None:
+                continue
             self._table.add_row(
                 account.get("platform", "Unknown"),
                 account.get("username", ""),
                 account.get("nickname", "") or "-",
                 self._get_account_status(account),
-                key=str(account.get("id", "")),
+                key=str(account_id),
             )
 
     def _get_account_status(self, account: dict) -> str:
