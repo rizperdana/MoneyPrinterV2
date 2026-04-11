@@ -202,9 +202,9 @@ MODEL_ROUTING = {
         "nvidia/nemotron-3-super-120b-a12b:free",
     ],
     "image_prompts": [
-        "bytedance-seed/dola-seed-2.0-pro:free",
         "arcee-ai/trinity-large-thinking:free",
         "minimax/minimax-m2.5:free",
+        "bytedance-seed/dola-seed-2.0-pro:free",
         "nvidia/nemotron-3-super-120b-a12b:free",
     ],
     "title_desc": [

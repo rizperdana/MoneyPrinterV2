@@ -27,21 +27,46 @@
         "TypeError: add_video() missing 1 required positional argument: 'platform'",
         "except asyncio.TimeoutError:"
       ]
+    },
+    {
+      "iteration": 2,
+      "startedAt": "2026-04-11T00:29:58.898Z",
+      "endedAt": "2026-04-11T01:01:28.364Z",
+      "durationMs": 1889270,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/llm_provider.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": false,
+      "errors": [
+        "ModuleNotFoundError: No module named 'utils'",
+        "ModuleNotFoundError: No module named 'src.tui.wrappers.youtube'",
+        "AttributeError: 'TTS' object has no attribute 'voice'",
+        "sqlite3.OperationalError: no such table: accounts",
+        "ImportError: cannot import name 'AFM' from 'src.classes.AFM' (/home/anon/Projects/experiment/MoneyPrinterV2/src/classes/AFM.py)"
+      ]
     }
   ],
-  "totalDurationMs": 458282,
+  "totalDurationMs": 2347552,
   "struggleIndicators": {
     "repeatedErrors": {
       "print(f'Error: {type(e).__name__}: {e}')": 1,
       "ModuleNotFoundError: No module named 'config'": 1,
       "OperationalError: no such table: accounts": 1,
-      "sqlite3.OperationalError: no such table: accounts": 1,
+      "sqlite3.OperationalError: no such table: accounts": 2,
       "KeyError: None": 1,
       "print(f'✗ Widget error: {e}')": 1,
       "print(f'✗ Button error: {e}')": 1,
       "print(f'✗ Log viewer error: {e}')": 1,
       "TypeError: add_video() missing 1 required positional argument: 'platform'": 1,
-      "except asyncio.TimeoutError:": 1
+      "except asyncio.TimeoutError:": 1,
+      "ModuleNotFoundError: No module named 'utils'": 1,
+      "ModuleNotFoundError: No module named 'src.tui.wrappers.youtube'": 1,
+      "AttributeError: 'TTS' object has no attribute 'voice'": 1,
+      "ImportError: cannot import name 'AFM' from 'src.classes.AFM' (/home/anon/Projects/experiment/MoneyPr": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0
