@@ -116,9 +116,35 @@
         "AttributeError: property 'browser' of 'YouTube' object has no setter",
         "except Exception:"
       ]
+    },
+    {
+      "iteration": 6,
+      "startedAt": "2026-04-11T01:46:21.928Z",
+      "endedAt": "2026-04-11T02:06:37.786Z",
+      "durationMs": 1215486,
+      "agent": "opencode",
+      "model": "",
+      "toolsUsed": {},
+      "filesModified": [
+        "src/tui/app.py"
+      ],
+      "exitCode": 0,
+      "completionDetected": true,
+      "errors": [
+        "⚠️ Tavily failed: No module named 'tavily'",
+        "⚠️ Exa failed: No module named 'exa_py'",
+        "⚠️ Firecrawl failed: No module named 'firecrawl'",
+        "print(f'Error: {e}')",
+        "AttributeError: 'TTS' object has no attribute 'generate'",
+        "Error: 'TTS' object has no attribute 'generate'",
+        "print(f'TTS Error: {e}')",
+        "print(f'Combine Error: {e}')",
+        "PIL.UnidentifiedImageError: cannot identify image file '/tmp/tmpoorj790h/image_0.png'",
+        "Combine Error: cannot identify image file '/tmp/tmpoorj790h/image_0.png'"
+      ]
     }
   ],
-  "totalDurationMs": 5034036,
+  "totalDurationMs": 6249522,
   "struggleIndicators": {
     "repeatedErrors": {
       "print(f'Error: {type(e).__name__}: {e}')": 2,
@@ -140,11 +166,18 @@
       "ModuleNotFoundError: No module named 'classes'": 1,
       "AttributeError: property 'browser' of 'YouTube' object has no setter": 2,
       "except Exception:": 2,
-      "⚠️ Tavily failed: No module named 'tavily'": 2,
-      "⚠️ Exa failed: No module named 'exa_py'": 2,
-      "⚠️ Firecrawl failed: No module named 'firecrawl'": 2,
+      "⚠️ Tavily failed: No module named 'tavily'": 3,
+      "⚠️ Exa failed: No module named 'exa_py'": 3,
+      "⚠️ Firecrawl failed: No module named 'firecrawl'": 3,
       "⚠️ Cloudflare FLUX.2 Klein 4B server error (500): {'error': 'Failed to generate image', 'details': \"": 1,
-      "⚠️ Cloudflare FLUX.2 Dev server error (500): {'error': 'Failed to generate image', 'details': \"5006:": 1
+      "⚠️ Cloudflare FLUX.2 Dev server error (500): {'error': 'Failed to generate image', 'details': \"5006:": 1,
+      "print(f'Error: {e}')": 1,
+      "AttributeError: 'TTS' object has no attribute 'generate'": 1,
+      "Error: 'TTS' object has no attribute 'generate'": 1,
+      "print(f'TTS Error: {e}')": 1,
+      "print(f'Combine Error: {e}')": 1,
+      "PIL.UnidentifiedImageError: cannot identify image file '/tmp/tmpoorj790h/image_0.png'": 1,
+      "Combine Error: cannot identify image file '/tmp/tmpoorj790h/image_0.png'": 1
     },
     "noProgressIterations": 0,
     "shortIterations": 0

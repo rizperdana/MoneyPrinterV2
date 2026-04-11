@@ -24,6 +24,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual.widgets import Header, Footer, Static, Button
+from textual.screen import Screen
 from textual import events
 from typing import Optional
 
@@ -123,29 +124,25 @@ class MoneyPrinterApp(App):
             mod_path = self.SCREEN_MODULES[name]
             parts = mod_path.rsplit(".", 1)
             mod = __import__(mod_path, fromlist=[parts[1] if len(parts) > 1 else ""])
-            # Get the screen class - name like "dashboard" → "DashboardScreen"
-            class_name = (
-                "".join(word.capitalize() for word in name.split("_")) + "Screen"
-            )
-            screen_cls = getattr(mod, class_name, None)
+
+            # Build expected class name: "settings" -> "SettingsScreen"
+            expected_name = f"{name.title().replace('_', '')}Screen"
+            screen_cls = getattr(mod, expected_name, None)
+
+            # If exact match not found, search for any Screen subclass
             if screen_cls is None:
-                # Try exact case-insensitive match: "settings" matches "SettingsScreen"
-                for attr_name in dir(mod):
-                    if attr_name.lower() == name.lower() + "screen":
-                        screen_cls = getattr(mod, attr_name)
-                        break
-            if screen_cls is None:
-                # Last resort: look for any Screen subclass in the module
                 for attr_name in dir(mod):
                     attr = getattr(mod, attr_name, None)
                     if (
                         attr
                         and isinstance(attr, type)
                         and issubclass(attr, Screen)
-                        and attr_name.endswith("Screen")
+                        and attr is not Screen
                     ):
+                        # Found a Screen subclass
                         screen_cls = attr
                         break
+
             if screen_cls:
                 instance = screen_cls()
                 self._screen_cache[name] = instance
