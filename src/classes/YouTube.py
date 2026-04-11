@@ -4167,8 +4167,11 @@ Example:
         except Exception:
             pass
 
-        self.browser = None
-        self.page = None
+        # Use _browser/_page instead of property to avoid setter issues
+        self._browser = None
+        self._browser_initialized = False
+        if hasattr(self, "page"):
+            self.page = None
 
     def __del__(self) -> None:
         self.cleanup()

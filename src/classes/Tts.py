@@ -14,5 +14,10 @@ class TTS:
         self._model = EdgeTTS(self._voice)
         print("TTS initialized")
 
+    @property
+    def voice(self) -> str:
+        """Return the voice name."""
+        return self._voice
+
     def synthesize(self, text, output_file=os.path.join(ROOT_DIR, ".mp", "audio.wav")):
         return self._model.synthesize(text, output_file)
