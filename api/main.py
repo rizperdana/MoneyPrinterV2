@@ -5,6 +5,7 @@ Registers all routers, CORS middleware, and serves the built frontend.
 """
 
 import os
+import pathlib
 import sys
 
 # Ensure src/ is importable
@@ -20,6 +21,7 @@ load_dotenv(os.path.join(_project_root, ".env"))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from api.routers import generate, upload, accounts, settings
 from api.ws import router as ws_router
@@ -54,10 +56,21 @@ app.include_router(settings.router, prefix="/api", tags=["settings"])
 # WebSocket router (no prefix — /ws/jobs/{id})
 app.include_router(ws_router, tags=["websocket"])
 
+
+# Serve .mp videos folder
+@app.get("/.mp/{filename:path}")
+async def serve_mp_video(filename: str):
+    """Serve video files from .mp folder."""
+    video_path = pathlib.Path(_project_root) / ".mp" / filename
+    if video_path.is_file():
+        return FileResponse(video_path)
+    return {"detail": "Video not found"}
+
+
 # Serve built frontend in production (only if web/dist exists)
 _dist_dir = os.path.join(_project_root, "web", "dist")
 if os.path.isdir(_dist_dir):
-    from fastapi.responses import FileResponse, HTMLResponse
+    from fastapi.responses import HTMLResponse
 
     @app.get("/{path:path}")
     async def serve_spa(path: str):

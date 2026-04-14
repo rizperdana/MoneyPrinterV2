@@ -130,7 +130,9 @@ class YouTube:
         """Set a callback for pipeline progress events."""
         self._progress_callback = cb
 
-    def _progress(self, step: str, status: str, progress: float | None = None, detail: str = ""):
+    def _progress(
+        self, step: str, status: str, progress: float | None = None, detail: str = ""
+    ):
         """Emit a progress event if a callback is registered."""
         if self._progress_callback:
             self._progress_callback(step, status, progress, detail)
@@ -722,14 +724,14 @@ Return ONLY the raw script text. No labels, no numbering."""
         """
         title = self.generate_response(
             f"Generate a YouTube Shorts title for: {self.subject}. "
-            f"Rules: Under 50 characters. Front-load the most important keywords. "
+            f"Rules: 60-125 characters. Front-load the most important keywords. "
             f"No hashtags in the title. Return ONLY the title, nothing else.",
             model_name=get_model_for_job("title_desc"),
         )
 
-        if len(title) > 50:
+        if len(title) > 125:
             if get_verbose():
-                warning("Generated Title is too long. Retrying...")
+                warning("Generated Title is over 125 chars. Retrying...")
             return self.generate_metadata()
 
         description = self.generate_response(
@@ -1654,7 +1656,9 @@ Example:
         info(" 📊 Step 1/7: Generating topic...")
         self._progress("topic", "running")
         self.generate_topic()
-        self._progress("topic", "done", detail=self.subject[:60] if self.subject else "")
+        self._progress(
+            "topic", "done", detail=self.subject[:60] if self.subject else ""
+        )
 
         # Generate the Script
         info(" ✍️ Step 2/7: Generating script...")
@@ -1666,13 +1670,15 @@ Example:
         info(" 📝 Step 3/7: Generating metadata...")
         self._progress("metadata", "running")
         self.generate_metadata()
-        self._progress("metadata", "done", detail=self.metadata.get('title', '')[:40])
+        self._progress("metadata", "done", detail=self.metadata.get("title", "")[:40])
 
         # Generate the Image Prompts
         info(" 🎨 Step 4/7: Generating image prompts...")
         self._progress("image_prompts", "running")
         self.generate_prompts()
-        self._progress("image_prompts", "done", detail=f"{len(self.image_prompts)} prompts")
+        self._progress(
+            "image_prompts", "done", detail=f"{len(self.image_prompts)} prompts"
+        )
 
         # Generate the Images
         info(" 🖼️ Step 5/7: Generating images...")
@@ -1683,7 +1689,9 @@ Example:
             result = self.generate_image(prompt)
             if result:
                 self.images.append(result)
-            self._progress("images", "running", progress=(i + 1) / total, detail=f"{i + 1}/{total}")
+            self._progress(
+                "images", "running", progress=(i + 1) / total, detail=f"{i + 1}/{total}"
+            )
         self._progress("images", "done", detail=f"{len(self.images)} images")
 
         # Generate the TTS

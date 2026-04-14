@@ -3,7 +3,9 @@
 import os
 import sys
 
-_project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_project_root = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 _src_dir = os.path.join(_project_root, "src")
 for _p in [_project_root, _src_dir]:
     if _p not in sys.path:
@@ -69,3 +71,90 @@ async def _do_upload(job):
         await asyncio.to_thread(_sync_upload)
     except Exception as e:
         job.error = f"Upload error: {str(e)}"
+
+
+@router.post("/videos/{video_id}/upload")
+async def upload_video_by_id(
+    video_id: int, bg: BackgroundTasks, platform: str = "youtube"
+):
+    """Upload a video from the database directly by its video_id.
+
+    This bypasses job_manager so it works even after server restart.
+    """
+    import json
+
+    # Look up video from database
+    from db import get_video_by_id
+
+    video = get_video_by_id(video_id)
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found in database")
+
+    # Validate file exists
+    file_path = video.get("file_path") or video.get("path")
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=400, detail=f"Video file not found: {file_path}"
+        )
+
+    # Read accounts from .mp cache files (primary source)
+    cache_file = os.path.join(_project_root, ".mp", f"{platform}.json")
+    accounts = []
+    if os.path.exists(cache_file):
+        with open(cache_file, "r") as f:
+            data = json.load(f)
+            accounts = data.get("accounts", [])
+
+    if not accounts:
+        raise HTTPException(status_code=400, detail=f"No {platform} account configured")
+
+    account = accounts[0]  # Use first available account
+
+    # Run upload in background
+    bg.add_task(_do_upload_video, file_path, video, account)
+    return {"status": "uploading", "video_id": video_id, "platform": platform}
+
+
+async def _do_upload_video(file_path: str, video: dict, account: dict):
+    """Upload video to YouTube/Twitter in a background task."""
+    import asyncio
+
+    def _sync_upload():
+        from classes.YouTube import YouTube
+
+        # Use firefox_profile from account, fall back to config
+        fp_profile = account.get("firefox_profile")
+        if not fp_profile or not os.path.isdir(fp_profile):
+            from config import get_firefox_profile_path
+
+            fp_profile = get_firefox_profile_path()
+            if not fp_profile or not os.path.isdir(fp_profile):
+                raise ValueError("No valid Firefox profile configured")
+
+        yt = YouTube(
+            account_uuid=account.get("id") or account.get("uuid"),
+            account_nickname=account.get("nickname"),
+            fp_profile_path=fp_profile,
+            niche=video.get("niche") or video.get("topic") or "",
+            language=video.get("language") or "English",
+        )
+        yt.video_path = file_path
+        yt.title = video.get("title", "Untitled")
+        yt.description = video.get("description", "")
+        yt.tags = video.get("tags", "").split(",") if video.get("tags") else []
+        try:
+            success_flag, result = yt.upload_video()
+            if not success_flag:
+                raise Exception(f"Upload failed: {result}")
+        finally:
+            if hasattr(yt, "_browser") and yt._browser:
+                try:
+                    yt._browser.quit()
+                except Exception:
+                    pass
+
+    try:
+        await asyncio.to_thread(_sync_upload)
+    except Exception as e:
+        # Log error - in a production system you'd want to update a job status
+        print(f"Upload error: {e}")

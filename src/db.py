@@ -320,6 +320,25 @@ def get_videos(platform: Optional[str] = None, limit: int = 50) -> list[dict]:
     return result
 
 
+def get_video_by_id(video_id: int) -> Optional[dict]:
+    """Get a single video by its ID.
+
+    Args:
+        video_id: The video's database ID
+
+    Returns:
+        Video record as dict or None if not found
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM videos WHERE id = ?", (video_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+    columns = [desc[0] for desc in cursor.description]
+    return dict(zip(columns, row))
+
+
 def get_settings() -> dict:
     """Get all settings as key-value dict."""
     conn = _get_connection()
