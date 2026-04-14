@@ -17,6 +17,7 @@ for _p in [_project_root, _src_dir]:
         sys.path.insert(0, _p)
 
 from api.jobs import job_manager, JobStatus
+from db import add_video, add_topic
 
 STEPS = ["topic", "script", "metadata", "image_prompts", "images", "tts", "combine"]
 
@@ -30,7 +31,9 @@ async def run_job(job_id: str):
     job.status = JobStatus.running
     loop = asyncio.get_event_loop()
 
-    def on_progress(step: str, status: str, progress: float | None = None, detail: str = ""):
+    def on_progress(
+        step: str, status: str, progress: float | None = None, detail: str = ""
+    ):
         """Callback invoked from the sync pipeline thread."""
         job.current_step = step
         job.step_index = STEPS.index(step) if step in STEPS else job.step_index
@@ -47,12 +50,14 @@ async def run_job(job_id: str):
     def _run_sync():
         """Synchronous pipeline execution."""
         from dotenv import load_dotenv
+
         load_dotenv(os.path.join(_project_root, ".env"))
 
         from config import get_firefox_profile_path, get_default_model
         from llm_provider import select_model
         from classes.YouTube import YouTube
         from classes.Tts import TTS
+        from db import add_topic, add_video, topic_exists
 
         # Select LLM model
         model = get_default_model()
@@ -66,7 +71,9 @@ async def run_job(job_id: str):
         youtube = YouTube.__new__(YouTube)
         youtube._account_uuid = job.account or "web-api"
         youtube._account_nickname = job.account or "Web API"
-        youtube._fp_profile_path = fp_profile if fp_profile and os.path.isdir(fp_profile) else ""
+        youtube._fp_profile_path = (
+            fp_profile if fp_profile and os.path.isdir(fp_profile) else ""
+        )
         youtube._niche = job.niche
         youtube._language = job.language
         youtube.images = []
@@ -89,7 +96,16 @@ async def run_job(job_id: str):
             # Step 1: Topic
             on_progress("topic", "running")
             youtube.generate_topic()
-            on_progress("topic", "done", detail=youtube.subject[:60] if youtube.subject else "")
+            on_progress(
+                "topic", "done", detail=youtube.subject[:60] if youtube.subject else ""
+            )
+
+            # Store topic in database
+            if youtube.subject and youtube._niche:
+                try:
+                    add_topic(youtube.subject, youtube._niche, job.account)
+                except Exception as e:
+                    print(f"Warning: could not add topic to db: {e}")
 
             if job.cancel_requested:
                 return None
@@ -105,7 +121,9 @@ async def run_job(job_id: str):
             # Step 3: Metadata
             on_progress("metadata", "running")
             youtube.generate_metadata()
-            on_progress("metadata", "done", detail=youtube.metadata.get("title", "")[:40])
+            on_progress(
+                "metadata", "done", detail=youtube.metadata.get("title", "")[:40]
+            )
 
             if job.cancel_requested:
                 return None
@@ -113,7 +131,9 @@ async def run_job(job_id: str):
             # Step 4: Image Prompts
             on_progress("image_prompts", "running")
             youtube.generate_prompts()
-            on_progress("image_prompts", "done", detail=f"{len(youtube.image_prompts)} prompts")
+            on_progress(
+                "image_prompts", "done", detail=f"{len(youtube.image_prompts)} prompts"
+            )
 
             if job.cancel_requested:
                 return None
@@ -127,14 +147,21 @@ async def run_job(job_id: str):
                 result = youtube.generate_image(prompt)
                 if result:
                     youtube.images.append(result)
-                on_progress("images", "running", progress=(i + 1) / total,
-                            detail=f"{i + 1}/{total}")
+                on_progress(
+                    "images",
+                    "running",
+                    progress=(i + 1) / total,
+                    detail=f"{i + 1}/{total}",
+                )
 
             # Fill placeholders if needed
             if len(youtube.images) < total:
                 missing = total - len(youtube.images)
                 from run_pipeline import _generate_placeholder_images
-                _generate_placeholder_images(youtube, missing, offset=len(youtube.images))
+
+                _generate_placeholder_images(
+                    youtube, missing, offset=len(youtube.images)
+                )
 
             on_progress("images", "done", detail=f"{len(youtube.images)} images")
 
@@ -154,9 +181,17 @@ async def run_job(job_id: str):
             path = youtube.combine()
             youtube.video_path = os.path.abspath(path)
             size_mb = os.path.getsize(youtube.video_path) / 1024 / 1024
-            on_progress("combine", "done", detail=f"{size_mb:.1f} MB")
+            on_progress("combine", "done", detail=f"{size_mb} MB")
 
-            return {"path": youtube.video_path}
+            # Return all video data for DB storage
+            return {
+                "path": youtube.video_path,
+                "subject": youtube.subject,
+                "script": youtube.script,
+                "metadata": youtube.metadata,
+                "niche": youtube._niche,
+                "language": youtube._language,
+            }
         finally:
             if hasattr(youtube, "_browser") and youtube._browser:
                 try:
@@ -172,10 +207,47 @@ async def run_job(job_id: str):
         elif result:
             job.status = JobStatus.done
             job.output_path = result.get("path")
-            await job.events.put({
-                "type": "done",
-                "path": job.output_path,
-            })
+
+            # Store video in database with all AI-generated data
+            if job.output_path and result.get("subject"):
+                try:
+                    metadata = result.get("metadata") or {}
+                    tags_list = (
+                        metadata.get("tags", [])
+                        if isinstance(metadata.get("tags"), list)
+                        else []
+                    )
+
+                    add_video(
+                        topic=result["subject"],
+                        title=metadata.get("title", "") if metadata else "",
+                        script=result.get("script"),
+                        platform="youtube",
+                        file_path=job.output_path,
+                        niche=result.get("niche", ""),
+                        description=metadata.get("description", "")
+                        if metadata
+                        else None,
+                        tags=",".join(tags_list) if tags_list else None,
+                        category=metadata.get("category", "")
+                        if metadata and metadata.get("category")
+                        else None,
+                        account=job.account,
+                        language=result.get("language", "English"),
+                        for_kids=job.for_kids,
+                    )
+                except Exception as e:
+                    import traceback
+
+                    print(f"Warning: could not add video to db: {e}")
+                    traceback.print_exc()
+
+            await job.events.put(
+                {
+                    "type": "done",
+                    "path": job.output_path,
+                }
+            )
         else:
             job.status = JobStatus.failed
             job.error = "Pipeline returned None"

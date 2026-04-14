@@ -86,8 +86,12 @@ Edit `config.json` with your API keys:
 ### Running
 
 ```bash
-# Interactive mode
+# Interactive mode (TUI)
 python src/main.py
+
+# Web API + UI (FastAPI on port 8000)
+python api/main.py
+# Then open http://127.0.0.1:8000 in browser
 
 # Non-interactive pipeline (automated)
 python src/run_pipeline.py --niche "interesting science facts" --language English --upload
@@ -98,6 +102,25 @@ python src/batch_run.py --niche "your niche" --count 5
 # 24/7 scheduler mode
 python src/scheduler.py start
 ```
+
+### Web Interface
+
+The web UI provides a modern interface for managing accounts, generating videos, and configuring settings:
+
+- **Dashboard** - Overview and quick actions
+- **Video Generation** - Create videos with AI
+- **Accounts** - Manage YouTube/Twitter accounts (imported from `.mp/youtube.json` and `.mp/twitter.json`)
+- **Settings** - Configuration (loaded from `.env` and `config.json`)
+- **Twitter** - Twitter bot controls
+- **AFM** - Affiliate marketing
+- **Outreach** - Business outreach
+
+Start the web server:
+```bash
+python api/main.py
+```
+
+Then open http://127.0.0.1:8000 in your browser.
 
 ---
 

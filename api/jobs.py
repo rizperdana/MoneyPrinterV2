@@ -22,6 +22,7 @@ class Job:
     account: str = ""
     niche: str = ""
     language: str = "English"
+    for_kids: bool = False
     current_step: str = ""
     step_index: int = 0
     step_progress: float | None = None  # 0.0-1.0 or None
@@ -37,8 +38,14 @@ class JobManager:
     def __init__(self):
         self._jobs: dict[str, Job] = {}
 
-    def create(self, account: str, niche: str, language: str = "English") -> Job:
-        job = Job(account=account, niche=niche, language=language)
+    def create(
+        self,
+        account: str,
+        niche: str,
+        language: str = "English",
+        for_kids: bool = False,
+    ) -> Job:
+        job = Job(account=account, niche=niche, language=language, for_kids=for_kids)
         self._jobs[job.id] = job
         return job
 

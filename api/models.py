@@ -1,6 +1,6 @@
 """Pydantic request/response models for the API."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class GenerateRequest(BaseModel):
@@ -30,6 +30,8 @@ class AccountUpdate(BaseModel):
 
 
 class SettingsUpdate(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     llm_base_url: str | None = None
     llm_model: str | None = None
     nanobanana2_api_key: str | None = None

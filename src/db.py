@@ -1,11 +1,14 @@
 import sqlite3
+import os
 from typing import Optional
 
 from config import ROOT_DIR
 from status import info, success, error, warning
 
+# Database file path
+DB_FILE = os.path.join(ROOT_DIR, "data", "moneyprinter.db")
 
-# Global database connection (in-memory)
+# Global database connection
 _conn: Optional[sqlite3.Connection] = None
 
 
@@ -13,13 +16,18 @@ def _get_connection() -> sqlite3.Connection:
     """Get or create the database connection."""
     global _conn
     if _conn is None:
-        _conn = sqlite3.connect(":memory:")
+        # Ensure data directory exists
+        os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
+        _conn = sqlite3.connect(DB_FILE, check_same_thread=False)
         _conn.row_factory = sqlite3.Row
     return _conn
 
 
 def init_db() -> None:
-    """Create tables if they don't exist."""
+    """Create tables if they don't exist and import initial data."""
+    import json
+    import os
+
     conn = _get_connection()
     cursor = conn.cursor()
 
@@ -35,6 +43,15 @@ def init_db() -> None:
         )
     """)
 
+    # Settings table - stores all config key-value pairs
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     # Topics table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS topics (
@@ -47,15 +64,22 @@ def init_db() -> None:
         )
     """)
 
-    # Videos table
+    # Videos table - stores all AI-generated video data
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS videos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             topic_id INTEGER,
+            niche TEXT NOT NULL,
+            account TEXT,
             title TEXT NOT NULL,
+            description TEXT,
             script TEXT,
+            tags TEXT,
+            category TEXT,
             platform TEXT NOT NULL,
             file_path TEXT,
+            language TEXT DEFAULT 'English',
+            for_kids BOOLEAN DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (topic_id) REFERENCES topics(id)
         )
@@ -109,12 +133,15 @@ def add_topic(topic: str, niche: str, account: Optional[str] = None) -> int:
     return topic_id
 
 
-def get_topics(niche: Optional[str] = None, limit: int = 100) -> list[dict]:
+def get_topics(
+    niche: Optional[str] = None, account: Optional[str] = None, limit: int = 100
+) -> list[dict]:
     """
-    Get topics, optionally filtered by niche.
+    Get topics, optionally filtered by niche and/or account.
 
     Args:
         niche: Optional niche filter
+        account: Optional account username filter
         limit: Maximum number of results
 
     Returns:
@@ -123,18 +150,52 @@ def get_topics(niche: Optional[str] = None, limit: int = 100) -> list[dict]:
     conn = _get_connection()
     cursor = conn.cursor()
 
+    query = "SELECT * FROM topics"
+    params = []
+    conditions = []
+
     if niche:
-        cursor.execute(
-            "SELECT * FROM topics WHERE niche = ? ORDER BY used_at DESC LIMIT ?",
-            (niche, limit),
-        )
-    else:
-        cursor.execute("SELECT * FROM topics ORDER BY used_at DESC LIMIT ?", (limit,))
+        conditions.append("niche = ?")
+        params.append(niche)
+    if account:
+        # Join with accounts table to filter by username
+        query = "SELECT t.* FROM topics t LEFT JOIN accounts a ON t.account_id = a.id WHERE a.username = ?"
+        params = [account]
+        if niche:
+            query += " AND t.niche = ?"
+            params.append(niche)
+    elif conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    query += " ORDER BY used_at DESC LIMIT ?"
+    params.append(limit)
+
+    cursor.execute(query, params)
 
     rows = cursor.fetchall()
     result = [dict(row) for row in rows]
     info(f"Retrieved {len(result)} topics")
     return result
+
+
+def get_last_topic_for_account(account: str) -> Optional[dict]:
+    """Get the most recent topic used by an account."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT t.* FROM topics t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE a.username = ?
+        ORDER BY t.used_at DESC
+        LIMIT 1
+    """,
+        (account,),
+    )
+
+    row = cursor.fetchone()
+    return dict(row) if row else None
 
 
 def topic_exists(topic: str) -> bool:
@@ -158,19 +219,33 @@ def topic_exists(topic: str) -> bool:
 def add_video(
     topic: str,
     title: str,
-    script: Optional[str],
-    platform: str,
+    script: Optional[str] = None,
+    platform: str = "youtube",
     file_path: Optional[str] = None,
+    niche: str = "",
+    description: Optional[str] = None,
+    tags: Optional[str] = None,
+    category: Optional[str] = None,
+    account: Optional[str] = None,
+    language: str = "English",
+    for_kids: bool = False,
 ) -> int:
     """
-    Insert a video record.
+    Insert a video record with all AI-generated data.
 
     Args:
         topic: The topic text
         title: Video title
-        script: Optional script content
+        script: Script content
         platform: Platform (youtube, twitter, tiktok, etc.)
-        file_path: Optional path to video file
+        file_path: Path to video file
+        niche: The niche/category
+        description: YouTube description
+        tags: SEO tags (comma-separated)
+        category: Video category
+        account: Account username
+        language: Video language
+        for_kids: Whether content is for kids
 
     Returns:
         The row ID of the inserted video
@@ -183,9 +258,31 @@ def add_video(
     row = cursor.fetchone()
     topic_id = row["id"] if row else None
 
+    # Convert tags to string if it's a list
+    if isinstance(tags, list):
+        tags = ",".join(tags)
+
     cursor.execute(
-        "INSERT INTO videos (topic_id, title, script, platform, file_path) VALUES (?, ?, ?, ?, ?)",
-        (topic_id, title, script, platform, file_path),
+        """
+        INSERT INTO videos (
+            topic_id, niche, account, title, description, script, tags, category,
+            platform, file_path, language, for_kids
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """,
+        (
+            topic_id,
+            niche,
+            account,
+            title,
+            description,
+            script,
+            tags,
+            category,
+            platform,
+            file_path,
+            language,
+            for_kids,
+        ),
     )
     conn.commit()
     video_id = cursor.lastrowid
@@ -221,6 +318,61 @@ def get_videos(platform: Optional[str] = None, limit: int = 50) -> list[dict]:
     result = [dict(row) for row in rows]
     info(f"Retrieved {len(result)} videos")
     return result
+
+
+def get_settings() -> dict:
+    """Get all settings as key-value dict."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT key, value FROM settings")
+    rows = cursor.fetchall()
+    return {row["key"]: row["value"] for row in rows}
+
+
+def set_setting(key: str, value: str) -> None:
+    """Set a setting value."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+    """,
+        (key, value),
+    )
+    conn.commit()
+
+
+def import_config_to_db() -> None:
+    """Import config.json and .env into settings table."""
+    import json
+    import os
+    from dotenv import load_dotenv
+
+    config_path = os.path.join(ROOT_DIR, "config.json")
+    env_path = os.path.join(ROOT_DIR, ".env")
+
+    # Load .env first
+    load_dotenv(env_path)
+
+    # Import from config.json
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            config = json.load(f)
+            for key, value in config.items():
+                if isinstance(value, (dict, list)):
+                    set_setting(key, json.dumps(value))
+                else:
+                    set_setting(key, str(value))
+
+    # Import .env overrides
+    env_keys = ["CLIPROXY_API_KEY", "GEMINI_API_KEY", "ANTHROPIC_API_KEY"]
+    for key in env_keys:
+        value = os.environ.get(key)
+        if value:
+            set_setting(key, value)
+
+    info("Imported config to database")
 
 
 def add_account(

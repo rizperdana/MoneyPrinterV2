@@ -15,7 +15,7 @@ def generate_response(prompt: str, job: str = None) -> str:
     """
     model = get_model_for_job(job) if job else None
     print(f"[📝 LLM] Using model: {model}")
-    result = generate_text(prompt, model_name=model)
+    result = generate_text(prompt, model_name=model, job=job)
     print(f"[✅ LLM] Generated {len(result)} chars")
     return result
 

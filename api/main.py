@@ -15,6 +15,7 @@ for _p in [_project_root, _src_dir]:
         sys.path.insert(0, _p)
 
 from dotenv import load_dotenv
+
 load_dotenv(os.path.join(_project_root, ".env"))
 
 from fastapi import FastAPI
@@ -24,7 +25,7 @@ from api.routers import generate, upload, accounts, settings
 from api.ws import router as ws_router
 
 # Initialize the database on startup
-from db import init_db
+from db import init_db, import_config_to_db
 
 app = FastAPI(title="MoneyPrinterV2", version="2.0.0")
 
@@ -32,6 +33,7 @@ app = FastAPI(title="MoneyPrinterV2", version="2.0.0")
 @app.on_event("startup")
 async def startup():
     init_db()
+    import_config_to_db()
 
 
 # CORS for Vite dev server
@@ -55,5 +57,19 @@ app.include_router(ws_router, tags=["websocket"])
 # Serve built frontend in production (only if web/dist exists)
 _dist_dir = os.path.join(_project_root, "web", "dist")
 if os.path.isdir(_dist_dir):
-    from fastapi.staticfiles import StaticFiles
-    app.mount("/", StaticFiles(directory=_dist_dir, html=True), name="static")
+    from fastapi.responses import FileResponse, HTMLResponse
+
+    @app.get("/{path:path}")
+    async def serve_spa(path: str):
+        # Skip API routes
+        if path.startswith("api") or path.startswith("ws"):
+            return {"detail": "Not Found"}
+
+        # Check if file exists
+        file_path = os.path.join(_dist_dir, path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+
+        # Fallback to index.html for SPA
+        index_path = os.path.join(_dist_dir, "index.html")
+        return FileResponse(index_path, media_type="text/html")
