@@ -133,10 +133,28 @@ def generate_title_response(subject: str) -> str:
         subject (str): The subject for the title.
 
     Returns:
-        str: The title.
+        str: The title (validated 3-8 words).
     """
-    prompt = f"Generate a YouTube Shorts title for: {subject}. Rules: Under 50 characters. Front-load the most important keywords. No hashtags in the title. Return ONLY the title, nothing else."
+    prompt = f"Generate a YouTube Shorts title for: {subject}. Rules: Under 50 characters. MUST be 3-8 words. Front-load the most important keywords. No hashtags in the title. Return ONLY the title, nothing else."
     title = generate_response(prompt, job="title_desc")
+
+    # Validate word count (3-8 words per FIX_STORYTELLING.md)
+    word_count = len(title.split())
+    if word_count < 3 or word_count > 8:
+        # Retry once with explicit instruction
+        retry_prompt = f"Generate a YouTube Shorts title for: {subject}. Rules: Under 50 characters. MUST be EXACTLY 3-8 words (no more, no less). Front-load the most important keywords. No hashtags. Return ONLY the title, nothing else."
+        title = generate_response(retry_prompt, job="title_desc")
+        word_count = len(title.split())
+        # If still invalid after retry, truncate to fit
+        if word_count > 8:
+            words = title.split()[:8]
+            title = " ".join(words)
+        elif word_count < 3:
+            words = title.split()
+            while len(words) < 3:
+                words.append("interesting")
+            title = " ".join(words)
+
     return title
 
 
@@ -208,6 +226,7 @@ CRITICAL RULES:
 - Each scene: 15-25 words describing what we SEE
 - Consistent cinematic style across ALL scenes
 - Scenes flow like a visual story (beginning to middle to end)
+- Use dark or muted backgrounds with high contrast subjects for cinematic mystery atmosphere
 
 Output format: Numbered 1 to {n_scenes}. One scene per line.
 Do NOT use JSON. Do NOT use quotes. Just numbered lines.

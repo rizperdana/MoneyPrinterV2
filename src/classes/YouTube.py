@@ -775,9 +775,9 @@ Return ONLY the raw script text. No labels, no numbering."""
 
     def _track_script_formula(self, script: str) -> dict:
         """
-        Track script compliance with FIX_STORYTELLING.md Section 12 story formula.
+        Track script compliance with FIX_STORYTELLING.md Section 6 story formula.
 
-        Formula: hook → context → twist → partial answer → open loop
+        Formula: hook → context → escalation → twist → partial explanation → open ending
         Voice: calm, slow, clear, eerie
 
         Returns:
@@ -813,6 +813,18 @@ Return ONLY the raw script text. No labels, no numbering."""
             "actually",
             "surprise",
         ]
+        escalation_indicators = [
+            "but then",
+            "as they investigated",
+            "further analysis",
+            "more surprising",
+            "deeper",
+            "even more",
+            "and then",
+            "things got",
+            "it gets worse",
+            "escalating",
+        ]
         partial_indicators = [
             "may",
             "might",
@@ -839,6 +851,14 @@ Return ONLY the raw script text. No labels, no numbering."""
             for sent in sentences[1:3]
             if len(sentences) > 1
         )
+
+        # Escalation detection: check sentences after context (positions 2-5)
+        escalation_sentences = sentences[2:6] if len(sentences) > 2 else []
+        has_escalation = any(
+            any(ind in sent.lower() for ind in escalation_indicators)
+            for sent in escalation_sentences
+        )
+
         has_twist = any(
             any(ind in sent.lower() for ind in twist_indicators) for sent in sentences
         )
@@ -858,9 +878,11 @@ Return ONLY the raw script text. No labels, no numbering."""
         has_calm_voice = avg_sentence_len <= 15 and not script.count("!") > 1
 
         return {
-            "story_structure": "hook → context → twist → partial → open loop",
+            "story_structure": "hook → context → escalation → twist → partial explanation → open ending",
             "has_hook": has_hook,
             "has_context": has_context,
+            "has_escalation": has_escalation,
+            "escalation_present": has_escalation,
             "has_twist": has_twist,
             "has_partial_answer": has_partial,
             "has_open_ending": has_ending,
@@ -1819,18 +1841,32 @@ Output format (one per line):
 
         # Pre-compute Ken Burns parameters for each segment.
         # Each segment gets a random zoom direction (in/out) and pan direction.
+        # Animation follows story tension: subtle for hook/context, stronger for twist (last third).
         # Zoom: start at 1.0x, end at 1.0 +/- 0.12x (12% change — subtle Ken Burns)
+        # Twist segments: stronger motion (0.80-1.20 zoom range, wider pan)
         # Pan: shift crop window by up to +/-8% of source dimensions.
         ken_burns_params = []
+        # Determine twist phase (last third of segments per FIX_STORYTELLING.md)
+        twist_start_idx = int(num_segments * 2 / 3)  # Start of last third
+
         for seg_idx in range(num_segments):
             zoom_start = 1.0
-            # Random zoom: 88% to 112% of source (always within source bounds)
-            zoom_end = random.uniform(0.88, 1.12)
-            # Random pan offsets (fraction of source dimensions)
-            pan_x_start = random.uniform(-0.05, 0.05)
-            pan_y_start = random.uniform(-0.05, 0.05)
-            pan_x_end = random.uniform(-0.08, 0.08)
-            pan_y_end = random.uniform(-0.08, 0.08)
+            # Twist segments (last third) get stronger animation per FIX_STORYTELLING.md
+            if seg_idx >= twist_start_idx:
+                # Twist: stronger motion (0.80-1.20 range = 40% change)
+                zoom_end = random.uniform(0.80, 1.20)
+                # Wider pan range for twist
+                pan_x_start = random.uniform(-0.08, 0.08)
+                pan_y_start = random.uniform(-0.08, 0.08)
+                pan_x_end = random.uniform(-0.12, 0.12)
+                pan_y_end = random.uniform(-0.12, 0.12)
+            else:
+                # Hook/Context/Escalation: subtle motion (0.88-1.12 range = 24% change)
+                zoom_end = random.uniform(0.88, 1.12)
+                pan_x_start = random.uniform(-0.05, 0.05)
+                pan_y_start = random.uniform(-0.05, 0.05)
+                pan_x_end = random.uniform(-0.08, 0.08)
+                pan_y_end = random.uniform(-0.08, 0.08)
             ken_burns_params.append(
                 {
                     "zoom_start": zoom_start,

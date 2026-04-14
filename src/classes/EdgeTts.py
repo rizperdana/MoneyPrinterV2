@@ -40,7 +40,24 @@ class EdgeTTS:
         return output_file
 
     def _wrap_with_prosody(self, text: str) -> str:
-        """Split script into sentences and apply storytelling prosody patterns."""
+        """Split script into sentences and apply storytelling prosody patterns.
+
+        Per FIX_STORYTELLING.md Section 7: voice should 'pause before important words'.
+        Add <break> tags before twist/emphasis keywords and before final sentence.
+        """
+        # Twist/emphasis keywords that signal important moments per FIX_STORYTELLING.md
+        emphasis_keywords = [
+            "but",
+            "however",
+            "actually",
+            "surprise",
+            "then",
+            "what",
+            "why",
+            "yet",
+            "unexpected",
+        ]
+
         # Split into sentences (handles .!? followed by space/end)
         sentences = re.split(r"(?<=[.!?])\s+", text.strip())
         sentences = [s.strip() for s in sentences if s.strip()]
@@ -48,13 +65,33 @@ class EdgeTTS:
         ssml_parts = ["<speak>"]
 
         for idx, sentence in enumerate(sentences):
+            sentence_lower = sentence.lower()
+
+            # Add pause before sentences with emphasis keywords (per FIX_STORYTELLING.md)
+            has_emphasis = any(kw in sentence_lower for kw in emphasis_keywords)
+            prefix_break = ""
+            if has_emphasis:
+                prefix_break = '<break time="300ms"/> '
+
+            # Add longer pause before final sentence/ending
+            is_final = idx == len(sentences) - 1
+            if is_final:
+                prefix_break = '<break time="500ms"/> '
+
             if idx == 0:
                 # Hook: slower, deliberate
-                ssml_parts.append(f'  <prosody rate="90%">{sentence}</prosody>')
-            elif idx == len(sentences) - 1:
-                # Twist/Ending: slower, lower pitch
                 ssml_parts.append(
-                    f'  <prosody rate="85%" pitch="-1st">{sentence}</prosody>'
+                    f'  <prosody rate="90%">{prefix_break}{sentence}</prosody>'
+                )
+            elif is_final:
+                # Twist/Ending: slower, lower pitch, longer break
+                ssml_parts.append(
+                    f'  <prosody rate="85%" pitch="-1st">{prefix_break}{sentence}</prosody>'
+                )
+            elif has_emphasis:
+                # Emphasis sentence: add slight pause before
+                ssml_parts.append(
+                    f'  <prosody rate="95%">{prefix_break}{sentence}</prosody>'
                 )
             else:
                 # Middle: normal pace
