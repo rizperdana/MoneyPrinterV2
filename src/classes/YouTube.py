@@ -39,7 +39,7 @@ from constants import (
     YOUTUBE_NEXT_BUTTON_ID,
     YOUTUBE_DONE_BUTTON_ID,
 )
-from typing import List
+from typing import List, Optional
 from moviepy import (
     VideoClip,
     AudioFileClip,
