@@ -845,7 +845,7 @@ Return ONLY the raw script text. No labels, no numbering."""
         has_partial = any(
             any(ind in sent.lower() for ind in partial_indicators) for sent in sentences
         )
-        has_ending = any(
+        has_ending = (
             script.strip().endswith("?")
             or "..." in script.strip()[-10:]
             or any(e in script_lower[-50:] for e in ending_indicators)
@@ -932,21 +932,29 @@ Return ONLY the raw script text. No labels, no numbering."""
         Returns:
             metadata (dict): The generated metadata with keys: title, description, tags.
         """
-        title = self.generate_response(
-            f"Generate a YouTube Shorts title for: {self.subject}. "
-            f"Title formula: [Strange fact] + [mystery] + [implied consequence]. "
-            f"Start with: This, Why, How, What, Scientists Found, Hidden. "
-            f"Make it curious, create questions in viewer's mind. Leave questions unanswered for mystery tone. "
-            f"Keep: 60-125 characters, front-load keywords. "
-            f"No hashtags in the title. Avoid generic phrases. "
-            f"Return ONLY the title, nothing else.",
-            model_name=get_model_for_job("title_desc"),
-        )
+        max_retries = 3
+        for attempt in range(max_retries):
+            title = self.generate_response(
+                f"Generate a YouTube Shorts title for: {self.subject}. "
+                f"⚠️ STRICT: Title must be EXACTLY 60-125 characters (count the letters). "
+                f"Title formula: [Strange fact] + [mystery] + [implied consequence]. "
+                f"Start with: This, Why, How, What, Scientists Found, Hidden. "
+                f"Make it curious, create questions in viewer's mind. Leave questions unanswered for mystery tone. "
+                f"Front-load keywords. No hashtags. Avoid generic phrases. "
+                f"Return ONLY the title, nothing else.",
+                model_name=get_model_for_job("title_desc"),
+            )
 
-        if len(title) > 125:
+            if len(title) <= 125:
+                break
             if get_verbose():
-                warning("Generated Title is over 125 chars. Retrying...")
-            return self.generate_metadata()
+                warning(
+                    f"Generated Title is over 125 chars ({len(title)}). Retry {attempt + 1}/{max_retries}..."
+                )
+
+        # If still too long after retries, truncate
+        if len(title) > 125:
+            title = title[:122] + "..."
 
         description = self.generate_response(
             f"Generate a YouTube Shorts description for: {self.subject}. "
