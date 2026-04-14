@@ -486,10 +486,17 @@ class YouTube:
 
 ⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY about "{self.niche}". Do NOT pick general news, history, or unrelated trending topics. If the research data doesn't contain niche-relevant content, IGNORE it and generate topics from your own knowledge about "{self.niche}".
 
+⚠️ MYSTERY TONE ENFORCED (Section 13):
+Every video must feel: "I found something strange, I do not fully understand it, and I want to know what it means."
+- SEEK: mysteries, anomalies, unexplained phenomena, contradictions, strange facts
+- AVOID: happy, positive, resolved, complete, known topics
+- PRIORITIZE: strange, impossible, unexplained, contradiction, puzzle, hidden
+
 Generate 3 specific, engaging video topic ideas that:
 1. Are STRICTLY and EXCLUSIVELY about: {self.niche}
 2. Would perform well as YouTube Shorts (curiosity-driven, visual, surprising)
 3. Are specific enough to make a 45-60 second video about
+4. FEEL like a mystery - strange, unexplained, or puzzling
 
 Each topic should be one sentence, specific, and curiosity-driven.
 
@@ -508,13 +515,21 @@ Example (if niche is "cool animal facts"):
 
 ⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY and EXCLUSIVELY about "{self.niche}". Do NOT drift into general knowledge, history, or unrelated subjects.
 
+⚠️ MYSTERY TONE ENFORCED (Section 13):
+Every video must feel: "I found something strange, I do not fully understand it, and I want to know what it means."
+- SEEK: mysteries, anomalies, unexplained phenomena, contradictions, strange facts
+- AVOID: happy, positive, resolved, complete, known topics
+- PRIORITIZE: strange, impossible, unexplained, contradiction, puzzle, hidden
+
 Consider:
 1. What surprising or little-known facts exist about {self.niche}?
 2. What recent discoveries or viral moments relate to {self.niche}?
 3. What would make someone stop scrolling and watch about {self.niche}?
+4. What mystery, anomaly, or unexplained phenomenon relates to {self.niche}?
 
 Generate 3 specific, engaging video topic ideas that would perform well as YouTube Shorts.
 Each topic should be one sentence, specific, and curiosity-driven.
+MUST feel like a mystery - strange, unexplained, or puzzling.
 
 Output format: Just list 3 topics, one per line, numbered 1-3.
 Example (if niche is "cool animal facts"):
@@ -650,12 +665,44 @@ Format: Just list 5 topics, one per line, numbered 1-5.""",
         - Climax/Payoff: The most impressive fact or visual.
         - Seamless Loop: Last sentence grammatically connects back to the first sentence.
 
+        TIMING CONSTRAINTS (strict):
+        - Target duration: 20-30 seconds of TTS speech
+        - Maximum words: 70-120 words
+        - Images: 4-5 visual scenes (4-6 seconds each)
+        - Target sentences: 6-8 sentences
+
         Returns:
             script (str): The script of the video.
         """
         info(" ✍️ Generating script...")
         sentence_length = get_script_sentence_length()
+
+        # Build prompt with explicit timing constraints
         prompt = f"""Write a YouTube Shorts script about: {self.subject}
+
+⚠️ TIMING CONSTRAINTS (STRICT):
+- Target TTS duration: 20-30 seconds
+- Maximum words: 70-120 words total
+- 4-5 images/visual scenes (each 4-6 seconds)
+- 6-8 sentences total (one sentence per visual scene)
+- Each sentence must fit in 4-6 seconds of speech
+
+⚠️ MYSTERY TONE ENFORCED (FIX_STORYTELLING Section 13):
+The entire video must feel: "I found something strange, I do not fully understand it, and I want to know what it means."
+- Use eerie, mysterious, wonder tone
+- END ON QUESTION, NOT ANSWER
+- Leave imagination space for viewer
+- NEVER fully resolve the mystery
+- One mystery per video, leave it open
+
+VOICE DELIVERY (STRICT):
+- calm, low-pressure, clear
+- slightly mysterious, not exaggerated
+- speak slower than normal conversation
+- pause before important words
+- lower energy on hook, increase intensity near twist
+- end with controlled uncertainty, eerie tone
+- Use: Hook=quiet/direct, Context=steady/informative, Twist=lower/sharper, Ending=unfinished/thoughtful/eerie
 
 CRITICAL RULE — EXPLAIN LIKE THE VIEWER IS 5 YEARS OLD:
 - Use ONLY words a 5-year-old knows. No jargon. No technical terms unless you immediately explain them with a simple analogy.
@@ -665,22 +712,27 @@ CRITICAL RULE — EXPLAIN LIKE THE VIEWER IS 5 YEARS OLD:
 - BAD: "The infrastructure handles millions of concurrent connections" → GOOD: "Picture a million people all talking on the phone at the same time — somehow nobody gets disconnected"
 - Each sentence must paint a CLEAR picture in the viewer's mind. If a kid can't visualize it, rewrite it.
 
-STRUCTURE (strict):
-1. HOOK (sentence 1): A shocking or surprising statement that makes people stop scrolling. Example: "This shrimp punches so fast the water catches fire."
-2. CORE DELIVERY (sentences 2-{sentence_length - 1}): Each sentence = one clear visual scene. Explain ONE thing per sentence. Use analogies. Be specific with numbers and comparisons.
-3. CLIMAX/PAYOFF (sentence {sentence_length - 1} or {sentence_length}): The most mind-blowing fact, delivered simply.
-4. SEAMLESS LOOP (last sentence): Must grammatically connect back to the first sentence so the video loops seamlessly.
+STORY STRUCTURE (6 phases, strict):
+1. HOOK (sentence 1): Strange claim or impossible visual that stops scrolling. Example: "This shrimp punches so fast the water catches fire."
+2. CONTEXT (sentences 2-3): Where, who, or what is unusual. Set the scene briefly.
+3. ESCALATION (sentences 4-5): Details that deepen the mystery. Each sentence adds one new layer.
+4. TWIST (sentence 5): Reveal contradiction — something that doesn't add up.
+5. PARTIAL EXPLANATION (sentence 6): Possible answer, but NOT fully resolved.
+6. OPEN ENDING (sentence 7-8): Leave question unresolved. Grammatically connects back to the hook for seamless loop.
+⚠️ CRITICAL: Never resolve the mystery fully. End with a question mark or "..." to leave viewer wondering.
 
 RULES:
-- Total: {sentence_length} sentences maximum
+- Total: 6-8 sentences maximum
 - 70-120 words total (short, punchy, no rambling)
+- One mystery per video — never fully resolve
+- Leave imagination space for the viewer
 - First sentence is a HOOK STATEMENT, NOT a title or label
 - Each sentence describes a visual scene (what we SEE on screen)
 - NO markdown, NO formatting, NO section labels
 - NO "welcome to this video" or "in this video"
 - NO call to action, NO "like and subscribe"
 - Write in {self.language}
-- Each sentence punchy (under 15 words)
+- Each sentence punchy (under 15 words, fits in 4-6 seconds)
 - SPECIFIC over VAGUE: say "300 million years ago" not "a long time ago", say "as fast as a bullet" not "very fast"
 
 Subject: {self.subject}
@@ -699,6 +751,12 @@ Return ONLY the raw script text. No labels, no numbering."""
             error("The generated script is empty.")
             return
 
+        # Validate timing constraints post-generation
+        completion = self._validate_script_timing(completion)
+
+        # Track formula compliance
+        self._script_formula = self._track_script_formula(completion)
+
         if len(completion) > 5000:
             if get_verbose():
                 warning("Generated Script is too long. Retrying...")
@@ -715,6 +773,158 @@ Return ONLY the raw script text. No labels, no numbering."""
 
         return completion
 
+    def _track_script_formula(self, script: str) -> dict:
+        """
+        Track script compliance with FIX_STORYTELLING.md Section 12 story formula.
+
+        Formula: hook → context → twist → partial answer → open loop
+        Voice: calm, slow, clear, eerie
+
+        Returns:
+            dict: formula tracking metadata
+        """
+        sentences = [s.strip() for s in re.split(r"[.!?]+", script) if s.strip()]
+        script_lower = script.lower()
+
+        # Story structure detection
+        hook_indicators = [
+            "this",
+            "what",
+            "why",
+            "how",
+            "imagine",
+            "did you know",
+            "secret",
+        ]
+        context_indicators = [
+            "found",
+            "discovered",
+            "located",
+            "years ago",
+            "under",
+            "deep",
+            "in the",
+        ]
+        twist_indicators = [
+            "but",
+            "however",
+            "yet",
+            "unexpected",
+            "actually",
+            "surprise",
+        ]
+        partial_indicators = [
+            "may",
+            "might",
+            "could be",
+            "possibly",
+            "perhaps",
+            "scientists think",
+        ]
+        ending_indicators = [
+            "?",
+            "...",
+            "what do you think",
+            "can we ever",
+            "nobody knows",
+        ]
+
+        has_hook = (
+            any(sentences[0].lower().startswith(w) for w in hook_indicators)
+            if sentences
+            else False
+        )
+        has_context = any(
+            any(ind in sent.lower() for ind in context_indicators)
+            for sent in sentences[1:3]
+            if len(sentences) > 1
+        )
+        has_twist = any(
+            any(ind in sent.lower() for ind in twist_indicators) for sent in sentences
+        )
+        has_partial = any(
+            any(ind in sent.lower() for ind in partial_indicators) for sent in sentences
+        )
+        has_ending = any(
+            script.strip().endswith("?")
+            or "..." in script.strip()[-10:]
+            or any(e in script_lower[-50:] for e in ending_indicators)
+        )
+
+        # Voice delivery: calm, slow, clear, eerie
+        # (detected via script style - short sentences, simple words, no exclamation-heavy)
+        words = script.split()
+        avg_sentence_len = len(words) / max(len(sentences), 1)
+        has_calm_voice = avg_sentence_len <= 15 and not script.count("!") > 1
+
+        return {
+            "story_structure": "hook → context → twist → partial → open loop",
+            "has_hook": has_hook,
+            "has_context": has_context,
+            "has_twist": has_twist,
+            "has_partial_answer": has_partial,
+            "has_open_ending": has_ending,
+            "voice_style": "calm, slow, clear, eerie",
+            "voice_calm": has_calm_voice,
+            "sentences": len(sentences),
+            "words": len(words),
+        }
+
+    def _validate_script_timing(self, script: str) -> str:
+        """
+        Validate and enforce script timing constraints.
+
+        - Target: 20-30 seconds TTS (~100-150 words at 150 wpm speaking rate)
+        - Max: 30 seconds / 120 words
+        - Warn if over and truncate
+
+        Args:
+            script (str): Generated script
+
+        Returns:
+            script (str): Validated/truncated script
+        """
+        word_count = len(script.split())
+        sentences = [s.strip() for s in re.split(r"[.!?]+", script) if s.strip()]
+        sentence_count = len(sentences)
+
+        # Estimate TTS duration at ~150 words/minute (2.5 words/second)
+        estimated_duration = word_count / 2.5
+
+        # Validate word count
+        if word_count > 120:
+            warning(f"Script too long: {word_count} words (max 120). Truncating...")
+            words = script.split()
+            script = " ".join(words[:120])
+            # Try to end on sentence boundary
+            for punct in [".", "!", "?"]:
+                last_punct = script.rfind(punct)
+                if last_punct > len(script) * 0.7:  # At least 70% of length
+                    script = script[: last_punct + 1]
+            word_count = len(script.split())
+            estimated_duration = word_count / 2.5
+
+        # Validate sentence count (target 6-8)
+        if sentence_count > 8:
+            warning(f"Too many sentences: {sentence_count} (target 6-8). Truncating...")
+            sentences = sentences[:8]
+            script = ". ".join(sentences)
+            if script and not script[-1] in ".!?":
+                script += "."
+
+        # Warn if duration exceeds target
+        if estimated_duration > 30:
+            warning(
+                f"Script estimated duration: {estimated_duration:.0f}s (target 20-30s)"
+            )
+
+        if get_verbose():
+            info(
+                f" => Timing: ~{word_count} words, {sentence_count} sentences, {estimated_duration:.0f}s TTS"
+            )
+
+        return script.strip()
+
     def generate_metadata(self) -> dict:
         """
         Generates Video metadata for the to-be-uploaded YouTube Short (Title, Description, Tags).
@@ -724,8 +934,12 @@ Return ONLY the raw script text. No labels, no numbering."""
         """
         title = self.generate_response(
             f"Generate a YouTube Shorts title for: {self.subject}. "
-            f"Rules: 60-125 characters. Front-load the most important keywords. "
-            f"No hashtags in the title. Return ONLY the title, nothing else.",
+            f"Title formula: [Strange fact] + [mystery] + [implied consequence]. "
+            f"Start with: This, Why, How, What, Scientists Found, Hidden. "
+            f"Make it curious, create questions in viewer's mind. Leave questions unanswered for mystery tone. "
+            f"Keep: 60-125 characters, front-load keywords. "
+            f"No hashtags in the title. Avoid generic phrases. "
+            f"Return ONLY the title, nothing else.",
             model_name=get_model_for_job("title_desc"),
         )
 
@@ -735,43 +949,114 @@ Return ONLY the raw script text. No labels, no numbering."""
             return self.generate_metadata()
 
         description = self.generate_response(
-            f"Generate a YouTube Shorts description for the following script: {self.script}. "
-            f"Rules: Include 3-5 relevant hashtags. Add a brief, keyword-rich summary of the video content "
-            f"to index properly in YouTube Search. Return ONLY the description, nothing else.",
+            f"Generate a YouTube Shorts description for: {self.subject}. "
+            f"Description formula:\n"
+            f"1. Hook line - reinforce the shocking title '{title}'\n"
+            f"2. Short context - 1-2 sentences adding info\n"
+            f"3. Curiosity line - end with open question\n"
+            f"Rules:\n"
+            f"- 1-3 short paragraphs\n"
+            f"- Include main keyword naturally\n"
+            f'- End with: "What do you think?" or "Can we ever know?"\n'
+            f"- No long explanations\n"
+            f"- Include 3-5 relevant hashtags at end\n"
+            f"Return ONLY the description, nothing else.",
             model_name=get_model_for_job("title_desc"),
         )
 
-        # Generate SEO tags
-        tags_raw = self.generate_response(
-            f"Generate a JSON array of 10-15 YouTube SEO tags (single words or short phrases) for a video about: {self.subject}. "
-            f'Return ONLY a JSON array of strings, e.g. ["tag1", "tag2"]. No other text.',
+        # Generate SEO keywords: main, related, emotional
+        keywords_raw = self.generate_response(
+            f"""Generate SEO keywords for a video about: {self.subject}.
+Return ONLY a JSON object with these fields:
+- "main": one broad topic keyword (e.g., "AI", "cryptocurrency", "productivity")
+- "related": one specific aspect keyword (e.g., "ChatGPT tips", "Bitcoin investing", "time management")
+- "emotional": one fear/wonder/disbelief keyword (e.g., "AI replace jobs", "crypto scam", "too late to start")
+- "tags": array of 10-15 SEO tags mixing main, related, and emotional types
+Example: {{"main": "AI", "related": "ChatGPT prompts", "emotional": "AI taking over", "tags": ["AI", "ChatGPT", "AI tools", "artificial intelligence", "ChatGPT prompts", "AI tips", "AI trends", "future of AI", "AI taking over", "job automation", "AI helpers", "productivity"]}}""",
             model_name=get_model_for_job("seo_tags"),
         )
 
+        main_keyword = ""
+        related_keyword = ""
+        emotional_keyword = ""
         tags = []
         try:
-            cleaned = str(tags_raw).replace("```json", "").replace("```", "").strip()
-            tags = json.loads(cleaned)
+            cleaned = (
+                str(keywords_raw).replace("```json", "").replace("```", "").strip()
+            )
+            kw_obj = json.loads(cleaned)
+            if isinstance(kw_obj, dict):
+                main_keyword = kw_obj.get("main", "")
+                related_keyword = kw_obj.get("related", "")
+                emotional_keyword = kw_obj.get("emotional", "")
+                tags = kw_obj.get("tags", [])
             if not isinstance(tags, list):
                 tags = []
         except Exception:
-            # Fallback: extract from subject
             if get_verbose():
-                warning("Failed to parse tags JSON. Using subject words as fallback.")
+                warning(
+                    "Failed to parse keywords JSON. Using subject words as fallback."
+                )
             tags = [w for w in self.subject.split() if len(w) > 2][:10]
 
-        self.metadata = {"title": title, "description": description, "tags": tags}
+        self.metadata = {
+            "title": title,
+            "description": description,
+            "tags": tags,
+            "main_keyword": main_keyword,
+            "related_keyword": related_keyword,
+            "emotional_keyword": emotional_keyword,
+            "formula": {
+                "title_style": "curiosity-driven",
+                "seo_style": "one main topic + one emotional keyword",
+                "description_style": "short context + question",
+                "ending_style": "unresolved, replayable",
+            },
+            "title_has_curiosity": self._validate_title_curiosity(title),
+            "description_has_context": self._validate_description_context(description),
+            "description_has_question": description.strip().endswith("?"),
+        }
 
         if get_verbose():
             info(f" => Generated {len(tags)} SEO tags")
 
         return self.metadata
 
+    def _validate_title_curiosity(self, title: str) -> bool:
+        """Check if title is curiosity-driven."""
+        curiosity_starters = [
+            "this",
+            "why",
+            "what",
+            "how",
+            "scientists",
+            "hidden",
+            "secret",
+            "found",
+        ]
+        title_lower = title.lower()
+        return any(title_lower.startswith(w) for w in curiosity_starters)
+
+    def _validate_description_context(self, desc: str) -> bool:
+        """Check if description has short context + question structure."""
+        desc_lower = desc.lower()
+        context_words = [
+            "found",
+            "discovered",
+            "scientists",
+            " researchers",
+            "located",
+            "years ago",
+            "deep",
+        ]
+        return any(w in desc_lower for w in context_words)
+
     def generate_prompts(self) -> List[str]:
         """
         Generates AI Image Prompts based on the provided Video Script.
-        Each scene gets 2 sub-prompts (different angle/perspective) for visual variety.
-        Target: 8-12 total images for a richer visual experience.
+
+        TIMING: 4-5 images at 4-6 seconds each = 20-30 seconds total
+        Each scene = one or two sentences = one visual
 
         Returns:
             image_prompts (List[str]): Generated List of image prompts.
@@ -781,33 +1066,35 @@ Return ONLY the raw script text. No labels, no numbering."""
             s.strip() for s in re.split(r"[.!?]+", self.script) if len(s.strip()) > 10
         ]
 
-        # Target 4-5 scenes, 1 image each = 4-5 total
-        n_scenes = min(max(len(sentences), 3), 5)
+        # Target 4-5 scenes matching 20-30 second video (4-6 sec/image)
+        n_scenes = 5  # Fixed: HOOK, CONTEXT, DETAIL, TWIST, ENDING
 
-        prompt = f"""You are a visual director creating a storyboard for a YouTube Short.
+        prompt = f"""You are a visual storyboard director creating a {n_scenes}-frame sequence for a YouTube Short about: {self.subject}
 
-Subject: {self.subject}
-Script sentences (in order):
-{chr(10).join(str(i + 1) + ". " + s for i, s in enumerate(sentences[:n_scenes]))}
+SCRIPT: {self.script[:500]}...
 
-For EACH sentence above, write ONE visual scene description for AI image generation.
+Create exactly {n_scenes} visual scene prompts, one per phase:
+
+PHASES:
+1. HOOK - Most shocking/unusual visual. Grab attention immediately.
+2. CONTEXT - Where/when it exists. Ground the story.
+3. DETAIL - Close-up of strange feature. Build curiosity.
+4. TWIST - Something that contradicts or deepens mystery.
+5. ENDING - Unresolved, memorable frame. Loops with opening.
 
 CRITICAL RULES:
-- NO text, letters, words, numbers, signs, logos, or writing of ANY kind in the scene
+- NO text, letters, words, numbers, signs, logos, or writing of ANY kind in any frame
 - NO close-ups of hands, fingers, or human extremities
-- Use WIDE shots, landscapes, environments, aerial views
-- Show the main subject clearly from a distance
-- Each scene: 15-25 words describing what we SEE
-- Consistent cinematic style across ALL scenes
-- Scenes flow like a visual story (beginning to middle to end)
+- Use WIDE shots, landscapes, aerial views
+- Each prompt: 15-25 words describing what we SEE
+- Consistent cinematic style across ALL frames
 
-Output format: Numbered 1 to {n_scenes}. One scene per line.
-Do NOT use JSON. Do NOT use quotes. Just numbered lines.
-
-Example:
-1. vast blue ocean surface stretching to horizon under golden sunset light with distant waves
-2. aerial drone view of colorful coral reef teeming with tropical fish from above
-3. deep dark ocean trench with bioluminescent creatures glowing in the abyss"""
+Output format (one per line):
+1. HOOK: [prompt]
+2. CONTEXT: [prompt]
+3. DETAIL: [prompt]
+4. TWIST: [prompt]
+5. ENDING: [prompt]"""
 
         completion = str(
             self.generate_response(
@@ -817,16 +1104,29 @@ Example:
 
         image_prompts = []
 
-        # Parse numbered lines (1, 2, 3 format)
+        # Parse with phase detection (e.g., "1. HOOK: ...")
+        phase_pattern = re.compile(
+            r"^(?:\d+[\.\)\-\s]*)?(HOOK|CONTEXT|DETAIL|TWIST|ENDING)[\:\-\s]+(.+)$",
+            re.IGNORECASE,
+        )
         lines = completion.split("\n")
         for line in lines:
             line = line.strip()
-            # Match patterns like "1.", "2.", "3." etc.
-            match = re.match(r"^[\d]+[\.\)\-\s]+(.+)$", line)
+            match = phase_pattern.match(line)
             if match:
-                scene = match.group(1).strip().strip('"').strip("'")
-                if len(scene) > 10:
-                    image_prompts.append(scene)
+                prompt_text = match.group(2).strip().strip('"').strip("'")
+                if len(prompt_text) > 10:
+                    image_prompts.append(prompt_text)
+
+        # Fallback: parse numbered lines without phase
+        if not image_prompts:
+            for line in lines:
+                line = line.strip()
+                match = re.match(r"^[\d]+[\.\)\-\s]+(.+)$", line)
+                if match:
+                    scene = match.group(1).strip().strip('"').strip("'")
+                    if len(scene) > 10:
+                        image_prompts.append(scene)
 
         # Fallback: try JSON parse
         if not image_prompts:
@@ -842,19 +1142,21 @@ Example:
             except Exception:
                 pass
 
-        # Fallback: generate from script sentences directly (1 per scene)
+        # Fallback: generate from script sentences with phase keywords
         if not image_prompts:
             if get_verbose():
                 warning(
                     "LLM prompt parsing failed. Generating from script sentences..."
                 )
-            for sentence in sentences[:n_scenes]:
-                visual = f"wide cinematic shot of {sentence.strip()[:60]}, photorealistic, dramatic lighting, no text, no hands"
+            phases = ["HOOK", "CONTEXT", "DETAIL", "TWIST", "ENDING"]
+            for i, sentence in enumerate(sentences[:n_scenes]):
+                phase = phases[i] if i < len(phases) else "DETAIL"
+                visual = f"{phase.lower()} visual: {sentence.strip()[:60]}, wide cinematic shot, photorealistic, dramatic lighting, no text"
                 image_prompts.append(visual)
 
-        # Ensure minimum of 4 images
+        # Ensure minimum of 4 images (matches 20-30 second timing at 4-6 sec/image)
         while len(image_prompts) < 4 and sentences:
-            idx = len(image_prompts) // 2
+            idx = len(image_prompts)
             if idx < len(sentences):
                 variant = (
                     "wide establishing shot"
@@ -868,13 +1170,15 @@ Example:
             else:
                 break
 
-        # Cap at 12 images max
-        image_prompts = image_prompts[:12]
+        # Cap at 5 images max (matching 20-30 second timing)
+        image_prompts = image_prompts[:5]
 
         self.image_prompts = image_prompts
 
+        # Calculate approximate seconds per image (25s total / num images)
+        secs_per_image = 25 / max(len(image_prompts), 1)
         success(
-            f"Generated {len(image_prompts)} Image Prompts ({len(image_prompts) // 2} scenes x 2 angles)."
+            f"Generated {len(image_prompts)} Image Prompts ({len(image_prompts)} scenes, ~{secs_per_image:.0f}s each)."
         )
 
         return image_prompts
@@ -1706,10 +2010,276 @@ Example:
         path = self.combine()
         self._progress("combine", "done")
 
+        # Validate production checklist
+        info(" ✅ Running production checklist validation...")
+        validation = self._validate_production_checklist(path)
+        if not validation["passed"]:
+            warning(" ⚠️ Production checklist issues detected:")
+            for issue in validation["issues"]:
+                warning(f"   - {issue}")
+        else:
+            success(" ✅ All production checklist items passed")
+
         success(f" ✅ Video generated: {path}")
         self.video_path = os.path.abspath(path)
 
         return path
+
+    def _validate_production_checklist(self, video_path: str) -> dict:
+        """
+        Validates the produced video against the production checklist.
+
+        Per FIX_STORYTELLING.md Section 12:
+        - Title: curiosity-driven
+        - SEO: one main + one emotional keyword
+        - Description: short context + question
+        - Image: cinematic mystery frame
+        - Animation: slow motion with tension rise
+        - Story: hook → context → twist → partial → open loop
+        - Voice: calm, slow, clear, eerie
+        - Ending: unresolved, replayable
+
+        Args:
+            video_path (str): Path to the generated video file.
+
+        Returns:
+            dict: {"passed": bool, "issues": list[str]}
+        """
+        issues = []
+
+        # 1. Title: curiosity-driven (Section 12)
+        title = (
+            self.metadata.get("title", "")
+            if hasattr(self, "metadata") and self.metadata
+            else ""
+        )
+        title_len = len(title)
+        curiosity_words = [
+            "secret",
+            "surprising",
+            "unexpected",
+            "shocking",
+            "revealed",
+            "hidden",
+            "little-known",
+            "unknown",
+            "mind-blowing",
+            "unbelievable",
+            "this",
+            "why",
+            "what",
+            "how",
+            "scientists",
+            "found",
+            "impossible",
+        ]
+        has_curiosity = any(word in title.lower() for word in curiosity_words)
+        if not (60 <= title_len <= 125):
+            issues.append(f"Title length {title_len} not in range 60-125")
+        if not has_curiosity:
+            issues.append("Title not curiosity-driven (Section 12)")
+
+        # 2. SEO: one main + one emotional keyword (Section 12)
+        main_keyword = (
+            self.metadata.get("main_keyword", "")
+            if hasattr(self, "metadata") and self.metadata
+            else ""
+        )
+        emotional_keyword = (
+            self.metadata.get("emotional_keyword", "")
+            if hasattr(self, "metadata") and self.metadata
+            else ""
+        )
+        if not main_keyword:
+            issues.append("SEO missing main keyword (Section 12)")
+        if not emotional_keyword:
+            issues.append("SEO missing emotional keyword (Section 12)")
+
+        # 3. Description: short context + question (Section 12)
+        description = (
+            self.metadata.get("description", "")
+            if hasattr(self, "metadata") and self.metadata
+            else ""
+        )
+        context_words = [
+            "found",
+            "discovered",
+            "scientists",
+            "researchers",
+            "located",
+            "years ago",
+            "deep",
+            "under",
+        ]
+        has_context = any(w in description.lower() for w in context_words)
+        ends_with_question = description.strip().endswith("?")
+        if not has_context:
+            issues.append("Description missing short context (Section 12)")
+        if not ends_with_question:
+            issues.append("Description does not end with question (Section 12)")
+
+        # 4. Image: cinematic mystery frame (Section 12) - 4-5 images
+        num_images = len(self.images) if hasattr(self, "images") and self.images else 0
+        if not (4 <= num_images <= 5):
+            issues.append(f"Image count {num_images} not in 4-5 range (Section 12)")
+
+        # 5. Animation: slow motion with tension rise (Section 12)
+        # Ken Burns applied in combine()
+        has_animation = hasattr(self, "images") and self.images and len(self.images) > 0
+        if not has_animation:
+            issues.append("Animation not applied (Section 12)")
+
+        # 6. Story: hook → context → twist → partial → open loop (Section 12)
+        script = getattr(self, "script", "") or ""
+        script_lower = script.lower()
+
+        # Story structure
+        story_hooks = [
+            "what if",
+            "imagine",
+            "did you know",
+            "ever wonder",
+            "this",
+            "what",
+            "why",
+        ]
+        story_twists = [
+            "but",
+            "however",
+            "yet",
+            "unexpected",
+            "actually",
+            "surprise",
+            "then",
+        ]
+        partial_words = [
+            "may",
+            "might",
+            "could be",
+            "possibly",
+            "perhaps",
+            "scientists think",
+            "researchers believe",
+        ]
+        ending_markers = [
+            "?",
+            "...",
+            "what do you think",
+            "can we ever",
+            "nobody knows",
+        ]
+
+        has_story_hook = any(h in script_lower[:50] for h in story_hooks)
+        has_story_twist = any(t in script_lower for t in story_twists)
+        has_partial = any(p in script_lower for p in partial_words)
+        has_open_ending = any(
+            e in script_lower[-80:] for e in ending_markers
+        ) or script.strip().endswith("?")
+
+        if not has_story_hook:
+            issues.append("Script missing story hook (Section 12)")
+        if not has_story_twist:
+            issues.append("Script missing twist element (Section 12)")
+        if not has_partial:
+            issues.append("Script missing partial explanation (Section 12)")
+        if not has_open_ending:
+            issues.append("Script missing open ending (Section 12)")
+
+        # 7. Voice: calm, slow, clear, eerie (Section 12)
+        # Check via script characteristics
+        script_formula = getattr(self, "_script_formula", {}) or {}
+        has_calm_voice = script_formula.get("voice_calm", False)
+        if not has_calm_voice:
+            # Fallback: check script characteristics
+            sentences = [s.strip() for s in re.split(r"[.!?]+", script) if s.strip()]
+            words = script.split()
+            avg_sentence_len = len(words) / max(len(sentences), 1)
+            is_calm = avg_sentence_len <= 15 and script.count("!") <= 1
+            if not is_calm:
+                issues.append(
+                    "Script not matching calm/slow/clear voice style (Section 12)"
+                )
+
+        # 8. Ending: unresolved, replayable (Section 12)
+        if not has_open_ending:
+            issues.append("Ending not unresolved/replayable (Section 12)")
+
+        # 11. Mystery Tone: Section 13 enforcement
+        # Every video should feel: "I found something strange, I do not fully understand it, and I want to know what it means."
+        mystery_indicators = [
+            "mystery",
+            "unknown",
+            "unexplained",
+            "strange",
+            "impossible",
+            "contradiction",
+            "puzzle",
+            "hidden",
+            "secret",
+            "nobody knows",
+            "can't explain",
+            "scientists don't know",
+            "Researchers are puzzled",
+            "No one can explain",
+            "remains a",
+            "raises questions",
+            "but nobody knows",
+        ]
+        has_mystery = any(word in script_lower for word in mystery_indicators)
+        if not has_mystery:
+            issues.append(
+                "Script missing mystery tone (Section 13) - should feel: 'I found something strange, I do not fully understand it'"
+            )
+
+        # 9. Duration: 20-30 seconds
+        duration = 0.0
+        if os.path.exists(video_path):
+            try:
+                from moviepy.editor import VideoFileClip
+
+                clip = VideoFileClip(video_path)
+                duration = clip.duration
+                clip.close()
+            except Exception:
+                pass
+        if not (20 <= duration <= 30):
+            issues.append(f"Duration {duration:.1f}s not in range 20-30s")
+
+        # 10. Format: 1080x1920 vertical video
+        width, height = 0, 0
+        if os.path.exists(video_path):
+            try:
+                from moviepy.editor import VideoFileClip
+
+                clip = VideoFileClip(video_path)
+                width, height = clip.size
+                clip.close()
+            except Exception:
+                pass
+        if not (width == 1080 and height == 1920):
+            issues.append(f"Format {width}x{height} not 1080x1920")
+
+        # Add formula tracking summary
+        validation_result = {"passed": len(issues) == 0, "issues": issues}
+
+        # Include formula compliance details
+        if hasattr(self, "metadata") and self.metadata:
+            validation_result["formula_compliance"] = {
+                "title_curiosity": has_curiosity,
+                "seo_main_keyword": bool(main_keyword),
+                "seo_emotional_keyword": bool(emotional_keyword),
+                "description_context": has_context,
+                "description_question": ends_with_question,
+                "image_count": num_images,
+                "story_hook": has_story_hook,
+                "story_twist": has_story_twist,
+                "story_partial": has_partial,
+                "story_ending": has_open_ending,
+                "duration": duration,
+                "format": f"{width}x{height}",
+            }
+
+        return validation_result
 
     def get_channel_id(self) -> str:
         """
