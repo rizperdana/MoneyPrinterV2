@@ -388,3 +388,15 @@ def get_script_sentence_length() -> int:
             return config_json["script_sentence_length"]
         else:
             return 4
+
+
+def get_images_per_video() -> int:
+    """
+    Gets the number of images to generate per video from config.
+    Default is 8 images per video.
+
+    Returns:
+        count (int): Number of images per video
+    """
+    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
+        return json.load(file).get("images_per_video", 8)

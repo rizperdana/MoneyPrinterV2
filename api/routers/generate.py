@@ -99,8 +99,23 @@ async def cancel_job(job_id: str):
 
 @router.get("/videos")
 async def list_videos(platform: str | None = None):
-    """List previously generated videos."""
+    """List previously generated videos with script included for debugging."""
     from db import get_videos
 
     videos = get_videos(platform=platform, limit=50)
+    # Add script to each video response for debugging
+    for v in videos:
+        if v.get("script"):
+            v["script_preview"] = v["script"][:200] + "..." if len(v.get("script", "")) > 200 else v.get("script", "")
     return {"videos": videos}
+
+
+@router.get("/videos/{video_id}")
+async def get_video_detail(video_id: int):
+    """Get a specific video with full script for debugging."""
+    from db import get_video_by_id
+
+    video = get_video_by_id(video_id)
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    return video

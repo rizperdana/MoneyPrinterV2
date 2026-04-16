@@ -261,6 +261,17 @@ Button.action-primary:hover {
     background: $accent-dim;
 }
 
+Button.action-secondary {
+    background: $bg-raised;
+    color: $text-secondary;
+    border: tall $border;
+}
+
+Button.action-secondary:hover {
+    background: $bg-overlay;
+    color: $text-primary;
+}
+
 /* === DATA TABLE === */
 DataTable {
     background: $bg-surface;
@@ -308,6 +319,57 @@ DataTable > .datatable--header {
     background: $bg-surface;
     border: tall $border;
     padding: 1;
+}
+
+.activity-btn {
+    background: $bg-raised;
+    color: $text-primary;
+    border: tall $border;
+    width: 100%;
+    margin: 0 0 1 0;
+}
+
+.activity-btn:hover {
+    background: $bg-overlay;
+    border: tall $border-focus;
+}
+
+/* === VIDEO DETAIL SCREEN === */
+.detail-container {
+    height: 1fr;
+    background: $bg-surface;
+    border: tall $border;
+    padding: 1 2;
+    overflow-y: auto;
+}
+
+.detail-label {
+    color: $text-secondary;
+    height: auto;
+    padding: 1 0 0 0;
+}
+
+.detail-value {
+    color: $text-primary;
+    height: auto;
+}
+
+.detail-script {
+    height: 20;
+    overflow-y: scroll;
+}
+
+.detail-error {
+    color: $state-error;
+    height: auto;
+    padding: 2;
+}
+
+.detail-actions {
+    height: auto;
+    width: 100%;
+    layout: horizontal;
+    padding: 1 0 0 0;
 }
 
 /* === QUICK ACTIONS === */

@@ -29,6 +29,7 @@ from config import (
     get_fonts_dir,
     get_font,
     get_is_for_kids,
+    get_images_per_video,
 )
 from status import error, success, info, warning
 from uuid import uuid4
@@ -1096,8 +1097,8 @@ Example: {{"main": "AI", "related": "ChatGPT prompts", "emotional": "AI taking o
             s.strip() for s in re.split(r"[.!?]+", self.script) if len(s.strip()) > 10
         ]
 
-        # Target 4-5 scenes matching 20-30 second video (4-6 sec/image)
-        n_scenes = 5  # Fixed: HOOK, CONTEXT, DETAIL, TWIST, ENDING
+        # Target configurable number of scenes for video
+        n_scenes = get_images_per_video()  # Configurable: images per video
 
         prompt = f"""You are a visual storyboard director creating a {n_scenes}-frame sequence for a YouTube Short about: {self.subject}
 
@@ -1111,6 +1112,8 @@ PHASES:
 3. DETAIL - Close-up of strange feature. Build curiosity.
 4. TWIST - Something that contradicts or deepens mystery.
 5. ENDING - Unresolved, memorable frame. Loops with opening.
+
+(Add more phases as needed for {n_scenes} scenes)
 
 CRITICAL RULES:
 - NO text, letters, words, numbers, signs, logos, or writing of ANY kind in any frame
@@ -1180,12 +1183,12 @@ Output format (one per line):
                 )
             phases = ["HOOK", "CONTEXT", "DETAIL", "TWIST", "ENDING"]
             for i, sentence in enumerate(sentences[:n_scenes]):
-                phase = phases[i] if i < len(phases) else "DETAIL"
+                phase = phases[i] if i < len(phases) else f"SCENE_{i + 1}"
                 visual = f"{phase.lower()} visual: {sentence.strip()[:60]}, wide cinematic shot, photorealistic, dramatic lighting, no text"
                 image_prompts.append(visual)
 
-        # Ensure minimum of 4 images (matches 20-30 second timing at 4-6 sec/image)
-        while len(image_prompts) < 4 and sentences:
+        # Ensure minimum of config images
+        while len(image_prompts) < n_scenes and sentences:
             idx = len(image_prompts)
             if idx < len(sentences):
                 variant = (
@@ -1200,8 +1203,8 @@ Output format (one per line):
             else:
                 break
 
-        # Cap at 5 images max (matching 20-30 second timing)
-        image_prompts = image_prompts[:5]
+        # Cap at configured images per video
+        image_prompts = image_prompts[:n_scenes]
 
         self.image_prompts = image_prompts
 
@@ -1475,28 +1478,28 @@ Output format (one per line):
     def generate_image(self, prompt: str, delay_between: int = 2) -> str:
         """
         Generates an AI Image based on the given prompt.
-        Priority: Cloudflare Image API -> Pollinations zimage -> Pollinations flux
+        Priority: Pollinations zimage -> Pollinations flux -> Cloudflare Image API
         """
-        # 1. Try Cloudflare Image API FIRST
+        # 1. Try Pollinations zimage FIRST
         if get_verbose():
-            info("Trying Cloudflare Image API...")
-        result = self.generate_image_cloudflare(prompt)
-        if result is not None:
-            time.sleep(delay_between)
-            return result
-
-        # 2. Try Pollinations zimage via API key
-        if get_verbose():
-            info("Cloudflare exhausted. Trying Pollinations zimage...")
+            info("Trying Pollinations zimage...")
         result = self.generate_image_pollinations(prompt)
         if result is not None:
             time.sleep(delay_between)
             return result
 
-        # 3. Fallback to Pollinations flux (cheaper, 0.001 pts/image)
+        # 2. Fallback to Pollinations flux (cheaper, 0.001 pts/image)
         if get_verbose():
             info("zimage failed. Trying Pollinations flux...")
         result = self.generate_image_pollinations_flux(prompt)
+        if result is not None:
+            time.sleep(delay_between)
+            return result
+
+        # 3. Try Cloudflare Image API as final backup
+        if get_verbose():
+            info("Pollinations exhausted. Trying Cloudflare Image API...")
+        result = self.generate_image_cloudflare(prompt)
         if result is not None:
             time.sleep(delay_between)
             return result
@@ -4338,6 +4341,28 @@ Output format (one per line):
                 # Fill description/caption
                 if verbose:
                     info("\t=> Setting caption...")
+
+                # First dismiss any onboarding/tutorial overlays BEFORE trying to click caption
+                try:
+                    # Press Escape to close any modal/overlay
+                    actions = ActionChains(browser)
+                    actions.send_keys(Keys.ESCAPE).perform()
+                    time.sleep(0.5)
+
+                    # Check for and close joyride overlays
+                    joyride_selectors = [
+                        ".react-joyride__overlay",
+                        "[class*='joyride-overlay']",
+                        "[class*='tour-overlay']",
+                    ]
+                    for selector in joyride_selectors:
+                        overlay = browser.find_elements(By.CSS_SELECTOR, selector)
+                        if overlay and overlay[0].is_displayed():
+                            overlay[0].click()
+                            time.sleep(0.3)
+                except Exception:
+                    pass  # Best effort - continue if overlay dismissal fails
+
                 caption_selectors = [
                     (By.CSS_SELECTOR, 'div[contenteditable="true"]'),
                     (By.CSS_SELECTOR, 'textarea[placeholder*="caption"]'),

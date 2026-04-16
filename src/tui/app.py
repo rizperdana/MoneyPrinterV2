@@ -31,6 +31,7 @@ from typing import Optional
 
 # Initialize database tables
 from src.db import init_db
+
 init_db()
 
 # Import widgets
@@ -39,8 +40,14 @@ from src.tui.widgets.job_ticker import JobTicker
 
 # Import events
 from src.tui.events import (
-    StepStarted, StepProgressed, StepCompleted, StepFailed,
-    LogLine, JobCompleted, JobFailed, LibraryChanged,
+    StepStarted,
+    StepProgressed,
+    StepCompleted,
+    StepFailed,
+    LogLine,
+    JobCompleted,
+    JobFailed,
+    LibraryChanged,
 )
 
 
@@ -71,8 +78,8 @@ class MoneyPrinterApp(App):
         "afm": "src.tui.screens.afm",
         "outreach": "src.tui.screens.outreach",
         "settings": "src.tui.screens.settings",
+        "video_detail": "src.tui.screens.video_detail",
     }
-
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -86,14 +93,20 @@ class MoneyPrinterApp(App):
         for name, mod_path in self.SCREEN_MODULES.items():
             try:
                 parts = mod_path.rsplit(".", 1)
-                mod = __import__(mod_path, fromlist=[parts[1] if len(parts) > 1 else ""])
+                mod = __import__(
+                    mod_path, fromlist=[parts[1] if len(parts) > 1 else ""]
+                )
                 expected_name = name.title().replace("_", "") + "Screen"
                 screen_cls = getattr(mod, expected_name, None)
                 if screen_cls is None:
                     for attr_name in dir(mod):
                         attr = getattr(mod, attr_name, None)
-                        if (attr and isinstance(attr, type) and
-                                issubclass(attr, Screen) and attr is not Screen):
+                        if (
+                            attr
+                            and isinstance(attr, type)
+                            and issubclass(attr, Screen)
+                            and attr is not Screen
+                        ):
                             screen_cls = attr
                             break
                 if screen_cls:
@@ -112,6 +125,7 @@ class MoneyPrinterApp(App):
         # Attach status interceptor to capture status.* calls
         try:
             from src.tui.wrappers import status_interceptor
+
             status_interceptor.attach(self)
         except Exception as e:
             self.log.error(f"Failed to attach status interceptor: {e}")
@@ -127,10 +141,10 @@ class MoneyPrinterApp(App):
         """Cleanup — detach status interceptor."""
         try:
             from src.tui.wrappers import status_interceptor
+
             status_interceptor.detach()
         except Exception:
             pass
-
 
     def action_go_to(self, screen_name: str) -> None:
         """Navigate to a screen by name.
@@ -149,8 +163,10 @@ class MoneyPrinterApp(App):
                     self.pop_screen()
             else:
                 # Don't stack the same screen twice
-                if (len(self.screen_stack) > 1 and
-                        self._current_screen_name == screen_name):
+                if (
+                    len(self.screen_stack) > 1
+                    and self._current_screen_name == screen_name
+                ):
                     return
                 # Pop to root first, then push
                 while len(self.screen_stack) > 1:
@@ -194,8 +210,13 @@ class MoneyPrinterApp(App):
             return
 
         key_map = {
-            "d": "dashboard", "v": "video_gen", "a": "accounts",
-            "t": "twitter", "f": "afm", "o": "outreach", "s": "settings",
+            "d": "dashboard",
+            "v": "video_gen",
+            "a": "accounts",
+            "t": "twitter",
+            "f": "afm",
+            "o": "outreach",
+            "s": "settings",
         }
 
         if event.key == "g":

@@ -80,6 +80,7 @@ async def upload_video_by_id(
     """Upload a video from the database directly by its video_id.
 
     This bypasses job_manager so it works even after server restart.
+    Supported platforms: youtube, tiktok
     """
     import json
 
@@ -111,12 +112,12 @@ async def upload_video_by_id(
     account = accounts[0]  # Use first available account
 
     # Run upload in background
-    bg.add_task(_do_upload_video, file_path, video, account)
+    bg.add_task(_do_upload_video, file_path, video, account, platform)
     return {"status": "uploading", "video_id": video_id, "platform": platform}
 
 
-async def _do_upload_video(file_path: str, video: dict, account: dict):
-    """Upload video to YouTube/Twitter in a background task."""
+async def _do_upload_video(file_path: str, video: dict, account: dict, platform: str = "youtube"):
+    """Upload video to YouTube or TikTok in a background task."""
     import asyncio
 
     def _sync_upload():
@@ -139,11 +140,17 @@ async def _do_upload_video(file_path: str, video: dict, account: dict):
             language=video.get("language") or "English",
         )
         yt.video_path = file_path
-        yt.title = video.get("title", "Untitled")
-        yt.description = video.get("description", "")
-        yt.tags = video.get("tags", "").split(",") if video.get("tags") else []
+        # Set metadata dict directly so upload functions use existing data
+        yt.metadata = {
+            "title": video.get("title", "Untitled"),
+            "description": video.get("description", ""),
+            "tags": video.get("tags", "").split(",") if video.get("tags") else [],
+        }
         try:
-            success_flag, result = yt.upload_video()
+            if platform == "tiktok":
+                success_flag, result = yt.upload_to_tiktok()
+            else:
+                success_flag, result = yt.upload_video()
             if not success_flag:
                 raise Exception(f"Upload failed: {result}")
         finally:
