@@ -43,6 +43,20 @@ def init_db() -> None:
         )
     """)
 
+    # OAuth credentials table - stores OAuth tokens and refresh tokens
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS oauth_credentials (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            account_name TEXT NOT NULL,
+            platform TEXT NOT NULL,
+            token TEXT NOT NULL,
+            payload TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(account_name, platform)
+        )
+    """)
+
     # Settings table - stores all config key-value pairs
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS settings (
@@ -506,5 +520,102 @@ def delete_account(account_id: int) -> bool:
 
     if cursor.rowcount > 0:
         success(f"Deleted account ID {account_id}")
+        return True
+    return False
+
+
+def get_oauth_credentials(
+    platform: Optional[str] = None, account_name: Optional[str] = None
+) -> list[dict]:
+    """
+    Get OAuth credentials, optionally filtered by platform and/or account_name.
+
+    Args:
+        platform: Optional platform filter
+        account_name: Optional account_name filter
+
+    Returns:
+        List of credential records as dicts
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+    query = "SELECT * FROM oauth_credentials"
+    params = []
+    conditions = []
+
+    if platform:
+        conditions.append("platform = ?")
+        params.append(platform)
+    if account_name:
+        conditions.append("account_name = ?")
+        params.append(account_name)
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    query += " ORDER BY updated_at DESC"
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    result = [dict(row) for row in rows]
+    info(f"Retrieved {len(result)} OAuth credentials")
+    return result
+
+
+def add_oauth_credential(
+    account_name: str, platform: str, token: str, payload: str
+) -> int:
+    """
+    Insert or update OAuth credential. Uses upsert ON CONFLICT.
+
+    Args:
+        account_name: The account name
+        platform: Platform (youtube, twitter, etc.)
+        token: The OAuth token
+        payload: Additional JSON payload (e.g., refresh token)
+
+    Returns:
+        The row ID of the inserted/updated credential
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO oauth_credentials (account_name, platform, token, payload, updated_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(account_name, platform) DO UPDATE SET
+            token = excluded.token,
+            payload = excluded.payload,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (account_name, platform, token, payload),
+    )
+    conn.commit()
+    credential_id = cursor.lastrowid
+    success(f"Added/updated OAuth credential: {account_name} ({platform})")
+    return credential_id
+
+
+def delete_oauth_credential(account_name: str, platform: str) -> bool:
+    """
+    Delete OAuth credential.
+
+    Args:
+        account_name: The account name
+        platform: Platform (youtube, twitter, etc.)
+
+    Returns:
+        True if deleted, False if not found
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM oauth_credentials WHERE account_name = ? AND platform = ?",
+        (account_name, platform),
+    )
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        success(f"Deleted OAuth credential: {account_name} ({platform})")
         return True
     return False
