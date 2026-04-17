@@ -182,7 +182,7 @@ async def delete_account_endpoint(account_id: int):
 
 
 @router.get("/accounts/{account_id}/oauth-links")
-async def get_account_oauth_links(account_id: int):
+async def get_account_oauth_links(account_id: str):
     """Get all OAuth links for an account."""
     from db import get_linked_oauth_ids, get_oauth_credentials_by_ids
 
@@ -203,7 +203,7 @@ async def get_account_oauth_links(account_id: int):
 
 
 @router.post("/accounts/{account_id}/link-oauth")
-async def link_oauth_to_account_endpoint(account_id: int, request: Request):
+async def link_oauth_to_account_endpoint(account_id: str, request: Request):
     """Link an OAuth credential to an account."""
     from db import link_oauth_to_account, get_oauth_credentials
 
@@ -218,12 +218,21 @@ async def link_oauth_to_account_endpoint(account_id: int, request: Request):
     if not any(c["id"] == oauth_id for c in creds):
         raise HTTPException(status_code=404, detail="OAuth credential not found")
 
-    link_id = link_oauth_to_account(account_id, oauth_id)
+    # Handle both "id" from DB and "oauth_id" from API response
+    actual_oauth_id = oauth_id
+    if isinstance(oauth_id, str) and not isinstance(oauth_id, int):
+        # Try to find matching credential
+        for c in creds:
+            if str(c["id"]) == str(oauth_id):
+                actual_oauth_id = c["id"]
+                break
+
+    link_id = link_oauth_to_account(account_id, actual_oauth_id)
     return {"link_id": link_id, "account_id": account_id, "oauth_id": oauth_id}
 
 
 @router.delete("/accounts/{account_id}/unlink-oauth/{oauth_id}")
-async def unlink_oauth(account_id: int, oauth_id: int):
+async def unlink_oauth(account_id: str, oauth_id: int):
     """Unlink an OAuth credential from an account."""
     from db import unlink_oauth_from_account
 
