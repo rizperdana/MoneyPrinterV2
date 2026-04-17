@@ -111,6 +111,13 @@ def init_db() -> None:
     """)
 
     conn.commit()
+
+    # Migration: Add oauth_token column to accounts table if not exists
+    try:
+        cursor.execute("SELECT oauth_token FROM accounts LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN oauth_token TEXT")
+
     info("Database initialized successfully")
 
 

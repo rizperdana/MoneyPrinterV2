@@ -87,23 +87,17 @@ def loadTokens(account_id: str = None) -> dict | None:
     except Exception:
         pass
     # Fallback to old accounts.oauth_token column
-    from src.db import _get_connection
+    try:
+        from src.db import _get_connection
 
-    conn = _get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT oauth_token FROM accounts WHERE id = ?", (account_id,))
-    row = cursor.fetchone()
-    if row and row[0]:
-        return json.loads(row[0])
-    return None
-    from src.db import _get_connection
-
-    conn = _get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT oauth_token FROM accounts WHERE id = ?", (account_id,))
-    row = cursor.fetchone()
-    if row and row[0]:
-        return json.loads(row[0])
+        conn = _get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT oauth_token FROM accounts WHERE id = ?", (account_id,))
+        row = cursor.fetchone()
+        if row and row[0]:
+            return json.loads(row[0])
+    except Exception:
+        pass
     return None
 
 
