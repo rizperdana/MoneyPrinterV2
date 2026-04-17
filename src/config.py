@@ -49,17 +49,6 @@ def get_email_credentials() -> dict:
         return json.load(file)["email"]
 
 
-def get_google_oauth() -> dict:
-    """
-    Gets the Google OAuth credentials from the config file.
-
-    Returns:
-        credentials (dict): The Google OAuth credentials
-    """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("google_oauth", {})
-
-
 def get_verbose() -> bool:
     """
     Gets the verbose flag from the config file.

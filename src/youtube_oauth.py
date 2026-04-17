@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import time
@@ -15,15 +16,22 @@ ROOT_DIR = Path(__file__).parent.parent
 
 
 def get_oauth_config() -> dict:
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
+    if not client_id or not client_secret or not redirect_uri:
+        raise ValueError(
+            "Missing required OAuth config. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI env vars."
+        )
     return {
-        "client_id": os.getenv("GOOGLE_CLIENT_ID"),
-        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
-        "redirect_uri": os.getenv("GOOGLE_REDIRECT_URI"),
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
         "scopes": os.getenv("GOOGLE_SCOPES", "").split(),
     }
 
 
-def getAuthorizationUrl(account_id: str = None) -> str:
+def get_authorization_url(account_id: str = None) -> str:
     config = get_oauth_config()
     params = {
         "client_id": config["client_id"],
@@ -38,7 +46,7 @@ def getAuthorizationUrl(account_id: str = None) -> str:
     return "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
 
 
-def saveTokens(tokens: dict, account_id: str = None) -> None:
+def save_tokens(tokens: dict, account_id: str = None) -> None:
     if not account_id:
         return
     # Try new oauth_credentials table first
@@ -66,7 +74,7 @@ def saveTokens(tokens: dict, account_id: str = None) -> None:
     conn.commit()
 
 
-def loadTokens(account_id: str = None) -> dict | None:
+def load_tokens(account_id: str = None) -> dict | None:
     if not account_id:
         return None
     # Try new oauth_credentials table first
@@ -101,8 +109,8 @@ def loadTokens(account_id: str = None) -> dict | None:
     return None
 
 
-def isTokenValid(account_id: str = None) -> bool:
-    tokens = loadTokens(account_id)
+def is_token_valid(account_id: str = None) -> bool:
+    tokens = load_tokens(account_id)
     if not tokens:
         return False
     saved_at = tokens.get("saved_at", 0)
@@ -111,21 +119,21 @@ def isTokenValid(account_id: str = None) -> bool:
     return time.time() < expiry_time
 
 
-def getAccessToken(account_id: str = None) -> str | None:
-    tokens = loadTokens(account_id)
+def get_access_token(account_id: str = None) -> str | None:
+    tokens = load_tokens(account_id)
     if not tokens:
         return None
-    if not isTokenValid(account_id):
+    if not is_token_valid(account_id):
         refresh_token = tokens.get("refresh_token")
         if refresh_token:
-            new_tokens = refreshToken(refresh_token, account_id)
+            new_tokens = refresh_token(refresh_token, account_id)
             if new_tokens:
                 return new_tokens.get("access_token")
         return None
     return tokens.get("access_token")
 
 
-def refreshToken(refresh_token: str, account_id: str = None) -> dict | None:
+def refresh_token(refresh_token: str, account_id: str = None) -> dict | None:
     config = get_oauth_config()
     response = requests.post(
         "https://oauth2.googleapis.com/token",
@@ -144,12 +152,12 @@ def refreshToken(refresh_token: str, account_id: str = None) -> dict | None:
             "expires_in": data.get("expires_in", 3600),
             "saved_at": time.time(),
         }
-        saveTokens(tokens, account_id)
+        save_tokens(tokens, account_id)
         return tokens
     return None
 
 
-def exchangeCodeForTokens(code: str, account_id: str = None) -> dict | None:
+def exchange_code_for_tokens(code: str, account_id: str = None) -> dict | None:
     config = get_oauth_config()
     response = requests.post(
         "https://oauth2.googleapis.com/token",
@@ -174,8 +182,8 @@ def exchangeCodeForTokens(code: str, account_id: str = None) -> dict | None:
     return None
 
 
-def startOAuthFlow() -> str:
-    url = getAuthorizationUrl()
+def start_oauth_flow() -> str:
+    url = get_authorization_url()
     webbrowser.open(url)
     return url
 
@@ -184,13 +192,11 @@ def get_oauth_status(account_id: str = None) -> str:
     """Get OAuth connection status for an account."""
     if not account_id:
         return "Not connected"
-    tokens = loadTokens(account_id)
+    tokens = load_tokens(account_id)
     if not tokens:
         return "Not connected"
     saved_at = tokens.get("saved_at", 0)
     if saved_at:
-        import datetime
-
         dt = datetime.datetime.fromtimestamp(saved_at)
         return f"Connected (last updated: {dt.strftime('%Y-%m-%d %H:%M')})"
     return "Connected"
