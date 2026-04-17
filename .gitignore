@@ -29,3 +29,8 @@ geckodriver.log
 # Misc
 .DS_Store
 .docs
+
+# Local data (secrets)
+data.db
+data/
+.mps/secrets.json
