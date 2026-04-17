@@ -75,12 +75,16 @@ async def _do_upload(job):
 
 @router.post("/videos/{video_id}/upload")
 async def upload_video_by_id(
-    video_id: int, bg: BackgroundTasks, platform: str = "youtube"
+    video_id: int,
+    bg: BackgroundTasks,
+    platform: str = "youtube",
+    account_name: str = None,
 ):
     """Upload a video from the database directly by its video_id.
 
     This bypasses job_manager so it works even after server restart.
     Supported platforms: youtube, tiktok
+    Optional account_name: select specific account instead of first available
     """
     import json
 
@@ -109,14 +113,27 @@ async def upload_video_by_id(
     if not accounts:
         raise HTTPException(status_code=400, detail=f"No {platform} account configured")
 
-    account = accounts[0]  # Use first available account
+    # Select account by name or use first available
+    if account_name:
+        account = next(
+            (a for a in accounts if a.get("id") == account_name), accounts[0]
+        )
+    else:
+        account = accounts[0]
 
     # Run upload in background
     bg.add_task(_do_upload_video, file_path, video, account, platform)
-    return {"status": "uploading", "video_id": video_id, "platform": platform}
+    return {
+        "status": "uploading",
+        "video_id": video_id,
+        "platform": platform,
+        "account": account.get("id"),
+    }
 
 
-async def _do_upload_video(file_path: str, video: dict, account: dict, platform: str = "youtube"):
+async def _do_upload_video(
+    file_path: str, video: dict, account: dict, platform: str = "youtube"
+):
     """Upload video to YouTube or TikTok in a background task."""
     import asyncio
 

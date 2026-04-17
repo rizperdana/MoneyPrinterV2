@@ -21,7 +21,7 @@ router = APIRouter()
 @router.get("/accounts")
 async def list_accounts():
     """List all accounts from .mp cache files and DB."""
-    from db import get_accounts
+    from db import get_accounts, get_oauth_credentials
 
     result = []
 
@@ -33,13 +33,24 @@ async def list_accounts():
         with open(yt_path, "r") as f:
             yt_data = json.load(f)
             for acc in yt_data.get("accounts", []):
+                account_id = acc.get("id", "")
+                # Check OAuth status
+                oauth_creds = get_oauth_credentials(
+                    platform="youtube", account_name=account_id
+                )
+                oauth_status = "connected" if oauth_creds else "not_connected"
+                oauth_updated = (
+                    oauth_creds[0].get("updated_at") if oauth_creds else None
+                )
                 result.append(
                     {
-                        "id": acc.get("id", ""),
+                        "id": account_id,
                         "platform": "youtube",
-                        "username": acc.get("id", ""),  # Use id as username
+                        "username": account_id,
                         "nickname": acc.get("nickname", ""),
                         "profile_path": acc.get("firefox_profile", ""),
+                        "oauth_status": oauth_status,
+                        "oauth_updated": oauth_updated,
                     }
                 )
 
@@ -51,13 +62,24 @@ async def list_accounts():
         with open(tw_path, "r") as f:
             tw_data = json.load(f)
             for acc in tw_data.get("accounts", []):
+                account_id = acc.get("id", "")
+                # Check OAuth status
+                oauth_creds = get_oauth_credentials(
+                    platform="twitter", account_name=account_id
+                )
+                oauth_status = "connected" if oauth_creds else "not_connected"
+                oauth_updated = (
+                    oauth_creds[0].get("updated_at") if oauth_creds else None
+                )
                 result.append(
                     {
-                        "id": acc.get("id", ""),
+                        "id": account_id,
                         "platform": "twitter",
-                        "username": acc.get("id", ""),
+                        "username": account_id,
                         "nickname": acc.get("nickname", ""),
                         "profile_path": acc.get("firefox_profile", ""),
+                        "oauth_status": oauth_status,
+                        "oauth_updated": oauth_updated,
                     }
                 )
 
@@ -69,9 +91,34 @@ async def list_accounts():
             a["username"] == acc["username"] and a["platform"] == acc["platform"]
             for a in result
         ):
+            # Check OAuth status
+            oauth_creds = get_oauth_credentials(
+                platform=acc.get("platform"), account_name=acc.get("username")
+            )
+            oauth_status = "connected" if oauth_creds else "not_connected"
+            oauth_updated = oauth_creds[0].get("updated_at") if oauth_creds else None
+            acc["oauth_status"] = oauth_status
+            acc["oauth_updated"] = oauth_updated
             result.append(acc)
 
     return result
+
+
+@router.get("/oauth/credentials")
+async def list_oauth_credentials(platform: str = "youtube"):
+    """List OAuth credentials for a platform."""
+    from db import get_oauth_credentials
+
+    creds = get_oauth_credentials(platform=platform)
+    return [
+        {
+            "account_name": c["account_name"],
+            "platform": c["platform"],
+            "updated_at": c["updated_at"],
+            "has_token": bool(c.get("token")),
+        }
+        for c in creds
+    ]
 
 
 @router.get("/accounts/{username}/last-topic")
