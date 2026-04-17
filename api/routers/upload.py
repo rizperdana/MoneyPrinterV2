@@ -79,12 +79,14 @@ async def upload_video_by_id(
     bg: BackgroundTasks,
     platform: str = "youtube",
     account_name: str = None,
+    account_id: int = None,
 ):
     """Upload a video from the database directly by its video_id.
 
     This bypasses job_manager so it works even after server restart.
     Supported platforms: youtube, tiktok
     Optional account_name: select specific account instead of first available
+    Optional account_id: use linked OAuth credentials for API upload
     """
     import json
 
@@ -121,8 +123,21 @@ async def upload_video_by_id(
     else:
         account = accounts[0]
 
+    # Get OAuth credentials when account_id is provided
+    oauth_token = None
+    if account_id and platform == "youtube":
+        from db import get_linked_oauth_ids, get_oauth_credentials_by_ids
+
+        oauth_ids = get_linked_oauth_ids(account_id)
+        if oauth_ids:
+            oauth_creds = get_oauth_credentials_by_ids(oauth_ids)
+            # Filter by platform
+            oauth_creds = [c for c in oauth_creds if c["platform"] == "youtube"]
+            if oauth_creds:
+                oauth_token = oauth_creds[0].get("token")
+
     # Run upload in background
-    bg.add_task(_do_upload_video, file_path, video, account, platform)
+    bg.add_task(_do_upload_video, file_path, video, account, platform, oauth_token)
     return {
         "status": "uploading",
         "video_id": video_id,
@@ -132,12 +147,38 @@ async def upload_video_by_id(
 
 
 async def _do_upload_video(
-    file_path: str, video: dict, account: dict, platform: str = "youtube"
+    file_path: str,
+    video: dict,
+    account: dict,
+    platform: str = "youtube",
+    oauth_token: str = None,
 ):
     """Upload video to YouTube or TikTok in a background task."""
     import asyncio
 
     def _sync_upload():
+        import logging
+
+        # If we have oauth_token for youtube, use API upload instead of browser
+        if oauth_token and platform == "youtube":
+            try:
+                from src.youtube_api import youtubeApiUpload
+
+                result = youtubeApiUpload(
+                    video_path=file_path,
+                    title=video.get("title", "Untitled"),
+                    description=video.get("description", ""),
+                    tags=video.get("tags", "").split(",") if video.get("tags") else [],
+                    oauth_token=oauth_token,
+                )
+                if result:
+                    logging.info(f"API upload successful: {result.get('url')}")
+                    return
+            except Exception as e:
+                logging.error(f"YouTube API upload failed: {e}")
+                # Fall back to browser upload
+
+        # Browser-based upload
         from classes.YouTube import YouTube
 
         # Use firefox_profile from account, fall back to config

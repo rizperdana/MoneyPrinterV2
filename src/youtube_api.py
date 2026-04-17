@@ -4,7 +4,7 @@ from pathlib import Path
 
 import requests
 
-from src.youtube_oauth import getAccessToken
+from src.youtube_oauth import get_access_token
 
 UPLOAD_URL = "https://www.googleapis.com/upload/youtube/v3/videos"
 
@@ -15,9 +15,19 @@ def youtubeApiUpload(
     description: str = "",
     tags: list = None,
     account_id: str = "1",
+    oauth_token: str = None,
 ) -> dict | None:
-    """Upload video to YouTube Data API."""
-    access_token = getAccessToken(account_id)
+    """Upload video to YouTube Data API.
+
+    Args:
+        video_path: Path to video file
+        title: Video title
+        description: Video description
+        tags: List of tags
+        account_id: Account ID (used to get token if oauth_token not provided)
+        oauth_token: Direct OAuth token (optional, preferred over account_id)
+    """
+    access_token = oauth_token or get_access_token(account_id)
     if not access_token:
         raise Exception("No valid OAuth token for account")
 
