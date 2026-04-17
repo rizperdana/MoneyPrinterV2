@@ -34,3 +34,6 @@ geckodriver.log
 data.db
 data/
 .mps/secrets.json
+
+# Private config
+config.json
