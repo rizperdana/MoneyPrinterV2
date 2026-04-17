@@ -76,7 +76,7 @@ if os.path.isdir(_dist_dir):
     @app.get("/{path:path}")
     async def serve_spa(path: str):
         # Skip API routes
-        if path.startswith("api") or path.startswith("ws"):
+        if path.startswith("api") or path.startswith("ws") or path.startswith("auth"):
             return {"detail": "Not Found"}
 
         # Check if file exists
