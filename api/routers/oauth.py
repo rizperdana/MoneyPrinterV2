@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Query
 from fastapi.responses import RedirectResponse
 
-from src.youtube_oauth import getAuthorizationUrl, exchangeCodeForTokens, startOAuthFlow, isTokenValid
+from src.youtube_oauth import (
+    get_authorization_url,
+    exchange_code_for_tokens,
+    start_oauth_flow,
+    is_token_valid,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -9,14 +14,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.get("/google/url")
 async def getAuthUrl(account_id: str = Query(None)):
     """Get OAuth authorization URL."""
-    url = getAuthorizationUrl(account_id)
+    url = get_authorization_url(account_id)
     return {"url": url}
 
 
 @router.get("/google/start")
 async def startOAuth():
     """Start OAuth flow by opening browser."""
-    url = startOAuthFlow()
+    url = start_oauth_flow()
     return {"url": url, "message": "Opened browser for OAuth authorization"}
 
 
@@ -24,7 +29,7 @@ async def startOAuth():
 async def oauthCallback(code: str = Query(...), state: str = Query(None)):
     """Handle OAuth callback."""
     account_id = state or "1"
-    tokens = exchangeCodeForTokens(code, account_id)
+    tokens = exchange_code_for_tokens(code, account_id)
     if tokens:
         return {"status": "authenticated"}
     return {"status": "error", "message": "Failed to exchange code"}
@@ -34,7 +39,7 @@ async def oauthCallback(code: str = Query(...), state: str = Query(None)):
 async def authStatus():
     """Check authentication status."""
     return {
-        "authenticated": isTokenValid("1"),
+        "authenticated": is_token_valid("1"),
         "has_refresh_token": False,
     }
 
@@ -43,6 +48,7 @@ async def authStatus():
 async def logout():
     """Logout by clearing tokens."""
     from pathlib import Path
+
     _project_root = Path(__file__).parent.parent.parent
     tokens_file = _project_root / ".mp" / "youtube_tokens.json"
     if tokens_file.exists():

@@ -11,7 +11,7 @@ for _p in [_project_root, _src_dir]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from api.models import AccountCreate, AccountUpdate
 
@@ -34,8 +34,13 @@ async def list_accounts():
             yt_data = json.load(f)
             for acc in yt_data.get("accounts", []):
                 account_id = acc.get("id", "")
+                # Check OAuth status
                 oauth_creds = get_oauth_credentials(
                     platform="youtube", account_name=account_id
+                )
+                oauth_status = "connected" if oauth_creds else "not_connected"
+                oauth_updated = (
+                    oauth_creds[0].get("updated_at") if oauth_creds else None
                 )
                 result.append(
                     {
@@ -44,7 +49,8 @@ async def list_accounts():
                         "username": account_id,
                         "nickname": acc.get("nickname", ""),
                         "profile_path": acc.get("firefox_profile", ""),
-                        "oauth_status": "connected" if oauth_creds else "not_connected",
+                        "oauth_status": oauth_status,
+                        "oauth_updated": oauth_updated,
                     }
                 )
 
@@ -57,8 +63,13 @@ async def list_accounts():
             tw_data = json.load(f)
             for acc in tw_data.get("accounts", []):
                 account_id = acc.get("id", "")
+                # Check OAuth status
                 oauth_creds = get_oauth_credentials(
                     platform="twitter", account_name=account_id
+                )
+                oauth_status = "connected" if oauth_creds else "not_connected"
+                oauth_updated = (
+                    oauth_creds[0].get("updated_at") if oauth_creds else None
                 )
                 result.append(
                     {
@@ -67,7 +78,8 @@ async def list_accounts():
                         "username": account_id,
                         "nickname": acc.get("nickname", ""),
                         "profile_path": acc.get("firefox_profile", ""),
-                        "oauth_status": "connected" if oauth_creds else "not_connected",
+                        "oauth_status": oauth_status,
+                        "oauth_updated": oauth_updated,
                     }
                 )
 
@@ -79,13 +91,35 @@ async def list_accounts():
             a["username"] == acc["username"] and a["platform"] == acc["platform"]
             for a in result
         ):
+            # Check OAuth status
             oauth_creds = get_oauth_credentials(
-                platform=acc["platform"], account_name=acc["username"]
+                platform=acc.get("platform"), account_name=acc.get("username")
             )
-            acc["oauth_status"] = "connected" if oauth_creds else "not_connected"
+            oauth_status = "connected" if oauth_creds else "not_connected"
+            oauth_updated = oauth_creds[0].get("updated_at") if oauth_creds else None
+            acc["oauth_status"] = oauth_status
+            acc["oauth_updated"] = oauth_updated
             result.append(acc)
 
     return result
+
+
+@router.get("/oauth/credentials")
+async def list_oauth_credentials(platform: str = "youtube"):
+    """List OAuth credentials for a platform."""
+    from db import get_oauth_credentials
+
+    creds = get_oauth_credentials(platform=platform)
+    return [
+        {
+            "oauth_id": c["id"],
+            "account_name": c["account_name"],
+            "platform": c["platform"],
+            "updated_at": c["updated_at"],
+            "has_token": bool(c.get("token")),
+        }
+        for c in creds
+    ]
 
 
 @router.get("/accounts/{username}/last-topic")
@@ -147,18 +181,53 @@ async def delete_account_endpoint(account_id: int):
     return {"status": "deleted"}
 
 
-@router.get("/oauth/credentials")
-async def list_oauth_credentials(platform: str = "youtube"):
-    """List OAuth credentials for a platform."""
-    from db import get_oauth_credentials
+@router.get("/accounts/{account_id}/oauth-links")
+async def get_account_oauth_links(account_id: int):
+    """Get all OAuth links for an account."""
+    from db import get_linked_oauth_ids, get_oauth_credentials_by_ids
 
-    creds = get_oauth_credentials(platform=platform)
+    oauth_ids = get_linked_oauth_ids(account_id)
+    if not oauth_ids:
+        return []
+
+    creds = get_oauth_credentials_by_ids(oauth_ids)
     return [
         {
-            "account_name": c["account_name"],
+            "oauth_id": c["id"],
             "platform": c["platform"],
-            "updated_at": c["updated_at"],
-            "has_token": bool(c.get("token")),
+            "account_name": c["account_name"],
+            "linked": True,
         }
         for c in creds
     ]
+
+
+@router.post("/accounts/{account_id}/link-oauth")
+async def link_oauth_to_account_endpoint(account_id: int, request: Request):
+    """Link an OAuth credential to an account."""
+    from db import link_oauth_to_account, get_oauth_credentials
+
+    body = await request.json()
+    oauth_id = body.get("oauth_id")
+
+    if not oauth_id:
+        raise HTTPException(status_code=400, detail="oauth_id required")
+
+    # Verify oauth_id exists
+    creds = get_oauth_credentials()
+    if not any(c["id"] == oauth_id for c in creds):
+        raise HTTPException(status_code=404, detail="OAuth credential not found")
+
+    link_id = link_oauth_to_account(account_id, oauth_id)
+    return {"link_id": link_id, "account_id": account_id, "oauth_id": oauth_id}
+
+
+@router.delete("/accounts/{account_id}/unlink-oauth/{oauth_id}")
+async def unlink_oauth(account_id: int, oauth_id: int):
+    """Unlink an OAuth credential from an account."""
+    from db import unlink_oauth_from_account
+
+    deleted = unlink_oauth_from_account(account_id, oauth_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Link not found")
+    return {"deleted": True}
