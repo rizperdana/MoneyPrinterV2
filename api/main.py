@@ -23,7 +23,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from api.routers import generate, upload, accounts, settings
+from api.routers import generate, upload, accounts, settings, oauth
 from api.ws import router as ws_router
 
 # Initialize the database on startup
@@ -52,6 +52,7 @@ app.include_router(generate.router, prefix="/api", tags=["generate"])
 app.include_router(upload.router, prefix="/api", tags=["upload"])
 app.include_router(accounts.router, prefix="/api", tags=["accounts"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
+app.include_router(oauth.router, tags=["auth"])
 
 # WebSocket router (no prefix — /ws/jobs/{id})
 app.include_router(ws_router, tags=["websocket"])
