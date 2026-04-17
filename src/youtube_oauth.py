@@ -41,12 +41,27 @@ def getAuthorizationUrl(account_id: str = None) -> str:
 def saveTokens(tokens: dict, account_id: str = None) -> None:
     if not account_id:
         return
+    # Try new oauth_credentials table first
+    try:
+        from src.db import add_oauth_credential
+
+        access_token = tokens.get("access_token", "")
+        # Build payload with all token info except access_token
+        payload = {k: v for k, v in tokens.items() if k != "access_token"}
+        payload["saved_at"] = tokens.get("saved_at", 0)
+        payload["expires_in"] = tokens.get("expires_in", 3600)
+        add_oauth_credential(account_id, "youtube", access_token, json.dumps(payload))
+        return
+    except Exception:
+        pass
+    # Fallback to old accounts.oauth_token column
     from src.db import _get_connection
+
     conn = _get_connection()
     cursor = conn.cursor()
     cursor.execute(
         "UPDATE accounts SET oauth_token = ? WHERE id = ?",
-        (json.dumps(tokens), account_id)
+        (json.dumps(tokens), account_id),
     )
     conn.commit()
 
@@ -54,7 +69,35 @@ def saveTokens(tokens: dict, account_id: str = None) -> None:
 def loadTokens(account_id: str = None) -> dict | None:
     if not account_id:
         return None
+    # Try new oauth_credentials table first
+    try:
+        from src.db import get_oauth_credentials
+
+        creds = get_oauth_credentials(account_name=account_id, platform="youtube")
+        if creds:
+            cred = creds[0]
+            token = cred.get("token", "")
+            payload = json.loads(cred.get("payload", "{}"))
+            return {
+                "access_token": token,
+                "refresh_token": payload.get("refresh_token"),
+                "expires_in": payload.get("expires_in", 3600),
+                "saved_at": payload.get("saved_at", 0),
+            }
+    except Exception:
+        pass
+    # Fallback to old accounts.oauth_token column
     from src.db import _get_connection
+
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT oauth_token FROM accounts WHERE id = ?", (account_id,))
+    row = cursor.fetchone()
+    if row and row[0]:
+        return json.loads(row[0])
+    return None
+    from src.db import _get_connection
+
     conn = _get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT oauth_token FROM accounts WHERE id = ?", (account_id,))
@@ -141,3 +184,19 @@ def startOAuthFlow() -> str:
     url = getAuthorizationUrl()
     webbrowser.open(url)
     return url
+
+
+def get_oauth_status(account_id: str = None) -> str:
+    """Get OAuth connection status for an account."""
+    if not account_id:
+        return "Not connected"
+    tokens = loadTokens(account_id)
+    if not tokens:
+        return "Not connected"
+    saved_at = tokens.get("saved_at", 0)
+    if saved_at:
+        import datetime
+
+        dt = datetime.datetime.fromtimestamp(saved_at)
+        return f"Connected (last updated: {dt.strftime('%Y-%m-%d %H:%M')})"
+    return "Connected"
