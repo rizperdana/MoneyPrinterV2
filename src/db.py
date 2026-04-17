@@ -57,6 +57,19 @@ def init_db() -> None:
         )
     """)
 
+    # Account-OAuth link table (many-to-many)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS account_oauth_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            account_id INTEGER NOT NULL,
+            oauth_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(account_id, oauth_id),
+            FOREIGN KEY (account_id) REFERENCES accounts(id),
+            FOREIGN KEY (oauth_id) REFERENCES oauth_credentials(id)
+        )
+    """)
+
     # Settings table - stores all config key-value pairs
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS settings (
@@ -626,3 +639,56 @@ def delete_oauth_credential(account_name: str, platform: str) -> bool:
         success(f"Deleted OAuth credential: {account_name} ({platform})")
         return True
     return False
+
+
+def link_oauth_to_account(account_id: int, oauth_id: int) -> int:
+    """Link an OAuth credential to an account."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO account_oauth_links (account_id, oauth_id, created_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(account_id, oauth_id) DO NOTHING
+        """,
+        (account_id, oauth_id),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def unlink_oauth_from_account(account_id: int, oauth_id: int) -> bool:
+    """Unlink an OAuth credential from an account."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM account_oauth_links WHERE account_id = ? AND oauth_id = ?",
+        (account_id, oauth_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def get_linked_oauth_ids(account_id: int) -> list[int]:
+    """Get all OAuth IDs linked to an account."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT oauth_id FROM account_oauth_links WHERE account_id = ?",
+        (account_id,),
+    )
+    return [row["oauth_id"] for row in cursor.fetchall()]
+
+
+def get_oauth_credentials_by_ids(oauth_ids: list[int]) -> list[dict]:
+    """Get OAuth credentials by a list of IDs."""
+    if not oauth_ids:
+        return []
+    conn = _get_connection()
+    cursor = conn.cursor()
+    placeholders = ",".join("?" * len(oauth_ids))
+    cursor.execute(
+        f"SELECT * FROM oauth_credentials WHERE id IN ({placeholders})",
+        oauth_ids,
+    )
+    return [dict(row) for row in cursor.fetchall()]
