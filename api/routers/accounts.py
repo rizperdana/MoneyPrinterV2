@@ -11,7 +11,7 @@ for _p in [_project_root, _src_dir]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from api.models import AccountCreate, AccountUpdate
 
@@ -112,6 +112,7 @@ async def list_oauth_credentials(platform: str = "youtube"):
     creds = get_oauth_credentials(platform=platform)
     return [
         {
+            "oauth_id": c["id"],
             "account_name": c["account_name"],
             "platform": c["platform"],
             "updated_at": c["updated_at"],
@@ -178,3 +179,55 @@ async def delete_account_endpoint(account_id: int):
     if not success:
         raise HTTPException(status_code=404, detail="Account not found")
     return {"status": "deleted"}
+
+
+@router.get("/accounts/{account_id}/oauth-links")
+async def get_account_oauth_links(account_id: int):
+    """Get all OAuth links for an account."""
+    from db import get_linked_oauth_ids, get_oauth_credentials_by_ids
+
+    oauth_ids = get_linked_oauth_ids(account_id)
+    if not oauth_ids:
+        return []
+
+    creds = get_oauth_credentials_by_ids(oauth_ids)
+    return [
+        {
+            "oauth_id": c["id"],
+            "platform": c["platform"],
+            "account_name": c["account_name"],
+            "linked": True,
+        }
+        for c in creds
+    ]
+
+
+@router.post("/accounts/{account_id}/link-oauth")
+async def link_oauth_to_account_endpoint(account_id: int, request: Request):
+    """Link an OAuth credential to an account."""
+    from db import link_oauth_to_account, get_oauth_credentials
+
+    body = await request.json()
+    oauth_id = body.get("oauth_id")
+
+    if not oauth_id:
+        raise HTTPException(status_code=400, detail="oauth_id required")
+
+    # Verify oauth_id exists
+    creds = get_oauth_credentials()
+    if not any(c["id"] == oauth_id for c in creds):
+        raise HTTPException(status_code=404, detail="OAuth credential not found")
+
+    link_id = link_oauth_to_account(account_id, oauth_id)
+    return {"link_id": link_id, "account_id": account_id, "oauth_id": oauth_id}
+
+
+@router.delete("/accounts/{account_id}/unlink-oauth/{oauth_id}")
+async def unlink_oauth(account_id: int, oauth_id: int):
+    """Unlink an OAuth credential from an account."""
+    from db import unlink_oauth_from_account
+
+    deleted = unlink_oauth_from_account(account_id, oauth_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Link not found")
+    return {"deleted": True}
