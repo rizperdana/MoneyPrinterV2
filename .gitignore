@@ -32,6 +32,7 @@ geckodriver.log
 
 # Local data (secrets)
 data.db
+data/moneyprinter.db
 data/
 .mps/secrets.json
 
