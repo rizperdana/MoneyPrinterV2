@@ -10,6 +10,24 @@ from src.youtube_oauth import (
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# Separate router for Google redirect (no prefix)
+google_redirect_router = APIRouter(tags=["auth"])
+
+
+@google_redirect_router.get("/google/redirect")
+async def googleRedirect(
+    code: str = Query(...), state: str = Query(None), scope: str = Query(None)
+):
+    """Handle Google OAuth redirect callback."""
+    account_id = state or "default"
+    try:
+        tokens = exchange_code_for_tokens(code, account_id)
+        if tokens:
+            return RedirectResponse(url="/accounts?oauth=success", status_code=302)
+    except Exception as e:
+        print(f"OAuth error: {e}")
+    return RedirectResponse(url="/accounts?oauth=error", status_code=302)
+
 
 @router.get("/google/url")
 async def getAuthUrl(account_id: str = Query(None)):
