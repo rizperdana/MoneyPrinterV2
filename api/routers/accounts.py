@@ -107,7 +107,7 @@ async def list_accounts():
 @router.get("/oauth/credentials")
 async def list_oauth_credentials(platform: str = "youtube"):
     """List OAuth credentials for a platform."""
-    from db import get_oauth_credentials
+    from db import get_oauth_credentials, get_linked_account_ids
 
     creds = get_oauth_credentials(platform=platform)
     return [
@@ -117,6 +117,7 @@ async def list_oauth_credentials(platform: str = "youtube"):
             "platform": c["platform"],
             "updated_at": c["updated_at"],
             "has_token": bool(c.get("token")),
+            "linked_account_ids": get_linked_account_ids(c["id"]),
         }
         for c in creds
     ]

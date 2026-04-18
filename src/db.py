@@ -641,6 +641,15 @@ def delete_oauth_credential(account_name: str, platform: str) -> bool:
     return False
 
 
+def delete_oauth_credential_by_id(oauth_id: int) -> bool:
+    """Delete OAuth credential by ID."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM oauth_credentials WHERE id = ?", (oauth_id,))
+    conn.commit()
+    return cursor.rowcount > 0
+
+
 def link_oauth_to_account(account_id: int | str, oauth_id: int) -> int:
     """Link an OAuth credential to an account. Accepts int or str account_id."""
     if isinstance(account_id, str) and account_id.isdigit():
@@ -684,6 +693,17 @@ def get_linked_oauth_ids(account_id: int | str) -> list[int]:
         (account_id,),
     )
     return [row["oauth_id"] for row in cursor.fetchall()]
+
+
+def get_linked_account_ids(oauth_id: int) -> list[int]:
+    """Get all account IDs linked to an OAuth credential."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT account_id FROM account_oauth_links WHERE oauth_id = ?",
+        (oauth_id,),
+    )
+    return [row["account_id"] for row in cursor.fetchall()]
 
 
 def get_oauth_credentials_by_ids(oauth_ids: list[int]) -> list[dict]:

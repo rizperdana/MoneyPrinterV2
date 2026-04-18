@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 from src.youtube_oauth import (
@@ -8,7 +8,7 @@ from src.youtube_oauth import (
     is_token_valid,
 )
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
 # Separate router for Google redirect (no prefix)
 google_redirect_router = APIRouter(tags=["auth"])
@@ -72,3 +72,14 @@ async def logout():
     if tokens_file.exists():
         tokens_file.unlink()
     return {"status": "logged_out"}
+
+
+@router.delete("/credentials/{oauth_id}")
+async def delete_oauth_credential(oauth_id: int):
+    """Delete an OAuth credential."""
+    from db import delete_oauth_credential_by_id
+
+    deleted = delete_oauth_credential_by_id(oauth_id=oauth_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="OAuth credential not found")
+    return {"deleted": True}
