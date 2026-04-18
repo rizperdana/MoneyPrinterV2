@@ -641,8 +641,10 @@ def delete_oauth_credential(account_name: str, platform: str) -> bool:
     return False
 
 
-def link_oauth_to_account(account_id: int, oauth_id: int) -> int:
-    """Link an OAuth credential to an account."""
+def link_oauth_to_account(account_id: int | str, oauth_id: int) -> int:
+    """Link an OAuth credential to an account. Accepts int or str account_id."""
+    if isinstance(account_id, str) and account_id.isdigit():
+        account_id = int(account_id)
     conn = _get_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -657,8 +659,10 @@ def link_oauth_to_account(account_id: int, oauth_id: int) -> int:
     return cursor.lastrowid
 
 
-def unlink_oauth_from_account(account_id: int, oauth_id: int) -> bool:
-    """Unlink an OAuth credential from an account."""
+def unlink_oauth_from_account(account_id: int | str, oauth_id: int) -> bool:
+    """Remove link between account and OAuth credential."""
+    if isinstance(account_id, str) and account_id.isdigit():
+        account_id = int(account_id)
     conn = _get_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -669,8 +673,10 @@ def unlink_oauth_from_account(account_id: int, oauth_id: int) -> bool:
     return cursor.rowcount > 0
 
 
-def get_linked_oauth_ids(account_id: int) -> list[int]:
+def get_linked_oauth_ids(account_id: int | str) -> list[int]:
     """Get all OAuth IDs linked to an account."""
+    if isinstance(account_id, str) and account_id.isdigit():
+        account_id = int(account_id)
     conn = _get_connection()
     cursor = conn.cursor()
     cursor.execute(
