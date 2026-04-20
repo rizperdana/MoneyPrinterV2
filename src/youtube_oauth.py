@@ -13,12 +13,33 @@ load_dotenv()
 import requests
 
 ROOT_DIR = Path(__file__).parent.parent
+CONFIG_FILE = ROOT_DIR / "config.json"
+
+
+def load_config() -> dict:
+    """Load config from config.json."""
+    if CONFIG_FILE.exists():
+        with open(CONFIG_FILE) as f:
+            return json.load(f)
+    return {}
 
 
 def get_oauth_config() -> dict:
+    # Try env vars first, fall back to config.json
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
     redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
+    scopes_env = os.getenv("GOOGLE_SCOPES", "")
+
+    # Fall back to config.json if env vars not set
+    if not client_id or not client_secret or not redirect_uri:
+        config = load_config()
+        google_oauth = config.get("google_oauth", {})
+        client_id = client_id or google_oauth.get("client_id")
+        client_secret = client_secret or google_oauth.get("client_secret")
+        redirect_uri = redirect_uri or google_oauth.get("redirect_uri")
+        scopes_env = scopes_env or " ".join(google_oauth.get("scopes", []))
+
     if not client_id or not client_secret or not redirect_uri:
         raise ValueError(
             "Missing required OAuth config. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI env vars."
@@ -27,7 +48,7 @@ def get_oauth_config() -> dict:
         "client_id": client_id,
         "client_secret": client_secret,
         "redirect_uri": redirect_uri,
-        "scopes": os.getenv("GOOGLE_SCOPES", "").split(),
+        "scopes": scopes_env.split() if scopes_env else [],
     }
 
 
