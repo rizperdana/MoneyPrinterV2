@@ -131,6 +131,18 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE accounts ADD COLUMN oauth_token TEXT")
 
+    # Migration: add topics column to accounts (JSON array of niche strings)
+    try:
+        cursor.execute("SELECT topics FROM accounts LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN topics TEXT DEFAULT '[]'")
+
+    # Migration: add youtube_url column to videos
+    try:
+        cursor.execute("SELECT youtube_url FROM videos LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE videos ADD COLUMN youtube_url TEXT")
+
     info("Database initialized successfully")
 
 
@@ -373,6 +385,15 @@ def get_video_by_id(video_id: int) -> Optional[dict]:
     return dict(zip(columns, row))
 
 
+def update_video_youtube_url(video_id: int, youtube_url: str) -> bool:
+    """Update the youtube_url for a video. Returns True if updated."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE videos SET youtube_url = ? WHERE id = ?", (youtube_url, video_id))
+    conn.commit()
+    return cursor.rowcount > 0
+
+
 def get_settings() -> dict:
     """Get all settings as key-value dict."""
     conn = _get_connection()
@@ -486,6 +507,32 @@ def get_accounts(platform: Optional[str] = None) -> list[dict]:
     return result
 
 
+def list_accounts_with_topics() -> list[dict]:
+    """List all accounts merged from cache files and DB. Adds topics from cache."""
+    import json
+    import os
+
+    cache_dir = ".mp"
+    accounts = get_accounts()  # Get DB accounts first
+
+    # Load topics from cache files
+    for acc in accounts:
+        cache_file = os.path.join(cache_dir, f"{acc['platform']}.json")
+        if os.path.exists(cache_file):
+            with open(cache_file) as f:
+                cache = json.load(f)
+                for entry in cache if isinstance(cache, list) else []:
+                    if entry.get("id") == acc.get("id") or entry.get("username") == acc.get("username"):
+                        acc["topics"] = entry.get("topics", [])
+                        acc["niche"] = entry.get("niche", "")
+                        acc["language"] = entry.get("language", "English")
+                        break
+        # Ensure topics key exists even if not in cache
+        if "topics" not in acc:
+            acc["topics"] = []
+    return accounts
+
+
 def update_account(account_id: int, updates: dict) -> bool:
     """
     Update an existing account record.
@@ -501,7 +548,7 @@ def update_account(account_id: int, updates: dict) -> bool:
     cursor = conn.cursor()
 
     # Build update query dynamically
-    valid_fields = {"platform", "username", "nickname", "profile_path"}
+    valid_fields = {"platform", "username", "nickname", "profile_path", "topics"}
     update_fields = {k: v for k, v in updates.items() if k in valid_fields}
 
     if not update_fields:
