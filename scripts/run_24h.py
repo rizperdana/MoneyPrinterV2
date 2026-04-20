@@ -85,6 +85,7 @@ def add_video(niche, language, topic, title, description, script, tags, video_pa
     from src.db import add_video as db_add_video
     return db_add_video(
         niche=niche,
+        topic=topic,
         account=account_id,
         title=title,
         description=description,
