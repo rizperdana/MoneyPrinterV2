@@ -2,11 +2,12 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any
+import json
+from typing import Any, Callable, Optional
 
 import requests
 
-from src.youtube_oauth import get_access_token
+from src.youtube_oauth import get_access_token, is_token_valid_for_token
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ def youtubeApiUpload(
     tags: list = None,
     account_id: str = "1",
     oauth_token: str = None,
+    progress_callback: Optional[Callable[[str, str, float], None]] = None,
 ) -> dict | None:
     """Upload video to YouTube Data API.
 
@@ -73,8 +75,21 @@ def youtubeApiUpload(
     Raises:
         Exception: If token acquisition fails or video file not found
     """
-    # Get access token
-    access_token = oauth_token or get_access_token(account_id)
+
+    def _log(event: str, **kwargs):
+        logger.info(json.dumps({"event": event, **kwargs}))
+
+    # Get access token - validate passed token before using
+    if oauth_token:
+        if is_token_valid_for_token(oauth_token, account_id):
+            access_token = oauth_token
+        else:
+            # Token expired or invalid, refresh
+            logger.info("OAuth token expired, refreshing...")
+            access_token = get_access_token(account_id)
+    else:
+        access_token = get_access_token(account_id)
+    
     if not access_token:
         logger.error(f"No valid OAuth token for account {account_id}")
         raise Exception("No valid OAuth token for account")
@@ -141,6 +156,9 @@ def youtubeApiUpload(
 
     except requests.RequestException as e:
         logger.error(f"Network error during upload init: {e}")
+        if progress_callback:
+            progress_callback("error", str(e), 0)
+        _log("youtube_upload", phase="error", error=str(e))
         raise Exception(f"Network error during upload init: {e}")
 
     upload_url = init_response.headers.get("Location")
@@ -148,20 +166,53 @@ def youtubeApiUpload(
         logger.error("No upload URL in initialization response")
         raise Exception("No upload URL in response from YouTube API")
 
+    if progress_callback:
+        progress_callback("initializing", "Starting upload...", 5.0)
+    _log("youtube_upload", phase="init", title=title, video_id=account_id)
+
     # Step 2: Upload video file
     logger.info(f"Uploading video to: {upload_url[:80]}...")
     
     upload_response: requests.Response | None = None
     try:
+        chunk_size = 1024 * 1024  # 1 MB chunks
+        bytes_sent = 0
         with open(video_path, "rb") as f:
-            video_data = f.read()
-
-        upload_response = requests.put(
-            upload_url,
-            data=video_data,
-            headers={"Content-Length": str(file_size)},
-            timeout=600,
-        )
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                chunk_len = len(chunk)
+                if bytes_sent == 0:
+                    # First chunk - send with Content-Length header
+                    upload_response = requests.put(
+                        upload_url,
+                        data=chunk,
+                        headers={
+                            "Content-Length": str(file_size),
+                            "Content-Range": f"bytes 0-{chunk_len - 1}/{file_size}",
+                        },
+                        timeout=600,
+                    )
+                else:
+                    # Subsequent chunks
+                    start = bytes_sent
+                    end = bytes_sent + chunk_len - 1
+                    upload_response = requests.put(
+                        upload_url,
+                        data=chunk,
+                        headers={
+                            "Content-Range": f"bytes {start}-{end}/{file_size}",
+                        },
+                        timeout=600,
+                    )
+                bytes_sent += chunk_len
+                progress_pct = 5.0 + (bytes_sent / file_size) * 90.0
+                # Call callback every ~5% or on last chunk
+                if progress_callback and (bytes_sent >= file_size or progress_pct >= 5.0 + 5.0):
+                    progress_callback("uploading", f"Uploading... {int(progress_pct)}%", progress_pct)
+                if bytes_sent % (5 * 1024 * 1024) == 0 or bytes_sent >= file_size:
+                    _log("youtube_upload", phase="uploading", progress=round(progress_pct, 1), bytes_sent=bytes_sent, total_bytes=file_size)
 
         # Handle upload response errors
         if upload_response.status_code == 401:
@@ -186,9 +237,16 @@ def youtubeApiUpload(
 
     except requests.RequestException as e:
         logger.error(f"Network error during video upload: {e}")
+        if progress_callback:
+            progress_callback("error", str(e), 0)
+        _log("youtube_upload", phase="error", error=str(e))
         raise Exception(f"Network error during video upload: {e}")
 
     # Step 3: Extract video ID from response
+    if progress_callback:
+        progress_callback("metadata", "Setting title, description, tags...", 97.0)
+    _log("youtube_upload", phase="metadata", title=title)
+
     try:
         response_json = upload_response.json()
         video_id = response_json.get("id")
@@ -198,7 +256,11 @@ def youtubeApiUpload(
             raise Exception("Video ID not found in API response. Upload may have completed but tracking failed.")
         
         logger.info(f"Upload successful! Video ID: {video_id}")
-        
+
+        if progress_callback:
+            progress_callback("complete", "Upload complete!", 100.0)
+        _log("youtube_upload", phase="complete", video_id=video_id, url=f"https://www.youtube.com/watch?v={video_id}")
+
         return {
             "url": f"https://www.youtube.com/watch?v={video_id}",
             "video_id": video_id,
@@ -206,4 +268,7 @@ def youtubeApiUpload(
         
     except ValueError as e:
         logger.error(f"Failed to parse API response: {e}")
+        if progress_callback:
+            progress_callback("error", str(e), 0)
+        _log("youtube_upload", phase="error", error=str(e))
         raise Exception(f"Failed to parse API response: {e}")
