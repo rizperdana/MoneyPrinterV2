@@ -89,7 +89,6 @@ def youtubeApiUpload(
             access_token = get_access_token(account_id)
     else:
         access_token = get_access_token(account_id)
-    
     if not access_token:
         logger.error(f"No valid OAuth token for account {account_id}")
         raise Exception("No valid OAuth token for account")
@@ -168,7 +167,7 @@ def youtubeApiUpload(
 
     if progress_callback:
         progress_callback("initializing", "Starting upload...", 5.0)
-    _log("youtube_upload", phase="init", title=title, video_id=account_id)
+    _log("youtube_upload", phase="init", title=title, account_id=account_id)
 
     # Step 2: Upload video file
     logger.info(f"Uploading video to: {upload_url[:80]}...")
@@ -209,7 +208,7 @@ def youtubeApiUpload(
                 bytes_sent += chunk_len
                 progress_pct = 5.0 + (bytes_sent / file_size) * 90.0
                 # Call callback every ~5% or on last chunk
-                if progress_callback and (bytes_sent >= file_size or progress_pct >= 5.0 + 5.0):
+                if progress_callback and (bytes_sent >= file_size or progress_pct >= 5.0):
                     progress_callback("uploading", f"Uploading... {int(progress_pct)}%", progress_pct)
                 if bytes_sent % (5 * 1024 * 1024) == 0 or bytes_sent >= file_size:
                     _log("youtube_upload", phase="uploading", progress=round(progress_pct, 1), bytes_sent=bytes_sent, total_bytes=file_size)
