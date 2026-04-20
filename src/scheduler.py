@@ -170,7 +170,7 @@ def run_youtube_job(account_id: str, model: str, logger: logging.Logger) -> bool
             [sys.executable, cron_script, "youtube", account_id, model],
             capture_output=True,
             text=True,
-            timeout=600,  # 10 min max
+            timeout=900,  # 15 min max
         )
         if result.returncode == 0:
             logger.info(f"[YouTube] Job completed successfully")
@@ -185,7 +185,7 @@ def run_youtube_job(account_id: str, model: str, logger: logging.Logger) -> bool
                     logger.error(f"[YouTube]   {line}")
             return False
     except subprocess.TimeoutExpired:
-        logger.error(f"[YouTube] Job timed out (10 min)")
+        logger.error(f"[YouTube] Job timed out (15 min)")
         return False
     except Exception as e:
         logger.error(f"[YouTube] Job exception: {e}")
