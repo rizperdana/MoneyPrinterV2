@@ -79,7 +79,7 @@ async def upload_video_by_id(
     bg: BackgroundTasks,
     platform: str = "youtube",
     account_name: str = None,
-    account_id: int = None,
+    account_id: str = None,
 ):
     """Upload a video from the database directly by its video_id.
 
@@ -159,7 +159,7 @@ async def _do_upload_video(
     def _sync_upload():
         import logging
 
-        # If we have oauth_token for youtube, use API upload instead of browser
+        # YouTube API upload (OAuth required)
         if oauth_token and platform == "youtube":
             try:
                 from src.youtube_api import youtubeApiUpload
@@ -176,47 +176,25 @@ async def _do_upload_video(
                     return
             except Exception as e:
                 logging.error(f"YouTube API upload failed: {e}")
-                # Fall back to browser upload
+                raise Exception(
+                    "YouTube OAuth upload failed. Your OAuth token may be expired or invalid. "
+                    "Please re-authenticate your YouTube account and try again."
+                ) from e
 
-        # Browser-based upload
-        from classes.YouTube import YouTube
+        # No OAuth token provided
+        if platform == "youtube":
+            raise Exception(
+                "No OAuth token provided. Please link your YouTube account with OAuth "
+                "credentials to enable video uploads."
+            )
 
-        # Use firefox_profile from account, fall back to config
-        fp_profile = account.get("firefox_profile")
-        if not fp_profile or not os.path.isdir(fp_profile):
-            from config import get_firefox_profile_path
+        # TikTok uploads require OAuth - no browser fallback
+        if platform == "tiktok":
+            raise Exception(
+                "TikTok uploads require OAuth credentials. Please configure TikTok API access."
+            )
 
-            fp_profile = get_firefox_profile_path()
-            if not fp_profile or not os.path.isdir(fp_profile):
-                raise ValueError("No valid Firefox profile configured")
-
-        yt = YouTube(
-            account_uuid=account.get("id") or account.get("uuid"),
-            account_nickname=account.get("nickname"),
-            fp_profile_path=fp_profile,
-            niche=video.get("niche") or video.get("topic") or "",
-            language=video.get("language") or "English",
-        )
-        yt.video_path = file_path
-        # Set metadata dict directly so upload functions use existing data
-        yt.metadata = {
-            "title": video.get("title", "Untitled"),
-            "description": video.get("description", ""),
-            "tags": video.get("tags", "").split(",") if video.get("tags") else [],
-        }
-        try:
-            if platform == "tiktok":
-                success_flag, result = yt.upload_to_tiktok()
-            else:
-                success_flag, result = yt.upload_video()
-            if not success_flag:
-                raise Exception(f"Upload failed: {result}")
-        finally:
-            if hasattr(yt, "_browser") and yt._browser:
-                try:
-                    yt._browser.quit()
-                except Exception:
-                    pass
+        raise Exception(f"Unsupported platform: {platform}")
 
     try:
         await asyncio.to_thread(_sync_upload)
