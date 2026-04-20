@@ -140,14 +140,32 @@ def is_token_valid(account_id: str = None) -> bool:
     return time.time() < expiry_time
 
 
+def is_token_valid_for_token(access_token: str, account_id: str = None) -> bool:
+    """Check if a specific access token is still valid.
+    
+    Compares against stored token for the account if available.
+    If no account_id, checks if token matches stored token and hasn't expired.
+    """
+    tokens = load_tokens(account_id)
+    if not tokens:
+        return False
+    # Token must match what we have stored
+    if tokens.get("access_token") != access_token:
+        return False
+    saved_at = tokens.get("saved_at", 0)
+    expires_in = tokens.get("expires_in", 3600)
+    expiry_time = saved_at + expires_in - 300
+    return time.time() < expiry_time
+
+
 def get_access_token(account_id: str = None) -> str | None:
     tokens = load_tokens(account_id)
     if not tokens:
         return None
     if not is_token_valid(account_id):
-        refresh_token = tokens.get("refresh_token")
-        if refresh_token:
-            new_tokens = refresh_token(refresh_token, account_id)
+        refresh_token_str = tokens.get("refresh_token")
+        if refresh_token_str:
+            new_tokens = refresh_token(refresh_token_str, account_id)
             if new_tokens:
                 return new_tokens.get("access_token")
         return None
