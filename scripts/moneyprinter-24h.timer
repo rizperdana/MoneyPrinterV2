@@ -1,0 +1,11 @@
+[Unit]
+Description=MoneyPrinterV2 24/7 Timer (every 2 hours)
+Requires=moneyprinter-24h.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

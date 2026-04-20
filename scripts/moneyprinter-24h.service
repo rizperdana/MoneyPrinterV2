@@ -1,0 +1,14 @@
+[Unit]
+Description=MoneyPrinterV2 24/7 Video Generator
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/anon/Projects/experiment/MoneyPrinterV2
+ExecStart=/home/anon/Projects/experiment/MoneyPrinterV2/scripts/run_24h.sh
+StandardOutput=append:logs/run_24h_stdout.log
+StandardError=append:logs/run_24h_stderr.log
+Environment=PATH=/home/anon/Projects/experiment/MoneyPrinterV2/venv/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target
