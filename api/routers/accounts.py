@@ -49,6 +49,9 @@ async def list_accounts():
                         "username": account_id,
                         "nickname": acc.get("nickname", ""),
                         "profile_path": acc.get("firefox_profile", ""),
+                        "niche": acc.get("niche", ""),
+                        "topics": acc.get("topics", []),
+                        "language": acc.get("language", "English"),
                         "oauth_status": oauth_status,
                         "oauth_updated": oauth_updated,
                     }
@@ -78,6 +81,9 @@ async def list_accounts():
                         "username": account_id,
                         "nickname": acc.get("nickname", ""),
                         "profile_path": acc.get("firefox_profile", ""),
+                        "niche": acc.get("niche", ""),
+                        "topics": acc.get("topics", []),
+                        "language": acc.get("language", "English"),
                         "oauth_status": oauth_status,
                         "oauth_updated": oauth_updated,
                     }

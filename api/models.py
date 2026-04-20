@@ -27,6 +27,9 @@ class AccountUpdate(BaseModel):
     username: str | None = None
     nickname: str | None = None
     profile_path: str | None = None
+    topics: list[str] | None = None
+    niche: str | None = None
+    language: str | None = None
 
 
 class SettingsUpdate(BaseModel):
