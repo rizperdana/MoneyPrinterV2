@@ -127,6 +127,7 @@ async def upload_video_by_id(
 
     # Get OAuth credentials
     oauth_token = None
+    oauth_account_for_refresh = None
     oauth_lookup_id = account_id or target_account_id
     if platform == "youtube":
         from src.db import get_linked_oauth_ids, get_oauth_credentials_by_ids, get_oauth_credentials
@@ -137,12 +138,20 @@ async def upload_video_by_id(
             oauth_creds = [c for c in oauth_creds if c["platform"] == "youtube"]
             if oauth_creds:
                 oauth_token = oauth_creds[0].get("token")
+                oauth_account_for_refresh = oauth_creds[0].get("account_name")
 
         # Fallback: if no linked credentials, try direct lookup by account_name
         if not oauth_token:
             direct_creds = get_oauth_credentials(account_name=oauth_lookup_id, platform="youtube")
             if direct_creds:
                 oauth_token = direct_creds[0].get("token")
+                oauth_account_for_refresh = oauth_lookup_id
+            else:
+                # Last resort: try 'default'
+                default_creds = get_oauth_credentials(account_name="default", platform="youtube")
+                if default_creds:
+                    oauth_token = default_creds[0].get("token")
+                    oauth_account_for_refresh = "default"
 
     # Create job for WebSocket event streaming
     upload_job = job_manager.create(
@@ -161,7 +170,7 @@ async def upload_video_by_id(
     })
 
     # Run upload in background
-    bg.add_task(_do_upload_video, file_path, video, account, platform, oauth_token, upload_job, oauth_lookup_id)
+    bg.add_task(_do_upload_video, file_path, video, account, platform, oauth_token, upload_job, oauth_account_for_refresh or "default")
     return {
         "status": "uploading",
         "video_id": video_id,
