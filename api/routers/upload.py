@@ -125,19 +125,24 @@ async def upload_video_by_id(
     else:
         account = accounts[0]
 
-    # Get OAuth credentials - use target_account_id (video's account if not specified)
+    # Get OAuth credentials
     oauth_token = None
     oauth_lookup_id = account_id or target_account_id
-    if oauth_lookup_id and platform == "youtube":
-        from db import get_linked_oauth_ids, get_oauth_credentials_by_ids
+    if platform == "youtube":
+        from src.db import get_linked_oauth_ids, get_oauth_credentials_by_ids, get_oauth_credentials
 
         oauth_ids = get_linked_oauth_ids(oauth_lookup_id)
         if oauth_ids:
             oauth_creds = get_oauth_credentials_by_ids(oauth_ids)
-            # Filter by platform
             oauth_creds = [c for c in oauth_creds if c["platform"] == "youtube"]
             if oauth_creds:
                 oauth_token = oauth_creds[0].get("token")
+
+        # Fallback: if no linked credentials, try direct lookup by account_name
+        if not oauth_token:
+            direct_creds = get_oauth_credentials(account_name=oauth_lookup_id, platform="youtube")
+            if direct_creds:
+                oauth_token = direct_creds[0].get("token")
 
     # Create job for WebSocket event streaming
     upload_job = job_manager.create(
