@@ -115,20 +115,23 @@ async def upload_video_by_id(
     if not accounts:
         raise HTTPException(status_code=400, detail=f"No {platform} account configured")
 
-    # Select account by name or use first available
-    if account_name:
+    # Select account by name, video's account, or first available
+    # Use video's account field as default when not specified
+    target_account_id = account_name or video.get("account")
+    if target_account_id:
         account = next(
-            (a for a in accounts if a.get("id") == account_name), accounts[0]
+            (a for a in accounts if a.get("id") == target_account_id), accounts[0]
         )
     else:
         account = accounts[0]
 
-    # Get OAuth credentials when account_id is provided
+    # Get OAuth credentials - use target_account_id (video's account if not specified)
     oauth_token = None
-    if account_id and platform == "youtube":
+    oauth_lookup_id = account_id or target_account_id
+    if oauth_lookup_id and platform == "youtube":
         from db import get_linked_oauth_ids, get_oauth_credentials_by_ids
 
-        oauth_ids = get_linked_oauth_ids(account_id)
+        oauth_ids = get_linked_oauth_ids(oauth_lookup_id)
         if oauth_ids:
             oauth_creds = get_oauth_credentials_by_ids(oauth_ids)
             # Filter by platform
@@ -136,13 +139,30 @@ async def upload_video_by_id(
             if oauth_creds:
                 oauth_token = oauth_creds[0].get("token")
 
+    # Create job for WebSocket event streaming
+    upload_job = job_manager.create(
+        account=account.get("id", "unknown"),
+        niche="",
+        language="",
+    )
+    upload_job.status = JobStatus.running
+
+    # Emit initial progress
+    upload_job.events.put_nowait({
+        "type": "upload_progress",
+        "step": "initializing",
+        "status": "Starting upload...",
+        "progress": 5,
+    })
+
     # Run upload in background
-    bg.add_task(_do_upload_video, file_path, video, account, platform, oauth_token)
+    bg.add_task(_do_upload_video, file_path, video, account, platform, oauth_token, upload_job)
     return {
         "status": "uploading",
         "video_id": video_id,
         "platform": platform,
         "account": account.get("id"),
+        "job_id": upload_job.id,
     }
 
 
@@ -152,12 +172,23 @@ async def _do_upload_video(
     account: dict,
     platform: str = "youtube",
     oauth_token: str = None,
+    job=None,
 ):
     """Upload video to YouTube or TikTok in a background task."""
     import asyncio
+    import logging
+
+    def _emit_progress(step, status_msg, progress):
+        """Thread-safe event emission to job.events via asyncio bridge."""
+        event = {"type": "upload_progress", "step": step, "status": status_msg, "progress": progress}
+        if job:
+            try:
+                loop = asyncio.get_event_loop()
+                loop.call_soon_threadsafe(job.events.put_nowait, event)
+            except RuntimeError:
+                pass  # No event loop in this thread context
 
     def _sync_upload():
-        import logging
 
         # YouTube API upload (OAuth required)
         if oauth_token and platform == "youtube":
@@ -170,10 +201,11 @@ async def _do_upload_video(
                     description=video.get("description", ""),
                     tags=video.get("tags", "").split(",") if video.get("tags") else [],
                     oauth_token=oauth_token,
+                    progress_callback=_emit_progress,
                 )
                 if result:
                     logging.info(f"API upload successful: {result.get('url')}")
-                    return
+                return result
             except Exception as e:
                 logging.error(f"YouTube API upload failed: {e}")
                 raise Exception(
@@ -196,8 +228,34 @@ async def _do_upload_video(
 
         raise Exception(f"Unsupported platform: {platform}")
 
+    result = None
     try:
-        await asyncio.to_thread(_sync_upload)
+        result = await asyncio.to_thread(_sync_upload)
+        # Emit completion event
+        if job:
+            try:
+                loop = asyncio.get_event_loop()
+                loop.call_soon_threadsafe(job.events.put_nowait, {
+                    "type": "upload_complete",
+                    "url": result.get("url", "") if result else "",
+                    "video_id": result.get("video_id", "") if result else "",
+                })
+                job.status = JobStatus.done
+                if result:
+                    job.upload_url = result.get("url", "")
+            except RuntimeError:
+                pass
     except Exception as e:
-        # Log error - in a production system you'd want to update a job status
-        print(f"Upload error: {e}")
+        # Emit error event
+        logging.error(f"Upload error: {e}")
+        if job:
+            try:
+                loop = asyncio.get_event_loop()
+                loop.call_soon_threadsafe(job.events.put_nowait, {
+                    "type": "upload_error",
+                    "error": str(e),
+                })
+                job.status = JobStatus.failed
+                job.error = str(e)
+            except RuntimeError:
+                pass
