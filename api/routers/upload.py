@@ -259,6 +259,10 @@ async def _do_upload_video(
                 job.status = JobStatus.done
                 if result:
                     job.upload_url = result.get("url", "")
+                    # Persist to database
+                    from src.db import update_video_youtube_url
+                    if result.get("url"):
+                        update_video_youtube_url(video["id"], result["url"])
             except RuntimeError:
                 pass
     except Exception as e:
