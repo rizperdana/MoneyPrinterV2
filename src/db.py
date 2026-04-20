@@ -552,7 +552,7 @@ def update_account(account_id: int, updates: dict) -> bool:
 
     # Build update query dynamically
     import json as _json
-    valid_fields = {"platform", "username", "nickname", "profile_path", "topics"}
+    valid_fields = {"platform", "username", "nickname", "profile_path", "topics", "niche", "language"}
     update_fields = {}
     for k, v in updates.items():
         if k in valid_fields:

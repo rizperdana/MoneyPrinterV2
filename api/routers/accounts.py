@@ -90,7 +90,8 @@ async def list_accounts():
                 )
 
     # Also get accounts from database
-    db_accounts = get_accounts()
+    from db import list_accounts_with_topics
+    db_accounts = list_accounts_with_topics()
     for acc in db_accounts:
         # Avoid duplicates by checking username+platform
         if not any(
