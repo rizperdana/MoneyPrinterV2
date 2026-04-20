@@ -46,8 +46,14 @@ def load_state():
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     if STATE_FILE.exists():
         with open(STATE_FILE) as f:
-            return json.load(f)
-    return {"last_index": {}, "total_runs": 0}
+            state = json.load(f)
+    else:
+        state = {}
+    # Ensure all expected keys exist (migration for old state files)
+    state.setdefault("last_index", {})
+    state.setdefault("last_topic", {})
+    state.setdefault("total_runs", 0)
+    return state
 
 
 def save_state(state):
@@ -56,15 +62,13 @@ def save_state(state):
 
 
 def load_accounts():
-    if not CACHE_FILE.exists():
-        logger.error(f"Account cache not found: {CACHE_FILE}")
-        return []
-    with open(CACHE_FILE) as f:
-        data = json.load(f)
-    # Handle both {"accounts": [...]} and [...] formats
-    if isinstance(data, dict) and "accounts" in data:
-        return data["accounts"]
-    return data if isinstance(data, list) else []
+    """Load accounts from cache files. Merges DB accounts with cache topics."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+    from src.db import get_accounts, list_accounts_with_topics
+
+    # Get accounts from DB with cache topics merged
+    return list_accounts_with_topics()
 
 
 def get_next_topic(account, state):
@@ -80,13 +84,13 @@ def get_next_topic(account, state):
     return topics[next_idx]
 
 
-def add_video(niche, language, topic, title, description, script, tags, video_path, platform="youtube", account_id=None):
+def add_video(niche, language, topic, title, description, script, tags, video_path, platform="youtube", account=None):
     """Add a generated video to the DB."""
     from src.db import add_video as db_add_video
     return db_add_video(
         niche=niche,
         topic=topic,
-        account=account_id,
+        account=account,
         title=title,
         description=description,
         script=script,
@@ -116,8 +120,20 @@ def main():
     account_id = account.get("id")
 
     logger.info(f"=== Run #{state['total_runs'] + 1} ===")
-    logger.info(f"Account: {account['username']} ({account_id[:8]}...)")
+    account_id = str(account.get("id", ""))
+    logger.info(f"Account: {account.get('username', '?')} ({account_id[:8] if len(account_id) >= 8 else account_id})")
     logger.info(f"Topic: {topic}")
+
+    # Simple dedup: if last run used same topic for same account, skip and pick next
+    last = state.get("last_topic", {}).get(account_id)
+    if last == topic:
+        topics = account.get("topics", []) or DARK_NICHES
+        idx = (state["last_index"].get(account_id, -1)) % len(topics)
+        state["last_index"][account_id] = idx
+        topic = topics[idx]
+        state["last_topic"][account_id] = topic
+        save_state(state)
+        logger.info(f"Same topic as last run, advanced to: {topic}")
 
     try:
         result = run_pipeline(
@@ -143,7 +159,7 @@ def main():
                 tags=[],
                 video_path=result["video_path"],
                 platform="youtube",
-                account_id=account_id,
+                account=account.get("username"),
             )
             logger.info(f"Video saved to DB with ID: {vid}")
 
@@ -153,6 +169,7 @@ def main():
                 logger.info(f"Uploaded: {result['youtube_url']}")
 
         state["total_runs"] += 1
+        state["last_topic"][account_id] = topic
         save_state(state)
 
     except Exception as e:
