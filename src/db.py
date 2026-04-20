@@ -523,7 +523,10 @@ def list_accounts_with_topics() -> list[dict]:
                 cache = json.load(f)
                 for entry in cache if isinstance(cache, list) else []:
                     if entry.get("id") == acc.get("id") or entry.get("username") == acc.get("username"):
-                        acc["topics"] = entry.get("topics", [])
+                        topics = entry.get("topics", [])
+                        if isinstance(topics, str):
+                            topics = _json.loads(topics)
+                        acc["topics"] = topics
                         acc["niche"] = entry.get("niche", "")
                         acc["language"] = entry.get("language", "English")
                         break
@@ -548,8 +551,15 @@ def update_account(account_id: int, updates: dict) -> bool:
     cursor = conn.cursor()
 
     # Build update query dynamically
+    import json as _json
     valid_fields = {"platform", "username", "nickname", "profile_path", "topics"}
-    update_fields = {k: v for k, v in updates.items() if k in valid_fields}
+    update_fields = {}
+    for k, v in updates.items():
+        if k in valid_fields:
+            if k == "topics" and isinstance(v, list):
+                update_fields[k] = _json.dumps(v)
+            else:
+                update_fields[k] = v
 
     if not update_fields:
         return False
