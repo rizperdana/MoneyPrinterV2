@@ -156,7 +156,7 @@ async def upload_video_by_id(
     })
 
     # Run upload in background
-    bg.add_task(_do_upload_video, file_path, video, account, platform, oauth_token, upload_job)
+    bg.add_task(_do_upload_video, file_path, video, account, platform, oauth_token, upload_job, oauth_lookup_id)
     return {
         "status": "uploading",
         "video_id": video_id,
@@ -173,6 +173,7 @@ async def _do_upload_video(
     platform: str = "youtube",
     oauth_token: str = None,
     job=None,
+    oauth_account_id: str = None,
 ):
     """Upload video to YouTube or TikTok in a background task."""
     import asyncio
@@ -201,6 +202,7 @@ async def _do_upload_video(
                     description=video.get("description", ""),
                     tags=video.get("tags", "").split(",") if video.get("tags") else [],
                     oauth_token=oauth_token,
+                    account_id=oauth_account_id,
                     progress_callback=_emit_progress,
                 )
                 if result:
