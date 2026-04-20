@@ -14,7 +14,6 @@ import os
 import sys
 import json
 import argparse
-import time
 
 from dotenv import load_dotenv
 
@@ -26,7 +25,7 @@ load_dotenv(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 )
 
-from config import ROOT_DIR, get_default_model, get_firefox_profile_path
+from config import ROOT_DIR, get_default_model
 from status import error, success, info, warning
 from llm_provider import select_model
 from classes.YouTube import YouTube
@@ -70,36 +69,19 @@ def run_pipeline(
         # Initialize TTS
         tts = TTS()
 
-        # Initialize YouTube (skip browser if not uploading)
-        fp_profile = get_firefox_profile_path()
-
-        if upload and fp_profile and os.path.isdir(fp_profile):
-            info("Initializing YouTube with Firefox profile for upload...")
-            youtube = YouTube(
-                account_uuid="auto-pipeline",
-                account_nickname="Auto Pipeline",
-                fp_profile_path=fp_profile,
-                niche=niche,
-                language=language,
-            )
-        else:
-            if upload:
-                warning("No valid Firefox profile configured. Skipping upload.")
-                upload = False
-
-            # Create YouTube instance without browser
-            youtube = YouTube.__new__(YouTube)
-            youtube._account_uuid = "auto-pipeline"
-            youtube._account_nickname = "Auto Pipeline"
-            youtube._niche = niche
-            youtube._language = language
-            youtube.images = []
-            youtube.subject = None
-            youtube.script = None
-            youtube.metadata = None
-            youtube.image_prompts = None
-            youtube.tts_path = None
-            youtube.video_path = None
+        # Initialize YouTube
+        youtube = YouTube.__new__(YouTube)
+        youtube._account_uuid = "auto-pipeline"
+        youtube._account_nickname = "Auto Pipeline"
+        youtube._niche = niche
+        youtube._language = language
+        youtube.images = []
+        youtube.subject = None
+        youtube.script = None
+        youtube.metadata = None
+        youtube.image_prompts = None
+        youtube.tts_path = None
+        youtube.video_path = None
 
         # Step 1: Generate Topic
         info("Step 1/7: Generating topic...")
@@ -165,19 +147,26 @@ def run_pipeline(
         if upload:
             info("Uploading to YouTube...")
             try:
-                upload_success = youtube.upload_video()
-                if upload_success:
-                    result["uploaded"] = True
-                    result["youtube_url"] = getattr(youtube, "uploaded_video_url", None)
-                    success(
-                        f"Video uploaded successfully! {result.get('youtube_url', '')}"
+                from src.youtube_oauth import get_access_token
+                from src.youtube_api import youtubeApiUpload
+
+                oauth_token = get_access_token("default")
+                if oauth_token:
+                    upload_result = youtubeApiUpload(
+                        video_path=video_path,
+                        title=result.get("title", "Untitled"),
+                        description=result.get("description", ""),
+                        tags=result.get("tags", []),
+                        oauth_token=oauth_token,
+                        account_id="default",
+                        progress_callback=None,
                     )
+                    result["uploaded"] = True
+                    result["youtube_url"] = upload_result.get("url")
+                    success(f"Uploaded: {result['youtube_url']}")
                 else:
                     result["uploaded"] = False
-                    result["error"] = (
-                        "Upload returned False — check Firefox profile login or YouTube Studio selectors"
-                    )
-                    error(result["error"])
+                    warning("No OAuth token available. Skipping upload.")
             except Exception as e:
                 error(f"Upload failed: {e}")
                 result["error"] = f"Upload failed: {e}"
