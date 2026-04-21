@@ -8,6 +8,7 @@ class GenerateRequest(BaseModel):
     niche: str
     language: str = "English"
     for_kids: bool = False
+    auto_upload: bool = False
 
 
 class JobResponse(BaseModel):

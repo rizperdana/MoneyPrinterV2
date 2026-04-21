@@ -17,9 +17,9 @@ for _p in [_project_root, _src_dir]:
         sys.path.insert(0, _p)
 
 from api.jobs import job_manager, JobStatus
-from db import add_video, add_topic
+from db import add_video, add_topic, update_video_youtube_url
 
-STEPS = ["topic", "script", "metadata", "image_prompts", "images", "tts", "combine"]
+STEPS = ["topic", "script", "metadata", "image_prompts", "images", "tts", "combine", "thumbnail", "upload"]
 
 
 async def run_job(job_id: str):
@@ -122,7 +122,7 @@ async def run_job(job_id: str):
             # Step 2: Script
             on_progress("script", "running")
             youtube.generate_script()
-            on_progress("script", "done", detail=f"{len(youtube.script)} chars")
+            on_progress("script", "done", detail=f"{len(youtube.script or '')} chars")
 
             if job.cancel_requested:
                 return None
@@ -130,9 +130,10 @@ async def run_job(job_id: str):
             # Step 3: Metadata
             on_progress("metadata", "running")
             youtube.generate_metadata()
-            on_progress(
-                "metadata", "done", detail=youtube.metadata.get("title", "")[:40]
-            )
+            metadata_title = ""
+            if youtube.metadata:
+                metadata_title = youtube.metadata.get("title", "") or ""
+            on_progress("metadata", "done", detail=metadata_title[:40])
 
             if job.cancel_requested:
                 return None
@@ -192,14 +193,62 @@ async def run_job(job_id: str):
             size_mb = os.path.getsize(youtube.video_path) / 1024 / 1024
             on_progress("combine", "done", detail=f"{size_mb} MB")
 
-            # Return all video data for DB storage
+            # Step 8: Thumbnail
+            on_progress("thumbnail", "running")
+            youtube.generate_thumbnail()
+            hook_path = getattr(youtube, 'hook_frame_path', None)
+            thumb_path = getattr(youtube, 'thumbnail_path', None)
+            on_progress("thumbnail", "done", detail=f"hook:{bool(hook_path)} thumb:{bool(thumb_path)}")
+
+            # Add video to DB first (needed for auto-upload URL update)
+            metadata = youtube.metadata or {}
+            tags_list = (
+                metadata.get("tags", [])
+                if isinstance(metadata.get("tags"), list)
+                else []
+            )
+            video_id = add_video(
+                topic=youtube.subject,
+                title=metadata.get("title", "") if metadata else "",
+                script=youtube.script,
+                platform="youtube",
+                file_path=youtube.video_path,
+                niche=youtube._niche,
+                description=metadata.get("description", "")
+                if metadata
+                else None,
+                tags=",".join(tags_list) if tags_list else None,
+                category=metadata.get("category", "")
+                if metadata and metadata.get("category")
+                else None,
+                account=job.account,
+                language=youtube._language,
+                for_kids=job.for_kids,
+            )
+
+            # Auto-upload if enabled
+            upload_url = None
+            if job.auto_upload:
+                on_progress("upload", "running")
+                success, url = youtube.upload_video()
+                if success and url:
+                    job.upload_url = url
+                    upload_url = url
+                    update_video_youtube_url(video_id, url)
+                on_progress("upload", "done", detail=url if success else "failed")
+
+            # Return all video data
             return {
                 "path": youtube.video_path,
                 "subject": youtube.subject,
                 "script": youtube.script,
-                "metadata": youtube.metadata,
+                "metadata": metadata,
                 "niche": youtube._niche,
                 "language": youtube._language,
+                "thumbnail_path": thumb_path,
+                "hook_frame_path": hook_path,
+                "video_id": video_id,
+                "upload_url": upload_url,
             }
         finally:
             if hasattr(youtube, "_browser") and youtube._browser:
@@ -217,39 +266,8 @@ async def run_job(job_id: str):
             job.status = JobStatus.done
             job.output_path = result.get("path")
 
-            # Store video in database with all AI-generated data
-            if job.output_path and result.get("subject"):
-                try:
-                    metadata = result.get("metadata") or {}
-                    tags_list = (
-                        metadata.get("tags", [])
-                        if isinstance(metadata.get("tags"), list)
-                        else []
-                    )
-
-                    add_video(
-                        topic=result["subject"],
-                        title=metadata.get("title", "") if metadata else "",
-                        script=result.get("script"),
-                        platform="youtube",
-                        file_path=job.output_path,
-                        niche=result.get("niche", ""),
-                        description=metadata.get("description", "")
-                        if metadata
-                        else None,
-                        tags=",".join(tags_list) if tags_list else None,
-                        category=metadata.get("category", "")
-                        if metadata and metadata.get("category")
-                        else None,
-                        account=job.account,
-                        language=result.get("language", "English"),
-                        for_kids=job.for_kids,
-                    )
-                except Exception as e:
-                    import traceback
-
-                    print(f"Warning: could not add video to db: {e}")
-                    traceback.print_exc()
+            # Video already added in _run_sync before auto-upload
+            # result contains video_id and upload_url from that process
 
             await job.events.put(
                 {

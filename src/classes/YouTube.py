@@ -13,6 +13,7 @@ from PIL import Image
 
 from utils import close_running_selenium_instances, build_url, choose_random_song
 from cache import get_accounts, add_account, get_youtube_cache_path
+from db import add_video as db_add_video
 from .Tts import TTS
 from llm_provider import generate_text, get_model_for_job
 from config import (
@@ -1272,7 +1273,7 @@ Output format (one per line):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Ghibli watercolor"
+        enhanced_prompt = f"{prompt}, Photorealistic watercolor"
         print(f"Generating AI image via Pollinations zimage: {prompt[:80]}...")
 
         try:
@@ -1328,7 +1329,7 @@ Output format (one per line):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Ghibli watercolor"
+        enhanced_prompt = f"{prompt}, Photorealistic watercolor"
         print(f"Generating AI image via Pollinations flux: {prompt[:80]}...")
 
         try:
@@ -1384,7 +1385,7 @@ Output format (one per line):
                 )
             return None
 
-        enhanced_prompt = f"{prompt}, Ghibli watercolor, high quality, detailed"
+        enhanced_prompt = f"{prompt}, Photorealistic watercolor, high quality, detailed"
 
         # Model fallback chain: Leonardo Phoenix > Flux Schnell > Flux Klein > Flux Dev > SDXL
         models = [
@@ -1529,6 +1530,75 @@ Output format (one per line):
         )
         return None
 
+    def generate_thumbnail(self) -> None:
+        """
+        Generates a YouTube thumbnail and a hook frame overlay.
+
+        Creates:
+        - self.thumbnail_path: AI-generated clickbait thumbnail (1280x720)
+        - self.hook_frame_path: First image with title overlay (1280x720)
+        """
+        from PIL import Image, ImageDraw, ImageFont
+
+        # 1. Generate the thumbnail AI image
+        title = self.metadata.get("title", self.subject) if hasattr(self, "metadata") and self.metadata else (self.subject or "")
+        thumbnail_prompt = f"Epic clickbait thumbnail for: {title} - mysterious atmosphere, high contrast, cinematic lighting, vibrant colors, must grab attention, no text"
+
+        thumbnail_path = self.generate_image(thumbnail_prompt)
+        if thumbnail_path:
+            self.thumbnail_path = thumbnail_path
+            if get_verbose():
+                info(f" => Thumbnail generated: {thumbnail_path}")
+        else:
+            warning("Thumbnail generation failed.")
+
+        # 2. Create hook frame: overlay title text on first generated image
+        if not self.images:
+            warning("No images available for hook frame.")
+            return
+
+        try:
+            first_img_path = self.images[0]
+            img = Image.open(first_img_path).convert("RGB")
+            img = img.resize((1280, 720), Image.LANCZOS)
+
+            draw = ImageDraw.Draw(img)
+
+            # Try to use a bold font
+            font_path = os.path.join(get_fonts_dir(), get_font())
+            try:
+                font_size = max(48, int(720 * 0.06))
+                font = ImageFont.truetype(font_path, font_size)
+            except Exception:
+                font = ImageFont.load_default()
+
+            # Title text centered at bottom
+            bbox = draw.textbbox((0, 0), title, font=font)
+            text_w = bbox[2] - bbox[0]
+            text_h = bbox[3] - bbox[1]
+            x = (1280 - text_w) // 2
+            y = 720 - text_h - 40
+
+            # Draw shadow first
+            shadow_offset = 3
+            for dx in range(-shadow_offset, shadow_offset + 1, 1):
+                for dy in range(-shadow_offset, shadow_offset + 1, 1):
+                    if dx != 0 or dy != 0:
+                        draw.text((x + dx, y + dy), title, font=font, fill="black")
+
+            # Draw white text
+            draw.text((x, y), title, font=font, fill="white")
+
+            hook_frame_path = os.path.join(ROOT_DIR, ".mp", "thumbnail_hook.png")
+            img.save(hook_frame_path)
+            self.hook_frame_path = hook_frame_path
+
+            if get_verbose():
+                info(f" => Hook frame saved: {hook_frame_path}")
+
+        except Exception as e:
+            warning(f"Hook frame creation failed: {e}")
+
     def generate_script_to_speech(self, tts_instance: TTS) -> str:
         """
         Converts the generated script into Speech using KittenTTS and returns the path to the wav file.
@@ -1555,7 +1625,7 @@ Output format (one per line):
 
     def add_video(self, video: dict) -> None:
         """
-        Adds a video to the cache.
+        Adds a video to the database.
 
         Args:
             video (dict): The video to add
@@ -1563,23 +1633,14 @@ Output format (one per line):
         Returns:
             None
         """
-        videos = self.get_videos()
-        videos.append(video)
-
-        cache = get_youtube_cache_path()
-
-        with open(cache, "r") as file:
-            previous_json = json.loads(file.read())
-
-            # Find our account
-            accounts = previous_json["accounts"]
-            for account in accounts:
-                if account["id"] == self._account_uuid:
-                    account["videos"].append(video)
-
-            # Commit changes
-            with open(cache, "w") as f:
-                f.write(json.dumps(previous_json))
+        db_add_video(
+            topic=self.subject,
+            title=video.get("title", ""),
+            description=video.get("description", ""),
+            platform="youtube",
+            file_path=video.get("url", ""),
+            niche=self.niche,
+        )
 
     def generate_subtitles(self, audio_path: str) -> str:
         """
@@ -2961,10 +3022,10 @@ Output format (one per line):
                         js_find_by_title = """
                         (function() {
                             var targetTitle = arguments[0].toLowerCase();
-                            
+
                             // Find all video elements
                             var videoItems = document.querySelectorAll('ytd-grid-video-renderer, ytd-video-renderer');
-                            
+
                             for (var i = 0; i < videoItems.length; i++) {
                                 var titleEl = videoItems[i].querySelector('#title, #video-title');
                                 if (titleEl) {
@@ -3778,23 +3839,23 @@ Output format (one per line):
                                         if (parent && parent.href) return parent.href;
                                     }
                                 }
-                                
+
                                 // Try to get from the first story/reel div
                                 var storyLinks = document.querySelectorAll('[role="article"] a[href*="/reel/"], [role="article"] a[href*="/videos/"], [role="article"] a[href*="/watch?v="]');
                                 if (storyLinks && storyLinks.length > 0) {
                                     // Get the first link which is likely the newest
                                     return storyLinks[0].href;
                                 }
-                                
+
                                 // Try from server rendering data
                                 var bodyText = document.body.innerText;
                                 var match = bodyText.match(/facebook\.com\/[^\s]*reel\/\d+/);
                                 if (match) return match[0];
-                                
+
                                 // Also try to match watch URLs
                                 var matchWatch = bodyText.match(/facebook\.com\/watch\?v=\d+/);
                                 if (matchWatch) return matchWatch[0];
-                                
+
                                 return null;
                             })();
                             """
@@ -4143,7 +4204,7 @@ Output format (one per line):
                                 (function() {
                                     // Try to get video from various Facebook data stores
                                     var results = [];
-                                    
+
                                     // Check for video IDs in page source with more patterns
                                     var scripts = document.querySelectorAll('script');
                                     for (var i = 0; i < scripts.length; i++) {
@@ -4154,7 +4215,7 @@ Output format (one per line):
                                             var reVideo = content.match(/(["'])(\\/videos\\/\\d+[^"']*)\\1/g);
                                             var reVidId = content.match(/video_id[=:]\\s*["']?(\\d+)/gi);
                                             var reFbVideo = content.match(/fb:\\/\\/video\\?id=(\\d+)/gi);
-                                            
+
                                             if (reReel && reReel.length > 0) {
                                                 for (var j = 0; j < Math.min(reReel.length, 3); j++) {
                                                     results.push(reReel[j]);
@@ -4167,13 +4228,13 @@ Output format (one per line):
                                             }
                                         }
                                     }
-                                    
+
                                     // Try to find from window.__DFP_DATA__ or similar
                                     if (window.__DFP_DATA__) {
                                         var dfp = window.__DFP_DATA__;
                                         if (dfp.video) results.push(dfp.video);
                                     }
-                                    
+
                                     return results.slice(0, 10);
                                 })();
                                 """
@@ -4690,7 +4751,7 @@ Output format (one per line):
                                     var match = content.match(/https?:\\/\\/www\\.tiktok\\.com\\/@[\\w.-]+\\/video\\/(\\d+)/);
                                     if (match) return match[0];
                                 }
-                                
+
                                 // Try to find video data in window object
                                 if (window.RENDER_DATA) {
                                     var renderData = window.RENDER_DATA;
@@ -4703,7 +4764,7 @@ Output format (one per line):
                                         }
                                     }
                                 }
-                                
+
                                 return null;
                             """)
                             if video_data:

@@ -44,6 +44,7 @@ async def start_generation(req: GenerateRequest, bg: BackgroundTasks):
         niche=req.niche,
         language=req.language,
         for_kids=req.for_kids,
+        auto_upload=req.auto_upload,
     )
     bg.add_task(run_job, job.id)
     return JobResponse(job_id=job.id, status=job.status.value)

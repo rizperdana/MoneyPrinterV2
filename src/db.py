@@ -83,7 +83,7 @@ def init_db() -> None:
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS topics (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            topic TEXT NOT NULL,
+            topic TEXT NOT NULL UNIQUE,
             niche TEXT NOT NULL,
             account_id INTEGER,
             used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -107,8 +107,10 @@ def init_db() -> None:
             file_path TEXT,
             language TEXT DEFAULT 'English',
             for_kids BOOLEAN DEFAULT 0,
+            account_id INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (topic_id) REFERENCES topics(id)
+            FOREIGN KEY (topic_id) REFERENCES topics(id),
+            FOREIGN KEY (account_id) REFERENCES accounts(id)
         )
     """)
 
@@ -148,6 +150,12 @@ def init_db() -> None:
         cursor.execute("SELECT youtube_url FROM videos LIMIT 1")
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE videos ADD COLUMN youtube_url TEXT")
+
+    # Migration: add account_id column to videos
+    try:
+        cursor.execute("SELECT account_id FROM videos LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE videos ADD COLUMN account_id INTEGER REFERENCES accounts(id)")
 
     info("Database initialized successfully")
 
@@ -311,6 +319,7 @@ def add_video(
     account: Optional[str] = None,
     language: str = "English",
     for_kids: bool = False,
+    account_id: Optional[int] = None,
 ) -> int:
     """
     Insert a video record with all AI-generated data.
@@ -328,6 +337,7 @@ def add_video(
         account: Account username
         language: Video language
         for_kids: Whether content is for kids
+        account_id: Optional account ID (resolves from account if not provided)
 
     Returns:
         The row ID of the inserted video
@@ -340,6 +350,13 @@ def add_video(
     row = cursor.fetchone()
     topic_id = row["id"] if row else None
 
+    # Resolve account_id from account username if not provided
+    if account_id is None and account:
+        cursor.execute("SELECT id FROM accounts WHERE username = ?", (account,))
+        row = cursor.fetchone()
+        if row:
+            account_id = row["id"]
+
     # Convert tags to string if it's a list
     if isinstance(tags, list):
         tags = ",".join(tags)
@@ -348,8 +365,8 @@ def add_video(
         """
         INSERT INTO videos (
             topic_id, niche, account, title, description, script, tags, category,
-            platform, file_path, language, for_kids
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            platform, file_path, language, for_kids, account_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             topic_id,
@@ -364,6 +381,7 @@ def add_video(
             file_path,
             language,
             for_kids,
+            account_id,
         ),
     )
     conn.commit()
@@ -547,6 +565,15 @@ def get_accounts(platform: Optional[str] = None) -> list[dict]:
     return result
 
 
+def get_account_by_username(username: str) -> Optional[dict]:
+    """Get account by username. Returns dict or None."""
+    conn = _get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM accounts WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    return dict(row) if row else None
+
+
 def list_accounts_with_topics() -> list[dict]:
     """List all accounts from DB."""
     return get_accounts()
@@ -681,6 +708,12 @@ def add_oauth_credential(
     conn.commit()
     credential_id = cursor.lastrowid
     success(f"Added/updated OAuth credential: {account_name} ({platform})")
+
+    # Link oauth to account
+    account = get_account_by_username(account_name)
+    if account:
+        link_oauth_to_account(account["id"], credential_id)
+
     return credential_id
 
 

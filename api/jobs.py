@@ -32,6 +32,7 @@ class Job:
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     events: Queue = field(default_factory=Queue)  # for WebSocket streaming
     cancel_requested: bool = False
+    auto_upload: bool = False
 
 
 class JobManager:
@@ -44,8 +45,9 @@ class JobManager:
         niche: str,
         language: str = "English",
         for_kids: bool = False,
+        auto_upload: bool = False,
     ) -> Job:
-        job = Job(account=account, niche=niche, language=language, for_kids=for_kids)
+        job = Job(account=account, niche=niche, language=language, for_kids=for_kids, auto_upload=auto_upload)
         self._jobs[job.id] = job
         return job
 
