@@ -57,7 +57,7 @@ async def run_job(job_id: str):
         from llm_provider import select_model
         from classes.YouTube import YouTube
         from classes.Tts import TTS
-        from db import add_topic, add_video, topic_exists
+        from db import add_topic, add_video, topic_exists, get_existing_videos_for_niche
 
         # Select LLM model
         model = get_default_model()
@@ -92,10 +92,19 @@ async def run_job(job_id: str):
         # Set progress callback
         youtube._progress_callback = on_progress
 
+        # Query existing videos for this niche (to avoid duplicates)
+        existing_videos = []
+        try:
+            existing_videos = get_existing_videos_for_niche(job.niche, limit=50)
+            if existing_videos and get_verbose():
+                print(f" => Loaded {len(existing_videos)} existing videos for dedup context")
+        except Exception as e:
+            print(f"Warning: could not load existing videos: {e}")
+
         try:
             # Step 1: Topic
             on_progress("topic", "running")
-            youtube.generate_topic()
+            youtube.generate_topic(existing_videos=existing_videos if existing_videos else None)
             on_progress(
                 "topic", "done", detail=youtube.subject[:60] if youtube.subject else ""
             )

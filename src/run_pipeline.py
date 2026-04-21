@@ -30,6 +30,7 @@ from status import error, success, info, warning
 from llm_provider import select_model
 from classes.YouTube import YouTube
 from classes.Tts import TTS
+from db import get_existing_videos_for_niche
 
 
 def run_pipeline(
@@ -83,9 +84,18 @@ def run_pipeline(
         youtube.tts_path = None
         youtube.video_path = None
 
+        # Query existing videos for this niche (to avoid duplicates)
+        existing_videos = []
+        try:
+            existing_videos = get_existing_videos_for_niche(niche, limit=50)
+            if existing_videos:
+                info(f" => Loaded {len(existing_videos)} existing videos for dedup context")
+        except Exception as e:
+            warning(f"Could not load existing videos: {e}")
+
         # Step 1: Generate Topic
         info("Step 1/7: Generating topic...")
-        topic = youtube.generate_topic()
+        topic = youtube.generate_topic(existing_videos=existing_videos if existing_videos else None)
         result["topic"] = topic
         success(f"Topic: {topic}")
 

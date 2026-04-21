@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
 MoneyPrinterV2 - 24/7 Content Production Runner
-Runs the video pipeline continuously with configurable intervals and niches.
+Runs the video pipeline using round-robin across DB accounts and their topics.
+Uses model settings from DB.
 
 Usage:
-    python src/run_24_7.py [--interval 7200] [--niches niches.txt] [--output-dir output/]
+    python src/run_24_7.py [--interval 7200] [--output-dir output/]
 
 Environment:
     Same as run_pipeline.py — loads .env automatically
@@ -33,30 +34,6 @@ load_dotenv(
 
 from config import ROOT_DIR, get_verbose
 from status import info, success, warning, error
-
-# Default niches if no file provided
-DEFAULT_NICHES = [
-    "amazing space facts",
-    "mind-blowing science discoveries",
-    "incredible ocean mysteries",
-    "fascinating history facts",
-    "amazing animal behaviors",
-    "unbelievable technology facts",
-    "mysterious deep sea creatures",
-    "incredible human body facts",
-    "amazing nature phenomena",
-    "mind-bending physics facts",
-    "ancient civilization mysteries",
-    "incredible engineering marvels",
-    "surprising psychology facts",
-    "amazing astronomical discoveries",
-    "fascinating chemistry facts",
-    "incredible wildlife adaptations",
-    "mind-blowing math facts",
-    "amazing geological formations",
-    "incredible medical breakthroughs",
-    "fascinating cultural traditions",
-]
 
 
 def setup_logging(output_dir: str) -> logging.Logger:
@@ -88,16 +65,6 @@ def setup_logging(output_dir: str) -> logging.Logger:
 
     return logger
 
-
-def load_niches(niches_file: str = None) -> list:
-    """Load niches from file or use defaults."""
-    if niches_file and os.path.exists(niches_file):
-        with open(niches_file, "r") as f:
-            niches = [
-                line.strip() for line in f if line.strip() and not line.startswith("#")
-            ]
-        return niches
-    return DEFAULT_NICHES
 
 
 def run_single_video(
@@ -188,9 +155,6 @@ def main():
         help="Seconds between videos (default: 7200 = 2 hours)",
     )
     parser.add_argument(
-        "--niches", type=str, default=None, help="Path to niches file (one per line)"
-    )
-    parser.add_argument(
         "--output-dir",
         type=str,
         default=None,
@@ -201,15 +165,6 @@ def main():
         type=int,
         default=0,
         help="Max videos to produce (0 = unlimited)",
-    )
-    parser.add_argument(
-        "--random-order",
-        action="store_true",
-        default=True,
-        help="Randomize niche order",
-    )
-    parser.add_argument(
-        "--no-random-order", action="store_true", help="Use niches in order"
     )
     parser.add_argument(
         "--upload", action="store_true", help="Upload to YouTube after generation"
@@ -227,14 +182,31 @@ def main():
     logger.info(f"Output: {output_dir}")
     logger.info(f"Max videos: {args.max_videos or 'unlimited'}")
 
-    niches = load_niches(args.niches)
-    logger.info(f"Niches loaded: {len(niches)}")
+    # Load settings from DB
+    from db import get_settings, get_accounts, init_db, add_video, update_video_youtube_url
+    init_db()
+    settings = get_settings()
+    
+    # Get default language from settings
+    default_language = settings.get("twitter_language", "English")
+    logger.info(f"Default language: {default_language}")
 
-    if args.random_order and not args.no_random_order:
-        random.shuffle(niches)
+    # Get accounts with topics
+    accounts = get_accounts()
+    # Filter to only accounts with topic
+    accounts = [a for a in accounts if a.get("topic")]
+    
+    if not accounts:
+        logger.error("No accounts with topic found in DB. Add accounts with topics first.")
+        return
+    
+    logger.info(f"Accounts loaded: {len(accounts)}")
+    for a in accounts:
+        logger.info(f"  - {a['username']}: {a.get('topic')} (lang: {a.get('language') or default_language})")
 
+    # Round-robin state
+    account_index = 0
     video_count = 0
-    niche_index = 0
 
     try:
         while True:
@@ -242,11 +214,23 @@ def main():
                 logger.info(f"Reached max videos ({args.max_videos}). Stopping.")
                 break
 
-            niche = niches[niche_index % len(niches)]
-            niche_index += 1
+            # Round-robin through accounts
+            account = accounts[account_index % len(accounts)]
+            account_index += 1
+            
+            topic = account.get("topic")
+            language = account.get("language") or default_language
+            account_name = account.get("username")
+            
+            if not topic:
+                logger.warning(f"Account {account_name} has no topic, skipping...")
+                continue
 
             logger.info(f"\n{'=' * 60}")
-            logger.info(f"Video #{video_count + 1}: {niche}")
+            logger.info(f"Video #{video_count + 1}")
+            logger.info(f"Account: {account_name}")
+            logger.info(f"Topic: {topic}")
+            logger.info(f"Language: {language}")
             logger.info(f"{'=' * 60}")
 
             # Check disk space before generating
@@ -260,7 +244,7 @@ def main():
             # Retry up to 3 times on failure
             result = None
             for attempt in range(3):
-                result = run_single_video(niche, output_dir, logger, upload=args.upload)
+                result = run_single_video(topic, output_dir, logger, upload=args.upload)
                 if result.get("video_path"):
                     break
                 logger.warning(
@@ -272,21 +256,36 @@ def main():
 
             if result.get("video_path"):
                 video_count += 1
+                
+                # Save to DB
+                vid = add_video(
+                    niche=topic,
+                    topic=topic,
+                    language=language,
+                    title=result.get("title", ""),
+                    description=result.get("description", ""),
+                    script=result.get("script", ""),
+                    tags=",".join(result.get("tags", [])),
+                    video_path=result["video_path"],
+                    platform="youtube",
+                    account=account_name,
+                )
+                logger.info(f"Video saved to DB (ID: {vid})")
+                
+                # Update YouTube URL if uploaded
+                if result.get("uploaded") and result.get("youtube_url"):
+                    update_video_youtube_url(vid, result["youtube_url"])
+                    logger.info(f"Uploaded: {result['youtube_url']}")
+                
                 logger.info(f"Total videos produced: {video_count}")
             else:
                 logger.error(
-                    f"Video failed after 3 attempts, skipping to next niche..."
+                    f"Video failed after 3 attempts, skipping to next account..."
                 )
 
             # Cleanup old files periodically
             if video_count % 5 == 0:
                 cleanup_old_files(output_dir)
-
-            # Reshuffle niches when we've gone through all
-            if niche_index >= len(niches):
-                random.shuffle(niches)
-                niche_index = 0
-                logger.info("Reshuffled niches for next cycle")
 
             # Wait for next video
             if args.max_videos == 0 or video_count < args.max_videos:

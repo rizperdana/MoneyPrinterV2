@@ -37,7 +37,7 @@ def cli():
 
 
 @cli.command("serve")
-@click.option("--port", default=8000, help="Server port")
+@click.option("--port", default=8701, help="Server port")
 @click.option("--host", default="127.0.0.1", help="Server host")
 @click.option(
     "--open", "open_browser", is_flag=True, default=False, help="Open browser on start"

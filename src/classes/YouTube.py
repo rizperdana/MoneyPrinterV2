@@ -461,15 +461,29 @@ class YouTube:
             return "\n\n".join(context_parts)
         return ""
 
-    def generate_topic(self) -> str:
+    def generate_topic(self, existing_videos: list[dict] = None) -> str:
         """
         Generates a topic based on trending subjects in the niche.
         Uses web research to find real trending topics, then picks the best one.
 
+        Args:
+            existing_videos: Optional list of dicts with 'title'/'topic'/'niche' from
+                             previously generated videos (to avoid duplicates).
+
         Returns:
             topic (str): The generated topic.
         """
-        # Step 1: Research what's actually trending
+        # Build existing video context for the LLM prompt
+        existing_context = ""
+        if existing_videos:
+            existing_lines = []
+            for v in existing_videos[:30]:
+                title = v.get("title") or v.get("topic") or ""
+                if title:
+                    existing_lines.append(f"- {title}")
+            if existing_lines:
+                existing_context = "\nAVOID these already-generated topics (generate something DIFFERENT):\n" + "\n".join(existing_lines)
+
         research_context = self._research_trending_topics()
 
         if research_context:
@@ -484,6 +498,9 @@ class YouTube:
 === RESEARCH DATA (for inspiration only) ===
 {research_context}
 === END RESEARCH DATA ===
+
+{existing_context}
+=== END ALREADY-DONE TOPICS ===
 
 ⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY about "{self.niche}". Do NOT pick general news, history, or unrelated trending topics. If the research data doesn't contain niche-relevant content, IGNORE it and generate topics from your own knowledge about "{self.niche}".
 
@@ -536,7 +553,9 @@ Output format: Just list 3 topics, one per line, numbered 1-3.
 Example (if niche is "cool animal facts"):
 1. The mantis shrimp can punch so fast it boils the water around it
 2. Tardigrades can survive in the vacuum of outer space
-3. Octopuses have three hearts and blue blood"""
+3. Octopuses have three hearts and blue blood
+{existing_context}
+=== END ALREADY-DONE TOPICS ==="""
 
         completion = str(
             self.generate_response(trend_prompt, model_name=get_model_for_job("topic"))

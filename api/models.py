@@ -26,7 +26,6 @@ class AccountUpdate(BaseModel):
     platform: str | None = None
     username: str | None = None
     nickname: str | None = None
-    topics: list[str] | None = None
     topic: str | None = None
     language: str | None = None
 

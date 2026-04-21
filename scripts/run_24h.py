@@ -61,26 +61,30 @@ def save_state(state):
 
 
 def load_accounts():
-    """Load accounts from cache files. Merges DB accounts with cache topics."""
+    """Load accounts from DB."""
     import sys
     sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-    from src.db import get_accounts, list_accounts_with_topics
+    from src.db import list_accounts_with_topics
 
-    # Get accounts from DB with cache topics merged
     return list_accounts_with_topics()
 
 
 def get_next_topic(account, state):
-    """Get next topic for account using round-robin."""
+    """Get next topic for account.
+    Uses account.topic directly.
+    """
     account_id = account["id"]
-    topics = account.get("topics", [])
-    if not topics:
-        topics = DARK_NICHES
+    account_topic = account.get("topic")
 
-    last_idx = state.get("last_index", {}).get(account_id, -1)
-    next_idx = (last_idx + 1) % len(topics)
-    state["last_index"][account_id] = next_idx
-    return topics[next_idx]
+    # Use account's topic if available
+    if account_topic:
+        state["last_topic"][account_id] = account_topic
+        return account_topic
+
+    # Fallback to DARK_NICHES if no topic set
+    topic = random.choice(DARK_NICHES)
+    state["last_topic"][account_id] = topic
+    return topic
 
 
 def add_video(niche, language, topic, title, description, script, tags, video_path, platform="youtube", account=None):
@@ -126,13 +130,8 @@ def main():
     # Simple dedup: if last run used same topic for same account, skip and pick next
     last = state.get("last_topic", {}).get(account_id)
     if last == topic:
-        topics = account.get("topics", []) or DARK_NICHES
-        idx = (state["last_index"].get(account_id, -1)) % len(topics)
-        state["last_index"][account_id] = idx
-        topic = topics[idx]
-        state["last_topic"][account_id] = topic
-        save_state(state)
-        logger.info(f"Same topic as last run, advanced to: {topic}")
+        # Account has single topic, just use it (dedup already done in get_next_topic)
+        logger.info(f"Same topic as last run for this account: {topic}")
 
     try:
         result = run_pipeline(

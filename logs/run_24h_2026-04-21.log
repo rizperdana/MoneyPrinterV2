@@ -119,3 +119,66 @@
 2026-04-21 10:21:10,643 INFO response: https://yandex.com/search/site/?text=what%27s+trending+in+unsolved+mysteries+%26+internet+rabbit+holes+right+now&web=1&searchid=5801114 200
 2026-04-21 10:21:19,267 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
 2026-04-21 10:21:28,423 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 10:22:34,042 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 10:22:38,521 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 10:23:53,402 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-21 10:24:06,804 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-21 10:24:07,532 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2026-04-21 10:24:08,043 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2026-04-21 10:24:08,052 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+2026-04-21 11:45:02,478 INFO === Run #12 ===
+2026-04-21 11:45:02,479 INFO Account: dystopian_tech (12)
+2026-04-21 11:45:02,480 INFO Topic: Dystopian tech futures
+2026-04-21 11:45:03,396 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=what%27s%20trending%20in%20Dystopian%20tech%20futures%20right%20now 200
+2026-04-21 11:45:05,146 INFO response: https://grokipedia.com/api/typeahead?query=what%27s+trending+in+Dystopian+tech+futures+right+now&limit=1 200
+2026-04-21 11:45:07,156 INFO response: https://www.mojeek.com/search?q=what%27s+trending+in+Dystopian+tech+futures+right+now 200
+2026-04-21 11:45:12,986 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 11:45:24,375 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 11:45:26,821 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 11:45:30,046 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 11:45:37,686 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 11:45:44,962 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 11:52:09,418 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 11:52:09,829 INFO Processing audio with duration 00:22.944
+2026-04-21 11:52:09,948 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 11:52:10,763 INFO Detected language 'en' with probability 1.00
+2026-04-21 11:54:14,265 INFO Initializing YouTube upload for: This AI Rejected 40,000 Qualified Applicants Without ever telling them they applied
+2026-04-21 11:54:16,468 INFO {"event": "youtube_upload", "phase": "init", "title": "This AI Rejected 40,000 Qualified Applicants Without ever telling them they applied", "account_id": "default"}
+2026-04-21 11:54:16,469 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 11:54:21,053 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 86.4, "bytes_sent": 5242880, "total_bytes": 5797408}
+2026-04-21 11:54:23,182 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5797408, "total_bytes": 5797408}
+2026-04-21 11:54:23,183 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This AI Rejected 40,000 Qualified Applicants Without ever telling them they applied"}
+2026-04-21 11:54:23,183 INFO Upload successful! Video ID: OEzqHqAyS6w
+2026-04-21 11:54:23,183 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "OEzqHqAyS6w", "url": "https://www.youtube.com/watch?v=OEzqHqAyS6w"}
+2026-04-21 11:54:23,191 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/65969bca-8c55-4713-a2c3-66ba5e6eb790.mp4
+2026-04-21 11:54:23,204 INFO Video saved to DB with ID: 9
+2026-04-21 11:54:23,216 INFO Uploaded: https://www.youtube.com/watch?v=OEzqHqAyS6w
+2026-04-21 12:21:07,041 INFO === Run #13 ===
+2026-04-21 12:21:07,044 INFO Account: dystopian_tech (12)
+2026-04-21 12:21:07,044 INFO Topic: Dystopian tech futures
+2026-04-21 12:21:07,044 INFO Same topic as last run for this account: Dystopian tech futures
+2026-04-21 12:21:13,950 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Dystopian%20tech%20futures%202026%20facts 200
+2026-04-21 12:21:13,954 INFO response: https://grokipedia.com/api/typeahead?query=Dystopian+tech+futures+2026+facts&limit=1 200
+2026-04-21 12:21:14,864 INFO response: https://search.yahoo.com/search;_ylt=cVmcxrDaq9h72wp1GQ_VAT4Q;_ylu=GEjnNctkuPoU733i1Cmpw4vePPLtE8CcejTPEfytIerQB0k?p=Dystopian+tech+futures+2026+facts 200
+2026-04-21 12:21:17,604 INFO response: https://www.mojeek.com/search?q=Dystopian+tech+futures+2026+facts 200
+2026-04-21 12:21:23,881 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 12:21:28,924 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 12:22:07,478 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 12:22:13,036 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 12:22:16,220 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 12:22:24,865 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 12:27:26,841 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 12:27:27,799 INFO Processing audio with duration 00:39.072
+2026-04-21 12:27:27,935 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 12:27:28,854 INFO Detected language 'en' with probability 1.00
+2026-04-21 12:30:24,998 INFO Initializing YouTube upload for: This CES 2026 AI reads your emotions before you feel them—but researchers won't explain, so it could control your feelings.
+2026-04-21 12:30:27,513 INFO {"event": "youtube_upload", "phase": "init", "title": "This CES 2026 AI reads your emotions before you feel them\u2014but researchers won't explain, so it could control your feelings.", "account_id": "default"}
+2026-04-21 12:30:27,513 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 12:30:34,224 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 73.9, "bytes_sent": 5242880, "total_bytes": 6852469}
+2026-04-21 12:30:38,679 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 6852469, "total_bytes": 6852469}
+2026-04-21 12:30:38,680 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This CES 2026 AI reads your emotions before you feel them\u2014but researchers won't explain, so it could control your feelings."}
+2026-04-21 12:30:38,680 INFO Upload successful! Video ID: LTIDXGehg9k
+2026-04-21 12:30:38,681 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "LTIDXGehg9k", "url": "https://www.youtube.com/watch?v=LTIDXGehg9k"}
+2026-04-21 12:30:38,700 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7d1dde1f-500c-4987-80c6-7b632536ff01.mp4
+2026-04-21 12:30:38,732 INFO Video saved to DB with ID: 10
+2026-04-21 12:30:38,760 INFO Uploaded: https://www.youtube.com/watch?v=LTIDXGehg9k

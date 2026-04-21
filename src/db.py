@@ -268,6 +268,36 @@ def topic_exists(topic: str) -> bool:
     return exists
 
 
+def get_existing_videos_for_niche(niche: str, limit: int = 50) -> list[dict]:
+    """
+    Get existing video titles and topics for a niche to avoid duplicates.
+
+    Args:
+        niche: The niche/category to search
+        limit: Maximum number of results
+
+    Returns:
+        List of dicts with 'title' and 'topic' keys from past videos
+    """
+    conn = _get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT v.title, v.niche, t.topic
+        FROM videos v
+        LEFT JOIN topics t ON v.topic_id = t.id
+        WHERE v.niche = ?
+        ORDER BY v.created_at DESC
+        LIMIT ?
+    """,
+        (niche, limit),
+    )
+
+    rows = cursor.fetchall()
+    return [{"title": row["title"], "niche": row["niche"], "topic": row["topic"] or ""} for row in rows]
+
+
 def add_video(
     topic: str,
     title: str,
@@ -481,8 +511,8 @@ def add_account(
 
     # Note: profile_path removed - stored in config.json or OAuth credentials instead
     cursor.execute(
-        "INSERT INTO accounts (platform, username, nickname, topic, topics) VALUES (?, ?, ?, ?, ?)",
-        (platform, username, nickname or "", topic or "", topics or "[]"),
+        "INSERT INTO accounts (platform, username, nickname, topic) VALUES (?, ?, ?, ?)",
+        (platform, username, nickname or "", topic or ""),
     )
     conn.commit()
     account_id = cursor.lastrowid
@@ -518,26 +548,8 @@ def get_accounts(platform: Optional[str] = None) -> list[dict]:
 
 
 def list_accounts_with_topics() -> list[dict]:
-    """List all accounts merged from cache files and DB. Adds topics from cache."""
-    import json
-    import os
-
-    cache_dir = ".mp"
-    accounts = get_accounts()  # Get DB accounts first
-
-    # Normalize topics from DB (TEXT column may contain JSON string)
-    for acc in accounts:
-        topics = acc.get("topics")
-        if isinstance(topics, str):
-            import json
-            try:
-                acc["topics"] = json.loads(topics)
-            except (json.JSONDecodeError, TypeError):
-                acc["topics"] = []
-        elif topics is None:
-            acc["topics"] = []
-
-    return accounts
+    """List all accounts from DB."""
+    return get_accounts()
 
 
 def update_account(account_id: int, updates: dict) -> bool:
@@ -555,15 +567,11 @@ def update_account(account_id: int, updates: dict) -> bool:
     cursor = conn.cursor()
 
     # Build update query dynamically
-    import json as _json
-    valid_fields = {"platform", "username", "nickname", "topics", "topic", "language"}
+    valid_fields = {"platform", "username", "nickname", "topic", "language"}
     update_fields = {}
     for k, v in updates.items():
         if k in valid_fields:
-            if k == "topics" and isinstance(v, list):
-                update_fields[k] = _json.dumps(v)
-            else:
-                update_fields[k] = v
+            update_fields[k] = v
 
     if not update_fields:
         return False
