@@ -714,3 +714,52 @@ MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db
 98 characters. This is the title. (youtube)
 2026-04-21 08:29:31,184 INFO Video saved to DB with ID: 8
 2026-04-21 08:29:31,196 INFO Uploaded: https://www.youtube.com/watch?v=iK_6o0JOh6A
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 12 accounts
+2026-04-21 10:21:03,267 INFO === Run #11 ===
+2026-04-21 10:21:03,268 INFO Account: dystopian_tech (12)
+2026-04-21 10:21:03,269 INFO Topic: unsolved mysteries & internet rabbit holes
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 8 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 10:21:09,260 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=what%27s%20trending%20in%20unsolved%20mysteries%20%26%20internet%20rabbit%20holes%20right%20now 200
+2026-04-21 10:21:09,265 INFO response: https://grokipedia.com/api/typeahead?query=what%27s+trending+in+unsolved+mysteries+%26+internet+rabbit+holes+right+now&limit=1 200
+2026-04-21 10:21:10,643 INFO response: https://yandex.com/search/site/?text=what%27s+trending+in+unsolved+mysteries+%26+internet+rabbit+holes+right+now&web=1&searchid=5801114 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (6208 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 10:21:19,267 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][6s] ✅ Done
+[✅ LLM] Generated 364 chars
+ℹ️  🎯 Topic selected: Cicada 3301: The mysterious internet puzzle that recruited geniuses for a secret...
+✅ Topic: Cicada 3301: The mysterious internet puzzle that recruited geniuses for a secret society—and nobody knows who created it
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 10:21:28,423 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][9s] ✅ Done
+[✅ LLM] Generated 387 chars
+ℹ️  => Timing: ~64 words, 7 sentences, 26s TTS
+ℹ️  => Script: 7 sentences, 387 chars
+✅ Script: 387 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API

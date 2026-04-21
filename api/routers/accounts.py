@@ -66,10 +66,9 @@ async def get_last_topic(username: str):
     for acc in accounts:
         if acc.get("username") == username:
             return {
-                "topic": acc.get("niche", ""),
-                "niche": acc.get("niche", ""),
+                "topic": acc.get("topic", ""),
             }
-    return {"topic": None, "niche": None}
+    return {"topic": None}
 
 
 @router.post("/accounts")
@@ -81,7 +80,7 @@ async def create_account(body: AccountCreate):
         platform=body.platform,
         username=body.username,
         nickname=body.nickname,
-        profile_path=body.profile_path,
+        topic=body.topic,
     )
     return {"id": account_id, "status": "created"}
 

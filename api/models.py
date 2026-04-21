@@ -19,16 +19,15 @@ class AccountCreate(BaseModel):
     platform: str
     username: str
     nickname: str | None = None
-    profile_path: str | None = None
+    topic: str | None = None
 
 
 class AccountUpdate(BaseModel):
     platform: str | None = None
     username: str | None = None
     nickname: str | None = None
-    profile_path: str | None = None
     topics: list[str] | None = None
-    niche: str | None = None
+    topic: str | None = None
     language: str | None = None
 
 

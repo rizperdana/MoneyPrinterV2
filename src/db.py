@@ -137,11 +137,11 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE accounts ADD COLUMN topics TEXT DEFAULT '[]'")
 
-    # Migration: add niche column to accounts
+    # Migration: add topic column to accounts (replace niche)
     try:
-        cursor.execute("SELECT niche FROM accounts LIMIT 1")
+        cursor.execute("SELECT topic FROM accounts LIMIT 1")
     except sqlite3.OperationalError:
-        cursor.execute("ALTER TABLE accounts ADD COLUMN niche TEXT DEFAULT ''")
+        cursor.execute("ALTER TABLE accounts ADD COLUMN topic TEXT DEFAULT ''")
 
     # Migration: add youtube_url column to videos
     try:
@@ -459,7 +459,8 @@ def add_account(
     platform: str,
     username: str,
     nickname: Optional[str] = None,
-    profile_path: Optional[str] = None,
+    topic: Optional[str] = None,
+    topics: Optional[str] = None,
 ) -> int:
     """
     Insert an account record.
@@ -469,6 +470,8 @@ def add_account(
         username: Account username
         nickname: Optional nickname
         profile_path: Optional path to profile
+        niche: Optional niche/topic for the account
+        topics: Optional JSON string of topics list
 
     Returns:
         The row ID of the inserted account
@@ -476,9 +479,10 @@ def add_account(
     conn = _get_connection()
     cursor = conn.cursor()
 
+    # Note: profile_path removed - stored in config.json or OAuth credentials instead
     cursor.execute(
-        "INSERT INTO accounts (platform, username, nickname, profile_path) VALUES (?, ?, ?, ?)",
-        (platform, username, nickname, profile_path),
+        "INSERT INTO accounts (platform, username, nickname, topic, topics) VALUES (?, ?, ?, ?, ?)",
+        (platform, username, nickname or "", topic or "", topics or "[]"),
     )
     conn.commit()
     account_id = cursor.lastrowid
@@ -552,7 +556,7 @@ def update_account(account_id: int, updates: dict) -> bool:
 
     # Build update query dynamically
     import json as _json
-    valid_fields = {"platform", "username", "nickname", "profile_path", "topics", "niche", "language"}
+    valid_fields = {"platform", "username", "nickname", "topics", "topic", "language"}
     update_fields = {}
     for k, v in updates.items():
         if k in valid_fields:
