@@ -137,6 +137,12 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE accounts ADD COLUMN topics TEXT DEFAULT '[]'")
 
+    # Migration: add niche column to accounts
+    try:
+        cursor.execute("SELECT niche FROM accounts LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN niche TEXT DEFAULT ''")
+
     # Migration: add youtube_url column to videos
     try:
         cursor.execute("SELECT youtube_url FROM videos LIMIT 1")
