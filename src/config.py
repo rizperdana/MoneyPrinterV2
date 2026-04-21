@@ -126,54 +126,6 @@ def get_tiktok_username() -> str:
         return json.load(file).get("tiktok_username", "")
 
 
-def get_nanobanana2_api_base_url() -> str:
-    """
-    Gets the Nano Banana 2 (Gemini image) API base URL.
-
-    Returns:
-        url (str): API base URL
-    """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get(
-            "nanobanana2_api_base_url",
-            "https://generativelanguage.googleapis.com/v1beta",
-        )
-
-
-def get_nanobanana2_api_key() -> str:
-    """
-    Gets the Nano Banana 2 API key.
-
-    Returns:
-        key (str): API key
-    """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        configured = json.load(file).get("nanobanana2_api_key", "")
-        return configured or os.environ.get("GEMINI_API_KEY", "")
-
-
-def get_nanobanana2_model() -> str:
-    """
-    Gets the Nano Banana 2 model name.
-
-    Returns:
-        model (str): Model name
-    """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("nanobanana2_model", "gemini-2.0-flash-exp")
-
-
-def get_nanobanana2_aspect_ratio() -> str:
-    """
-    Gets the aspect ratio for Nano Banana 2 image generation.
-
-    Returns:
-        ratio (str): Aspect ratio
-    """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("nanobanana2_aspect_ratio", "9:16")
-
-
 def get_threads() -> int:
     """
     Gets the amount of threads to use for example when writing to a file with MoviePy.

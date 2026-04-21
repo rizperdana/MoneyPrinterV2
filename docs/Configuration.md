@@ -10,10 +10,6 @@ All your configurations will be in a file in the root directory, called `config.
 - `ollama_base_url`: `string` - Base URL of your local Ollama server (default: `http://127.0.0.1:11434`).
 - `ollama_model`: `string` - Ollama model to use for text generation (e.g. `llama3.2:3b`). If empty, the app queries Ollama at startup and lets you pick from the available models interactively.
 - `twitter_language`: `string` - The language that will be used to generate & post tweets.
-- `nanobanana2_api_base_url`: `string` - Nano Banana 2 API base URL (default: `https://generativelanguage.googleapis.com/v1beta`).
-- `nanobanana2_api_key`: `string` - API key for Nano Banana 2 (Gemini image API). If empty, MPV2 falls back to environment variable `GEMINI_API_KEY`.
-- `nanobanana2_model`: `string` - Nano Banana 2 model name (default: `gemini-3.1-flash-image-preview`).
-- `nanobanana2_aspect_ratio`: `string` - Aspect ratio for generated images (default: `9:16`).
 - `threads`: `number` - The amount of threads that will be used to execute operations, e.g. writing to a file using MoviePy.
 - `is_for_kids`: `boolean` - If `true`, the application will upload the video to YouTube Shorts as a video for kids.
 - `google_maps_scraper`: `string` - The URL to the Google Maps scraper. This will be used to scrape Google Maps for local businesses. It is recommended to use the default value.
@@ -55,10 +51,6 @@ All your configurations will be in a file in the root directory, called `config.
   "ollama_base_url": "http://127.0.0.1:11434",
   "ollama_model": "",
   "twitter_language": "English",
-  "nanobanana2_api_base_url": "https://generativelanguage.googleapis.com/v1beta",
-  "nanobanana2_api_key": "",
-  "nanobanana2_model": "gemini-3.1-flash-image-preview",
-  "nanobanana2_aspect_ratio": "9:16",
   "threads": 2,
   "zip_url": "",
   "is_for_kids": false,
@@ -94,13 +86,11 @@ All your configurations will be in a file in the root directory, called `config.
 
 ## Environment Variable Fallbacks
 
-- `GEMINI_API_KEY`: used when `nanobanana2_api_key` is empty.
 - `POST_BRIDGE_API_KEY`: used when `post_bridge.api_key` is empty.
 
 Example:
 
 ```bash
-export GEMINI_API_KEY="your_api_key_here"
 export POST_BRIDGE_API_KEY="your_post_bridge_api_key_here"
 ```
 

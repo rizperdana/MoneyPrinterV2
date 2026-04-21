@@ -24,7 +24,6 @@ router = APIRouter()
 
 # Keys that should be masked when returned via GET
 _SENSITIVE_KEYS = {
-    "nanobanana2_api_key",
     "assembly_ai_api_key",
 }
 

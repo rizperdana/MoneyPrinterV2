@@ -35,8 +35,6 @@ class SettingsUpdate(BaseModel):
 
     llm_base_url: str | None = None
     llm_model: str | None = None
-    nanobanana2_api_key: str | None = None
-    nanobanana2_model: str | None = None
     tts_voice: str | None = None
     headless: bool | None = None
     firefox_profile: str | None = None
