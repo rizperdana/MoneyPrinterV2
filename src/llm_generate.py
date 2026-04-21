@@ -210,31 +210,39 @@ def generate_image_prompts_response(subject: str, script: str) -> list:
     sentences = [s.strip() for s in re.split(r"[.!?]+", script) if len(s.strip()) > 10]
     n_scenes = min(max(len(sentences), 3), 5)
 
-    prompt = f"""You are a visual director creating a storyboard for a YouTube Short.
+    # Z-Image Turbo optimized prompt template
+    # Structure: subject+action, environment, lighting, composition, style, quality, inline constraints
+    # Target: 80-250 words per prompt (supports full detail richness)
+    prompt = f"""You are a visual director crafting ultra-detailed scene prompts for Z-Image Turbo (pollinations.ai zimage model).
 
 Subject: {subject}
 Script sentences (in order):
 {chr(10).join(str(i + 1) + ". " + s for i, s in enumerate(sentences[:n_scenes]))}
 
-For EACH sentence above, write ONE visual scene description for AI image generation.
+For EACH sentence above, write ONE comprehensive visual scene prompt optimized for Z-Image Turbo.
 
-CRITICAL RULES:
-- NO text, letters, words, numbers, signs, logos, or writing of ANY kind in the scene
-- NO close-ups of hands, fingers, or human extremities
-- Use WIDE shots, landscapes, environments, aerial views
-- Show the main subject clearly from a distance
-- Each scene: 15-25 words describing what we SEE
-- Consistent cinematic style across ALL scenes
-- Scenes flow like a visual story (beginning to middle to end)
-- Use dark or muted backgrounds with high contrast subjects for cinematic mystery atmosphere
+PROMPT STRUCTURE (follow for every scene):
+1. MAIN SUBJECT + ACTION: Detailed description of the primary subject including specific attributes (age if human/creature, materials, pose, clothing, expression).
+2. ENVIRONMENT/SETTING: Precise location, time of day, weather conditions, atmosphere.
+3. LIGHTING/MOOD: Specific light quality (golden hour, overcast soft, dramatic rim light, cinematic shadows), emotional tone (serene, mysterious, energetic).
+4. COMPOSITION/FRAMING: Shot type (wide establishing, medium, close-up), camera angle, rule of thirds placement.
+5. STYLE/TECHNICAL: "shot on RED/ARRI/cinematic", "photorealistic", "8K ultra-detailed", lens style (85mm portrait, wide-angle landscape).
+6. QUALITY BOOSTERS: "sharp focus throughout", "crisp textures", "no artifacts", "no blur/distortion", "professional color grading".
+7. INLINE CONSTRAINTS: Embed "no text/gibberish/watermarks", "clean composition", "no blurry elements" directly in prompt.
 
-Output format: Numbered 1 to {n_scenes}. One scene per line.
-Do NOT use JSON. Do NOT use quotes. Just numbered lines.
+TECHNICAL PARAMS (append to each prompt):
+"Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9"
 
-Example:
-1. vast blue ocean surface stretching to horizon under golden sunset light with distant waves
-2. aerial drone view of colorful coral reef teeming with tropical fish from above
-3. deep dark ocean trench with bioluminescent creatures glowing in the abyss"""
+OUTPUT FORMAT: Numbered 1 to {n_scenes}. Each prompt on its own line.
+- Target length: 80-250 words per prompt
+- Use complete natural sentences (NOT tags/lists)
+- NO JSON, NO quotes, NO bullet points
+- Scenes must flow as a visual narrative (beginning → middle → end)
+- Cinematic style consistent across ALL scenes
+
+Example output:
+1. A weathered prospector in a torn flannel shirt and dusty denim crouches beside a rushing mountain stream, panning for gold with calloused hands and a look of desperate hope etched on his weathered face. The scene unfolds in a secluded Sierra Nevada canyon during late autumn golden hour, the air crisp with pine and possibility. Soft directional sunlight streams through towering Douglas firs casting long dramatic shadows across the riverbed while volumetric fog clings to the distant ridgeline. Shot in anamorphic wide-angle cinematic style with the subject placed using rule of thirds, evoking a sense of rugged solitude and perseverance. Ultra-sharp 8K resolution with crisp fabric textures and meticulous detail on weathered skin. Professional color grading with warm amber highlights and cool shadow tones. No text, no gibberish, no watermarks, no artifacts. Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9
+2. An extreme aerial drone shot soaring over the canyon rim at sunrise, revealing the vast scale of the Sierra Nevada wilderness bathed in pink and orange alpenglow..."""
 
     completion = generate_response(prompt, job="image_prompts")
 
@@ -262,22 +270,33 @@ Example:
         except Exception:
             pass
 
-    # Fallback: generate from script sentences directly (1 per scene)
+    # Fallback: generate Z-Image Turbo formatted prompts from script sentences
     if not image_prompts:
         for sentence in sentences[:n_scenes]:
-            visual = f"wide cinematic shot of {sentence.strip()[:60]}, photorealistic, dramatic lighting, no text, no hands"
+            visual = (
+                f"A cinematic scene depicting {sentence.strip()[:100]} "
+                f"in a wide establishing shot with dramatic lighting and atmospheric depth. "
+                f"Photorealistic 8K quality with sharp focus, crisp textures, and professional color grading. "
+                f"No text, no gibberish, no watermarks, clean composition. "
+                f"Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9"
+            )
             image_prompts.append(visual)
 
-    # Ensure minimum of 4 images
+    # Ensure minimum of 4 images (Z-Image Turbo formatted fallbacks)
     while len(image_prompts) < 4 and sentences:
         idx = len(image_prompts) // 2
         if idx < len(sentences):
             variant = (
-                "wide establishing shot"
+                "wide establishing aerial shot"
                 if len(image_prompts) % 2 == 0
-                else "close-up detail view"
+                else "cinematic medium shot"
             )
-            visual = f"{variant} of {sentences[idx].strip()[:60]}, cinematic, detailed"
+            visual = (
+                f"{variant} depicting {sentences[idx].strip()[:80]} "
+                f"with dramatic lighting and cinematic atmosphere. "
+                f"8K photorealistic with sharp focus, no artifacts. "
+                f"Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9"
+            )
             image_prompts.append(visual)
         else:
             break
