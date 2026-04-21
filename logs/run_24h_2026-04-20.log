@@ -1,0 +1,152 @@
+2026-04-20 22:54:46,443 INFO === Run #1 ===
+2026-04-20 22:56:36,385 INFO === Run #1 ===
+2026-04-20 22:56:36,386 INFO Account: awoogle-mysteries (1)
+2026-04-20 22:56:36,386 INFO Topic: [
+2026-04-20 22:56:37,152 INFO response: https://grokipedia.com/api/typeahead?query=%5B+2026+facts&limit=1 200
+2026-04-20 22:56:37,157 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%202026%20facts 200
+2026-04-20 22:56:38,978 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=2026%20FC%20Seoul%20season&explaintext=0&exintro=0&redirects=1 200
+2026-04-20 22:56:40,412 INFO response: https://search.brave.com/search?q=%5B+2026+facts&source=web 200
+2026-04-20 22:56:50,978 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 22:57:08,601 INFO === Run #1 ===
+2026-04-20 22:57:08,602 INFO Account: awoogle-mysteries (1)
+2026-04-20 22:57:08,602 INFO Topic: [
+2026-04-20 22:57:09,183 INFO response: https://grokipedia.com/api/typeahead?query=mysteries+%5B&limit=1 200
+2026-04-20 22:57:09,184 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=mysteries%20%5B 200
+2026-04-20 22:57:09,489 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=Mysteries%20of%20Isis&explaintext=0&exintro=0&redirects=1 200
+2026-04-20 22:57:10,004 INFO response: https://search.brave.com/search?q=mysteries+%5B&source=web 429
+2026-04-20 22:57:10,619 INFO response: https://www.google.com/search?q=mysteries+%5B&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-20 22:57:13,384 INFO response: https://www.mojeek.com/search?q=mysteries+%5B 200
+2026-04-20 22:57:22,396 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 22:57:26,491 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 22:59:01,135 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 22:59:15,957 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 22:59:18,517 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:00:00,706 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:04:33,807 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-20 23:04:34,294 INFO Processing audio with duration 00:34.176
+2026-04-20 23:04:34,441 INFO VAD filter removed 00:00.000 of audio
+2026-04-20 23:04:35,300 INFO Detected language 'en' with probability 1.00
+2026-04-20 23:08:46,348 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/0803421c-616f-40cf-8bc6-334f10bc2b38.mp4
+2026-04-20 23:08:46,349 ERROR Unexpected error: add_video() got an unexpected keyword argument 'account'. Did you mean 'account_id'?
+Traceback (most recent call last):
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/scripts/run_24h.py", line 135, in main
+    vid = add_video(
+        niche=topic,
+    ...<8 lines>...
+        account=account.get("username"),
+    )
+TypeError: add_video() got an unexpected keyword argument 'account'. Did you mean 'account_id'?
+2026-04-20 23:12:10,569 INFO === Run #2 ===
+2026-04-20 23:12:10,569 INFO Account: awoogle-mysteries (1)
+2026-04-20 23:12:10,569 INFO Topic: [
+2026-04-20 23:12:11,242 INFO response: https://grokipedia.com/api/typeahead?query=unknown+%5B+secrets&limit=1 200
+2026-04-20 23:12:11,242 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unknown%20%5B%20secrets 200
+2026-04-20 23:12:12,674 INFO response: https://yandex.com/search/site/?text=unknown+%5B+secrets&web=1&searchid=7239641 200
+2026-04-20 23:12:18,797 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:13:02,870 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:13:36,675 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:13:39,003 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:13:42,905 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:13:49,660 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:18:47,229 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-20 23:18:47,632 INFO Processing audio with duration 00:33.672
+2026-04-20 23:18:47,764 INFO VAD filter removed 00:00.000 of audio
+2026-04-20 23:18:48,548 INFO Detected language 'en' with probability 1.00
+2026-04-20 23:21:22,479 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/9583b5b0-1a59-4fa9-8f44-b35b8eb8de07.mp4
+2026-04-20 23:21:22,501 INFO Video saved to DB with ID: 3
+2026-04-20 23:35:13,184 INFO === Run #3 ===
+2026-04-20 23:35:13,185 INFO Account: awoogle-mysteries (1)
+2026-04-20 23:35:13,185 INFO Topic: [
+2026-04-20 23:35:14,072 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=trending%20now%20%5B 200
+2026-04-20 23:35:14,477 INFO response: https://grokipedia.com/api/typeahead?query=trending+now+%5B&limit=1 200
+2026-04-20 23:35:14,478 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=Trending%20Topic&explaintext=0&exintro=0&redirects=1 200
+2026-04-20 23:35:17,038 INFO response: https://www.mojeek.com/search?q=trending+now+%5B 200
+2026-04-20 23:35:24,010 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:35:27,893 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:36:23,973 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:36:26,312 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:37:11,024 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:37:45,077 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:48:29,254 INFO === Run #3 ===
+2026-04-20 23:48:29,255 INFO Account: awoogle-mysteries (1)
+2026-04-20 23:48:29,255 INFO Topic: [
+2026-04-20 23:48:30,256 INFO response: https://grokipedia.com/api/typeahead?query=what%27s+trending+in+%5B+right+now&limit=1 200
+2026-04-20 23:48:30,256 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=what%27s%20trending%20in%20%5B%20right%20now 200
+2026-04-20 23:48:35,294 INFO Error in engine duckduckgo: TimeoutException(TimeoutError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/'))
+2026-04-20 23:48:35,909 INFO response: https://search.yahoo.com/search;_ylt=pzYKFJXzLTnGVOprGBL2E3tX;_ylu=toFtGnnCPyIqY3ZMFhdjFf3TX3rptV-sOvyp6gTqpywnKVI?p=what%27s+trending+in+%5B+right+now 200
+2026-04-20 23:48:37,529 INFO response: https://www.mojeek.com/search?q=what%27s+trending+in+%5B+right+now 200
+2026-04-20 23:48:44,595 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:48:48,485 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:48:53,716 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:49:02,410 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:49:11,732 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:49:16,751 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:50:16,588 INFO === Run #3 ===
+2026-04-20 23:50:16,588 INFO Account: awoogle-mysteries (1)
+2026-04-20 23:50:16,588 INFO Topic: [
+2026-04-20 23:50:17,164 INFO response: https://grokipedia.com/api/typeahead?query=%5B+2026+facts&limit=1 200
+2026-04-20 23:50:17,164 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%202026%20facts 200
+2026-04-20 23:50:17,575 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=2026%20FC%20Seoul%20season&explaintext=0&exintro=0&redirects=1 200
+2026-04-20 23:50:17,828 INFO response: https://www.google.com/search?q=%5B+2026+facts&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-20 23:50:19,323 INFO Error in engine duckduckgo: DDGSException("ConnectError: ConnectError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/')")
+2026-04-20 23:50:19,830 INFO response: https://search.brave.com/search?q=%5B+2026+facts&source=web 429
+2026-04-20 23:50:20,259 INFO Error in engine yahoo: DDGSException("RequestError: RequestError('error sending request for url (https://search.yahoo.com/search;_ylt=b-EVG3sfL0QBtC1TWRdLb29g;_ylu=9hcOkheiJhmsr-X3E6Hx15RV53DqtVd0PLs6IchnzRI10Gs?p=%5B+2026+facts)', 'https://search.yahoo.com/search;_ylt=b-EVG3sfL0QBtC1TWRdLb29g;_ylu=9hcOkheiJhmsr-X3E6Hx15RV53DqtVd0PLs6IchnzRI10Gs?p=%5B+2026+facts')")
+2026-04-20 23:50:22,697 INFO response: https://www.mojeek.com/search?q=%5B+2026+facts 200
+2026-04-20 23:50:35,726 ERROR Unexpected error: [Errno 32] Broken pipe
+Traceback (most recent call last):
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/src/run_pipeline.py", line 88, in run_pipeline
+    topic = youtube.generate_topic()
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/src/classes/YouTube.py", line 542, in generate_topic
+    self.generate_response(trend_prompt, model_name=get_model_for_job("topic"))
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/src/classes/YouTube.py", line 211, in generate_response
+    result = generate_text(prompt, model_name=model)
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/src/llm_provider.py", line 171, in generate_text
+    raise RuntimeError(f"All models failed (tried: {', '.join(candidates)})")
+RuntimeError: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/scripts/run_24h.py", line 122, in main
+    result = run_pipeline(
+        niche=topic,
+    ...<2 lines>...
+        headless=True,
+    )
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/src/run_pipeline.py", line 179, in run_pipeline
+    traceback.print_exc()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "/home/anon/.asdf/installs/python/3.14.3t/lib/python3.14t/traceback.py", line 210, in print_exc
+    print_exception(sys.exception(), limit=limit, file=file, chain=chain)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anon/.asdf/installs/python/3.14.3t/lib/python3.14t/traceback.py", line 134, in print_exception
+    te.print(file=file, chain=chain, colorize=colorize)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anon/.asdf/installs/python/3.14.3t/lib/python3.14t/traceback.py", line 1575, in print
+    print(line, file=file, end="")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+2026-04-20 23:55:41,854 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-20 23:55:43,209 INFO === Run #4 ===
+2026-04-20 23:55:43,209 INFO Account: awoogle-mysteries (1)
+2026-04-20 23:55:43,209 INFO Topic: [
+2026-04-20 23:55:43,607 INFO Processing audio with duration 00:33.264
+2026-04-20 23:55:44,004 INFO VAD filter removed 00:00.000 of audio
+2026-04-20 23:55:45,893 INFO Detected language 'en' with probability 1.00
+2026-04-20 23:55:52,103 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%20viral%20moments 200
+2026-04-20 23:55:53,044 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=Viral%20moment&explaintext=0&exintro=0&redirects=1 200
+2026-04-20 23:55:53,874 INFO response: https://grokipedia.com/api/typeahead?query=%5B+viral+moments&limit=1 200
+2026-04-20 23:55:54,378 INFO response: https://search.yahoo.com/search;_ylt=roonONwBF8-bc9pLFNChLSXf;_ylu=3t885pkPKboIGwOI8-rQTvwHzkLD1uwPpp6D-2XZ3t3svmM?p=%5B+viral+moments 200
+2026-04-20 23:55:55,372 INFO response: https://www.google.com/search?q=%5B+viral+moments&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-20 23:55:55,918 INFO response: https://search.brave.com/search?q=%5B+viral+moments&source=web 429
+2026-04-20 23:55:58,166 INFO response: https://www.mojeek.com/search?q=%5B+viral+moments 200
+2026-04-20 23:56:12,304 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:56:23,060 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:57:00,939 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:57:09,597 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:57:21,111 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-20 23:59:02,702 ERROR Pipeline error: Upload failed: name 'video_path' is not defined
+2026-04-21 00:09:36,566 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-21 00:09:45,380 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-04-21 00:09:45,406 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)

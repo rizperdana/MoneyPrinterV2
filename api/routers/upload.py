@@ -125,6 +125,18 @@ async def upload_video_by_id(
     else:
         account = accounts[0]
 
+    # Fallback: if profile_path is empty, try to load it from .mp cache
+    if not account.get("profile_path"):
+        cache_file = os.path.join(_project_root, ".mp", f"{platform}.json")
+        if os.path.exists(cache_file):
+            with open(cache_file) as f:
+                cache_data = json.load(f)
+                cache_accounts = cache_data.get("accounts", [])
+                for entry in cache_accounts:
+                    if entry.get("id") == account.get("id") or entry.get("username") == account.get("username"):
+                        account["profile_path"] = entry.get("profile_path") or entry.get("firefox_profile", "")
+                        break
+
     # Get OAuth credentials
     oauth_token = None
     oauth_account_for_refresh = None

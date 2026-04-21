@@ -1,0 +1,716 @@
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 1 accounts
+2026-04-20 23:55:43,209 INFO === Run #4 ===
+2026-04-20 23:55:43,209 INFO Account: awoogle-mysteries (1)
+2026-04-20 23:55:43,209 INFO Topic: [
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 8 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-20 23:55:52,103 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%20viral%20moments 200
+2026-04-20 23:55:53,044 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=Viral%20moment&explaintext=0&exintro=0&redirects=1 200
+2026-04-20 23:55:53,874 INFO response: https://grokipedia.com/api/typeahead?query=%5B+viral+moments&limit=1 200
+2026-04-20 23:55:54,378 INFO response: https://search.yahoo.com/search;_ylt=roonONwBF8-bc9pLFNChLSXf;_ylu=3t885pkPKboIGwOI8-rQTvwHzkLD1uwPpp6D-2XZ3t3svmM?p=%5B+viral+moments 200
+2026-04-20 23:55:55,372 INFO response: https://www.google.com/search?q=%5B+viral+moments&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-20 23:55:55,918 INFO response: https://search.brave.com/search?q=%5B+viral+moments&source=web 429
+2026-04-20 23:55:58,166 INFO response: https://www.mojeek.com/search?q=%5B+viral+moments 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5449 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-20 23:56:12,304 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][12s] ✅ Done
+[✅ LLM] Generated 358 chars
+ℹ️  🎯 Topic selected: The US government officially acknowledges UFOs but refuses to release any real f...
+✅ Topic: The US government officially acknowledges UFOs but refuses to release any real footage—and no one knows why
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-20 23:56:23,060 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][10s] ✅ Done
+[✅ LLM] Generated 370 chars
+ℹ️  => Timing: ~74 words, 7 sentences, 30s TTS
+ℹ️  => Script: 7 sentences, 370 chars
+✅ Script: 370 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-20 23:57:00,939 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][37s] ✅ Done
+[✅ LLM] Generated 64 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-20 23:57:09,597 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][8s] ✅ Done
+[✅ LLM] Generated 367 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-20 23:57:21,111 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][11s] ✅ Done
+[✅ LLM] Generated 419 chars
+ℹ️  => Generated 15 SEO tags
+✅ Title: US Government admits UFOs exist—but hides all real footage: Why?
+✅ Tags: 15 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API                                                                      [llm][180s] ⏱️ Timeout (attempt 1/2)
+[llm][183s] ⠙ kilo-auto/free calling API                                                                      [llm][363s] ⏱️ Timeout (attempt 2/2)
+                                                                      [llm][0s] ⠋ kilo-auto/free calling API                                                                      [llm][180s] ⏱️ Timeout (attempt 1/2)
+[llm][183s] ⠙ kilo-auto/free calling API                                                                      [llm][363s] ⏱️ Timeout (attempt 2/2)
+                                                                      [llm][0s] ⠋ gpt-4o-free calling API2026-04-21 00:09:36,566 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+                                                                      [llm][8s] 🔴 HTTP 429
+[llm][0s] ⠋ gpt-4.1-free calling API2026-04-21 00:09:45,380 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+                                                                      [llm][8s] 🔴 HTTP 429
+❌ Pipeline failed: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+2026-04-21 00:09:45,406 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 1 accounts
+2026-04-21 00:20:57,969 INFO === Run #5 ===
+2026-04-21 00:20:57,970 INFO Account: awoogle-mysteries (1)
+2026-04-21 00:20:57,970 INFO Topic: [
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 8 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 00:21:03,915 INFO response: https://grokipedia.com/api/typeahead?query=unknown+%5B+secrets&limit=1 200
+2026-04-21 00:21:03,916 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unknown%20%5B%20secrets 200
+2026-04-21 00:21:04,120 INFO response: https://www.google.com/search?q=unknown+%5B+secrets&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-21 00:21:05,406 INFO response: https://yandex.com/search/site/?text=unknown+%5B+secrets&web=1&searchid=2381079 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5403 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 00:21:23,018 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][16s] ✅ Done
+[✅ LLM] Generated 409 chars
+ℹ️  🎯 Topic selected: Why did Moo Deng the baby hippo become a global phenomenon when nobody predicted...
+✅ Topic: Why did Moo Deng the baby hippo become a global phenomenon when nobody predicted a pygmy hippo would dominate 2024
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 00:21:28,650 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 741 chars
+⚠️ Script too long: 135 words (max 120). Truncating...
+⚠️ Script estimated duration: 42s (target 20-30s)
+ℹ️  => Timing: ~104 words, 8 sentences, 42s TTS
+ℹ️  => Script: 6 sentences, 566 chars
+✅ Script: 566 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 00:21:32,951 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 97 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 00:21:37,086 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 560 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 00:21:40,800 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 375 chars
+ℹ️  => Generated 14 SEO tags
+✅ Title: This Pygmy Hippo Became 2024's Biggest Mystery But Scientists Can't Explain Why Everyone Loved It
+✅ Tags: 14 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 00:22:51,402 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][70s] ✅ Done
+[✅ LLM] Generated 1535 chars
+✅ Generated 6 Image Prompts (6 scenes, ~4s each).
+✅ Generated 6 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Low-angle wide shot of a tiny baby hippo bursting from a pond, water splashing i...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/48304ef1-3299-4563-ba21-fa5615c9521f.png"
+✅ Image 1/6: 48304ef1-3299-4563-ba21-fa5615c9521f.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Aerial view of a tropical zoo enclosure with a small lake surrounded by palm tre...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/3fadb615-59ee-4f01-b394-ec373d8e646c.png"
+✅ Image 2/6: 3fadb615-59ee-4f01-b394-ec373d8e646c.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Medium close-up of the baby hippo's snout, big glistening eyes, tiny nostrils fl...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/db62af83-e5c0-4de6-8449-ad3590913f6f.png"
+✅ Image 3/6: db62af83-e5c0-4de6-8449-ad3590913f6f.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide shot of empty enclosures with sleeping baby animals, while a crowd rushes p...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/c6c21af0-bcd5-4b33-b483-a0c752dd4b0b.png"
+✅ Image 4/6: c6c21af0-bcd5-4b33-b483-a0c752dd4b0b.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide shot of the tiny hippo bursting from the pond in slow motion, then pauses, ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/0c84906c-6318-4fde-8637-01a275bbd936.png"
+✅ Image 5/6: 0c84906c-6318-4fde-8637-01a275bbd936.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of Every day, thousands of cute baby animals exist online —...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/448a1de2-a8a2-4a85-9f7b-0c855934fc53.png"
+✅ Image 6/6: 448a1de2-a8a2-4a85-9f7b-0c855934fc53.png
+✅ Total images: 6
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/43c6f7db-86db-4caa-adcb-8aea6243d255.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/43c6f7db-86db-4caa-adcb-8aea6243d255.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-21 00:27:29,987 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 00:27:31,694 INFO Processing audio with duration 00:35.736
+2026-04-21 00:27:31,822 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 00:27:32,795 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 102 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/9c8f68d7-bb9f-4cd4-9a9a-09e9f5fb3fcb.mp4.
+MoviePy - Writing audio in 9c8f68d7-bb9f-4cd4-9a9a-09e9f5fb3fcbTEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/9c8f68d7-bb9f-4cd4-9a9a-09e9f5fb3fcb.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/9c8f68d7-bb9f-4cd4-9a9a-09e9f5fb3fcb.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/9c8f68d7-bb9f-4cd4-9a9a-09e9f5fb3fcb.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/9c8f68d7-bb9f-4cd4-9a9a-09e9f5fb3fcb.mp4 (2.8 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-21 00:32:22,164 INFO Initializing YouTube upload for: This Pygmy Hippo Became 2024's Biggest Mystery But Scientists Can't Explain Why Everyone Loved It
+2026-04-21 00:32:24,547 INFO {"event": "youtube_upload", "phase": "init", "title": "This Pygmy Hippo Became 2024's Biggest Mystery But Scientists Can't Explain Why Everyone Loved It", "account_id": "default"}
+2026-04-21 00:32:24,547 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 00:32:29,301 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 2913146, "total_bytes": 2913146}
+2026-04-21 00:32:29,301 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This Pygmy Hippo Became 2024's Biggest Mystery But Scientists Can't Explain Why Everyone Loved It"}
+2026-04-21 00:32:29,302 INFO Upload successful! Video ID: hxOcobt-Hxs
+2026-04-21 00:32:29,302 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "hxOcobt-Hxs", "url": "https://www.youtube.com/watch?v=hxOcobt-Hxs"}
+✅ Uploaded: https://www.youtube.com/watch?v=hxOcobt-Hxs
+2026-04-21 00:32:29,320 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/9c8f68d7-bb9f-4cd4-9a9a-09e9f5fb3fcb.mp4
+✅ Added video: This Pygmy Hippo Became 2024's Biggest Mystery But Scientists Can't Explain Why Everyone Loved It (youtube)
+2026-04-21 00:32:29,337 INFO Video saved to DB with ID: 4
+2026-04-21 00:32:29,351 INFO Uploaded: https://www.youtube.com/watch?v=hxOcobt-Hxs
+2026-04-21 00:32:29,351 ERROR Unexpected error: 'last_topic'
+Traceback (most recent call last):
+  File "/home/anon/Projects/experiment/MoneyPrinterV2/scripts/run_24h.py", line 166, in main
+    state["last_topic"][account_id] = topic
+    ~~~~~^^^^^^^^^^^^^^
+KeyError: 'last_topic'
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 1 accounts
+2026-04-21 02:21:00,579 INFO === Run #7 ===
+2026-04-21 02:21:00,581 INFO Account: awoogle-mysteries (1)
+2026-04-21 02:21:00,581 INFO Topic: [
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 7 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 02:21:06,708 INFO response: https://grokipedia.com/api/typeahead?query=unusual+facts+%5B&limit=1 200
+2026-04-21 02:21:06,708 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unusual%20facts%20%5B 200
+2026-04-21 02:21:07,114 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=Unusual%20face%20syndrome&explaintext=0&exintro=0&redirects=1 200
+2026-04-21 02:21:09,982 INFO response: https://www.mojeek.com/search?q=unusual+facts+%5B 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5655 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 02:21:22,684 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][11s] ✅ Done
+[✅ LLM] Generated 424 chars
+ℹ️  🎯 Topic selected: There's a sleeping disorder where people hear sudden gunshots or explosions in t...
+✅ Topic: There's a sleeping disorder where people hear sudden gunshots or explosions in their heads right as they fall asleep—and doctors still don't know why
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 02:21:27,298 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 743 chars
+⚠️ Script too long: 136 words (max 120). Truncating...
+⚠️ Too many sentences: 17 (target 6-8). Truncating...
+⚠️ Script estimated duration: 45s (target 20-30s)
+ℹ️  => Timing: ~113 words, 17 sentences, 45s TTS
+ℹ️  => Script: 8 sentences, 321 chars
+✅ Script: 321 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 02:22:04,966 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][37s] ✅ Done
+[✅ LLM] Generated 122 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 02:22:08,045 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 300 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 02:22:13,902 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 493 chars
+ℹ️  => Generated 12 SEO tags
+✅ Title: This sleeping disorder makes people hear gunshots as they drift off—and doctors can't explain why, leaving them terrified.
+✅ Tags: 12 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 02:22:19,137 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 1688 chars
+✅ Generated 8 Image Prompts (8 scenes, ~3s each).
+✅ Generated 8 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A dark void fills the screen, then a blinding white flash explodes outward with ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/46eef626-d881-42df-b688-372d8b4f2782.png"
+✅ Image 1/8: 46eef626-d881-42df-b688-372d8b4f2782.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A tranquil suburban neighborhood at sunset, windows glowing warm yellow, a figur...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/b60f1c7c-177d-45f5-b315-326151defcce.png"
+✅ Image 2/8: b60f1c7c-177d-45f5-b315-326151defcce.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A close-up of a sleeping face bathed in moonlight, peaceful expression, then sud...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/9363ddbd-d1f0-4ce7-9805-b48b4e7562f4.png"
+✅ Image 3/8: 9363ddbd-d1f0-4ce7-9805-b48b4e7562f4.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: The same bedroom from multiple angles simultaneously showing empty space, no int...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/97ca22d7-b4ef-4f81-ac63-0c108fda1e6a.png"
+✅ Image 4/8: 97ca22d7-b4ef-4f81-ac63-0c108fda1e6a.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: The screen fades to black void once more, then a single bright flash explodes si...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/dc3ab713-fa55-4928-8013-70661094e013.png"
+✅ Image 5/8: dc3ab713-fa55-4928-8013-70661094e013.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of Some hear bombs, cinematic, detailed...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/81571afe-1ac1-4c0b-9c04-7b6886fa8663.png"
+✅ Image 6/8: 81571afe-1ac1-4c0b-9c04-7b6886fa8663.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: wide establishing shot of Some hear doorbells, cinematic, detailed...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/564f43e2-42f1-43e1-a106-19c2b7f58bc8.png"
+✅ Image 7/8: 564f43e2-42f1-43e1-a106-19c2b7f58bc8.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of Some hear screaming, cinematic, detailed...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/e9f9c269-e1d4-4ee4-9aa1-1d2b18447b32.png"
+✅ Image 8/8: e9f9c269-e1d4-4ee4-9aa1-1d2b18447b32.png
+✅ Total images: 8
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/4ed22f3f-d659-40ec-9463-8925fcf2a78e.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/4ed22f3f-d659-40ec-9463-8925fcf2a78e.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-21 02:27:31,229 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 02:27:32,431 INFO Processing audio with duration 00:24.504
+2026-04-21 02:27:32,671 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 02:27:34,591 INFO Detected language 'en' with probability 0.99
+ℹ️  => Loaded 55 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/278e1e10-54e5-471d-a3bd-b3d87011b8db.mp4.
+MoviePy - Writing audio in 278e1e10-54e5-471d-a3bd-b3d87011b8dbTEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/278e1e10-54e5-471d-a3bd-b3d87011b8db.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/278e1e10-54e5-471d-a3bd-b3d87011b8db.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/278e1e10-54e5-471d-a3bd-b3d87011b8db.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/278e1e10-54e5-471d-a3bd-b3d87011b8db.mp4 (3.3 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-21 02:29:46,962 INFO Initializing YouTube upload for: This sleeping disorder makes people hear gunshots as they drift off—and doctors can't explain why, leaving them terrified.
+2026-04-21 02:29:49,068 INFO {"event": "youtube_upload", "phase": "init", "title": "This sleeping disorder makes people hear gunshots as they drift off\u2014and doctors can't explain why, leaving them terrified.", "account_id": "default"}
+2026-04-21 02:29:49,068 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 02:29:54,181 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 3491226, "total_bytes": 3491226}
+2026-04-21 02:29:54,181 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This sleeping disorder makes people hear gunshots as they drift off\u2014and doctors can't explain why, leaving them terrified."}
+2026-04-21 02:29:54,182 INFO Upload successful! Video ID: cD_GonkdNrM
+2026-04-21 02:29:54,182 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "cD_GonkdNrM", "url": "https://www.youtube.com/watch?v=cD_GonkdNrM"}
+✅ Uploaded: https://www.youtube.com/watch?v=cD_GonkdNrM
+2026-04-21 02:29:54,200 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/278e1e10-54e5-471d-a3bd-b3d87011b8db.mp4
+✅ Added video: This sleeping disorder makes people hear gunshots as they drift off—and doctors can't explain why, leaving them terrified. (youtube)
+2026-04-21 02:29:54,217 INFO Video saved to DB with ID: 6
+2026-04-21 02:29:54,231 INFO Uploaded: https://www.youtube.com/watch?v=cD_GonkdNrM
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 1 accounts
+2026-04-21 04:21:00,615 INFO === Run #8 ===
+2026-04-21 04:21:00,617 INFO Account: awoogle-mysteries (1)
+2026-04-21 04:21:00,617 INFO Topic: [
+2026-04-21 04:21:00,618 INFO Same topic as last run, advanced to: [
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 8 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 04:21:06,594 INFO response: https://grokipedia.com/api/typeahead?query=%5B+2026+facts&limit=1 200
+2026-04-21 04:21:06,594 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%202026%20facts 200
+2026-04-21 04:21:07,004 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=2026%20FC%20Seoul%20season&explaintext=0&exintro=0&redirects=1 200
+2026-04-21 04:21:07,268 INFO Error in engine yahoo: DDGSException("RequestError: RequestError('error sending request for url (https://search.yahoo.com/search;_ylt=9FLvW2WvzZ70wuPpNei6Qlkt;_ylu=p4zPfTbsGdfk0ZvhLA3AwuSf0OcdFIjtHSH1XtCprvk6jig?p=%5B+2026+facts)', 'https://search.yahoo.com/search;_ylt=9FLvW2WvzZ70wuPpNei6Qlkt;_ylu=p4zPfTbsGdfk0ZvhLA3AwuSf0OcdFIjtHSH1XtCprvk6jig?p=%5B+2026+facts')")
+2026-04-21 04:21:09,255 INFO response: https://yandex.com/search/site/?text=%5B+2026+facts&web=1&searchid=4674814 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5511 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 04:21:15,856 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 248 chars
+ℹ️  🎯 Topic selected: Why is "navy" suddenly trending as a Google search with zero explanation...
+✅ Topic: Why is "navy" suddenly trending as a Google search with zero explanation
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 04:21:20,737 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 362 chars
+ℹ️  => Timing: ~71 words, 7 sentences, 28s TTS
+ℹ️  => Script: 7 sentences, 362 chars
+✅ Script: 362 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 04:21:26,665 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 90 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 04:21:29,823 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 403 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 04:21:34,845 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 416 chars
+ℹ️  => Generated 15 SEO tags
+✅ Title: What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching
+✅ Tags: 15 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 04:22:18,346 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][43s] ✅ Done
+[✅ LLM] Generated 1408 chars
+✅ Generated 7 Image Prompts (7 scenes, ~4s each).
+✅ Generated 7 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A massive aerial view of an endless sea of glowing smartphone screens filling a ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/fd3849fa-6d75-4806-9017-19238955ea31.png"
+✅ Image 1/7: fd3849fa-6d75-4806-9017-19238955ea31.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide shot of a city skyline at dusk, with a wave of blue light pulsing from ever...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/ac26ae72-f93e-477b-9eb1-ff431354aa42.png"
+✅ Image 2/7: ac26ae72-f93e-477b-9eb1-ff431354aa42.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Zoom in on a single smartphone screen showing a glowing search bar and a pulse o...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/78cb38cc-8aa0-4e41-807a-ce93c736a690.png"
+✅ Image 3/7: 78cb38cc-8aa0-4e41-807a-ce93c736a690.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Pull back to reveal a swarm of autonomous drones each holding a phone, silently ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/90b6b69a-0b90-439a-ab69-2da1fdd84d94.png"
+✅ Image 4/7: 90b6b69a-0b90-439a-ab69-2da1fdd84d94.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: The scene dissolves back to the opening aerial sea of glowing smartphones, loopi...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/96f0622b-7663-41e3-ac54-9fe7ab8e0f96.png"
+✅ Image 5/7: 96f0622b-7663-41e3-ac54-9fe7ab8e0f96.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of Everyone is looking, but nobody is talking, cinematic, d...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/59355dad-e9d8-48bb-85df-11a986819824.png"
+✅ Image 6/7: 59355dad-e9d8-48bb-85df-11a986819824.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: wide establishing shot of So why does the whole world suddenly want to know abou...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/5ca2942f-9ac9-4e85-a147-5c50b94d89c2.png"
+✅ Image 7/7: 5ca2942f-9ac9-4e85-a147-5c50b94d89c2.png
+✅ Total images: 7
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/35203ee5-b561-411b-8d02-a6a09ef535e9.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/35203ee5-b561-411b-8d02-a6a09ef535e9.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-21 04:26:39,284 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 04:26:41,526 INFO Processing audio with duration 00:25.152
+2026-04-21 04:26:41,767 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 04:26:43,892 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 71 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/14036ae6-52c0-4907-afcd-68465da9c47b.mp4.
+MoviePy - Writing audio in 14036ae6-52c0-4907-afcd-68465da9c47bTEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/14036ae6-52c0-4907-afcd-68465da9c47b.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/14036ae6-52c0-4907-afcd-68465da9c47b.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/14036ae6-52c0-4907-afcd-68465da9c47b.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/14036ae6-52c0-4907-afcd-68465da9c47b.mp4 (5.3 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-21 04:29:00,609 INFO Initializing YouTube upload for: What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching
+2026-04-21 04:29:02,774 INFO {"event": "youtube_upload", "phase": "init", "title": "What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching", "account_id": "default"}
+2026-04-21 04:29:02,774 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 04:29:06,613 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 90.0, "bytes_sent": 5242880, "total_bytes": 5554268}
+2026-04-21 04:29:08,097 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5554268, "total_bytes": 5554268}
+2026-04-21 04:29:08,097 INFO {"event": "youtube_upload", "phase": "metadata", "title": "What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching"}
+2026-04-21 04:29:08,098 INFO Upload successful! Video ID: -Wyn2FlfItk
+2026-04-21 04:29:08,098 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "-Wyn2FlfItk", "url": "https://www.youtube.com/watch?v=-Wyn2FlfItk"}
+✅ Uploaded: https://www.youtube.com/watch?v=-Wyn2FlfItk
+2026-04-21 04:29:08,107 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/14036ae6-52c0-4907-afcd-68465da9c47b.mp4
+✅ Added video: What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching (youtube)
+2026-04-21 04:29:08,121 INFO Video saved to DB with ID: 7
+2026-04-21 04:29:08,133 INFO Uploaded: https://www.youtube.com/watch?v=-Wyn2FlfItk
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 1 accounts
+2026-04-21 06:21:01,119 INFO === Run #9 ===
+2026-04-21 06:21:01,120 INFO Account: awoogle-mysteries (1)
+2026-04-21 06:21:01,120 INFO Topic: [
+2026-04-21 06:21:01,120 INFO Same topic as last run, advanced to: [
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+⚠️ Tavily failed: HTTPSConnectionPool(host='api.tavily.com', port=443): Max retries exceeded with url: /search (Caused by NameResolutionError("HTTPSConnection(host='api.tavily.com', port=443): Failed to resolve 'api.tavily.com' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching Exa...
+⚠️ Exa failed: HTTPSConnectionPool(host='api.exa.ai', port=443): Max retries exceeded with url: /search (Caused by NameResolutionError("HTTPSConnection(host='api.exa.ai', port=443): Failed to resolve 'api.exa.ai' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 06:21:01,738 INFO Error in engine wikipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%20viral%20moments)', 'https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%20viral%20moments')")
+2026-04-21 06:21:01,738 INFO Error in engine grokipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://grokipedia.com/api/typeahead?query=%5B+viral+moments&limit=1)', 'https://grokipedia.com/api/typeahead?query=%5B+viral+moments&limit=1')")
+2026-04-21 06:21:01,739 INFO Error in engine google: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.google.com/search?q=%5B+viral+moments&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS)', 'https://www.google.com/search?q=%5B+viral+moments&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS')")
+2026-04-21 06:21:01,739 INFO Error in engine yahoo: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.yahoo.com/search;_ylt=fMTV7RAIjlQMbdo1gjCW6B8O;_ylu=hIWFyByIbtyQJwvmxxtxGEutKVVapnRpbKTfyIjOb-6ID_I?p=%5B+viral+moments)', 'https://search.yahoo.com/search;_ylt=fMTV7RAIjlQMbdo1gjCW6B8O;_ylu=hIWFyByIbtyQJwvmxxtxGEutKVVapnRpbKTfyIjOb-6ID_I?p=%5B+viral+moments')")
+2026-04-21 06:21:01,739 INFO Error in engine duckduckgo: DDGSException("ConnectError: ConnectError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/')")
+2026-04-21 06:21:01,740 INFO Error in engine brave: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.brave.com/search?q=%5B+viral+moments&source=web)', 'https://search.brave.com/search?q=%5B+viral+moments&source=web')")
+2026-04-21 06:21:01,740 INFO Error in engine mojeek: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.mojeek.com/search?q=%5B+viral+moments)', 'https://www.mojeek.com/search?q=%5B+viral+moments')")
+2026-04-21 06:21:01,740 INFO Error in engine yandex: DDGSException("ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=%5B+viral+moments&web=1&searchid=8368900)', 'https://yandex.com/search/site/?text=%5B+viral+moments&web=1&searchid=8368900')")
+⚠️ ddgs failed: ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=%5B+viral+moments&web=1&searchid=8368900)', 'https://yandex.com/search/site/?text=%5B+viral+moments&web=1&searchid=8368900')
+ℹ️    🔍 Fetching Wikipedia...
+⚠️ Wikipedia API failed: HTTPSConnectionPool(host='en.wikipedia.org', port=443): Max retries exceeded with url: /api/rest_v1/feed/featured/2026/04/21 (Caused by NameResolutionError("HTTPSConnection(host='en.wikipedia.org', port=443): Failed to resolve 'en.wikipedia.org' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Fetching Google Trends...
+⚠️ Google Trends failed: HTTPSConnectionPool(host='trends.google.com', port=443): Max retries exceeded with url: /trending/rss?geo=US (Caused by NameResolutionError("HTTPSConnection(host='trends.google.com', port=443): Failed to resolve 'trends.google.com' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching Firecrawl...
+⚠️ Firecrawl failed: 'NoneType' object has no attribute 'status_code'
+⚠️ Web research unavailable. Using LLM knowledge for topic generation.
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 06:21:03,511 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 06:21:03,529 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ gpt-4o-free calling API2026-04-21 06:21:03,537 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ gpt-4.1-free calling API2026-04-21 06:21:03,544 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+❌ Pipeline failed: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+2026-04-21 06:21:03,547 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 1 accounts
+2026-04-21 08:21:01,874 INFO === Run #10 ===
+2026-04-21 08:21:01,875 INFO Account: awoogle-mysteries (1)
+2026-04-21 08:21:01,875 INFO Topic: unsolved mysteries & internet rabbit holes
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 8 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 08:21:06,645 INFO response: https://grokipedia.com/api/typeahead?query=unsolved+mysteries+%26+internet+rabbit+holes+2026+facts&limit=1 200
+2026-04-21 08:21:06,645 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unsolved%20mysteries%20%26%20internet%20rabbit%20holes%202026%20facts 200
+2026-04-21 08:21:09,412 INFO response: https://www.mojeek.com/search?q=unsolved+mysteries+%26+internet+rabbit+holes+2026+facts 200
+ℹ️    ✅ ddgs: 7 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5826 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 08:21:15,560 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 437 chars
+ℹ️  🎯 Topic selected: Thousands of YouTube videos with just numbers for titles and zero views appeared...
+✅ Topic: Thousands of YouTube videos with just numbers for titles and zero views appeared for one month straight - no one knows who uploaded them or why
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 08:21:21,473 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 423 chars
+⚠️ Too many sentences: 9 (target 6-8). Truncating...
+ℹ️  => Timing: ~70 words, 9 sentences, 28s TTS
+ℹ️  => Script: 8 sentences, 395 chars
+✅ Script: 395 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 08:21:29,279 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][7s] ✅ Done
+[✅ LLM] Generated 125 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 08:21:33,616 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 366 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 08:21:36,790 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 417 chars
+ℹ️  => Generated 14 SEO tags
+✅ Title: Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who
+98 characters. This is the title.
+✅ Tags: 14 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 08:21:43,517 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][6s] ✅ Done
+[✅ LLM] Generated 1732 chars
+✅ Generated 10 Image Prompts (10 scenes, ~2s each).
+✅ Generated 10 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A sweeping drone view reveals thousands of glowing device screens stacked in end...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/fea3a6f6-bd4e-4ebf-b223-6dc04e88489a.png"
+✅ Image 1/10: fea3a6f6-bd4e-4ebf-b223-6dc04e88489a.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Aerial perspective of a solitary bedroom at night - one monitor glows among doze...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/2f26ba2a-4fb5-4818-a6de-1c3b50815557.png"
+✅ Image 2/10: 2f26ba2a-4fb5-4818-a6de-1c3b50815557.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Extreme wide shot of server farm towers glittering under northern lights, blinki...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/48d7e0b7-07dc-464f-8357-c2b611a66d94.png"
+✅ Image 3/10: 48d7e0b7-07dc-464f-8357-c2b611a66d94.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A split-screen shows untouched pristine upload queue on the left while metadata ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/2738b1b8-9a7a-419d-917a-dc3a4119495f.png"
+✅ Image 4/10: 2738b1b8-9a7a-419d-917a-dc3a4119495f.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: The camera pulls back through concentric rings of monitors stretching to the hor...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/c34ddfef-a1cb-45ba-813d-a8e223f99571.png"
+✅ Image 5/10: c34ddfef-a1cb-45ba-813d-a8e223f99571.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Time-lapse of empty upload queue filling instantaneously at midnight, then vanis...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/3a260325-bde8-4ae6-b7ed-7f69df88b0a9.png"
+✅ Image 6/10: 3a260325-bde8-4ae6-b7ed-7f69df88b0a9.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A magnifying lens hovers over blank video thumbnails - identical black frames wi...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/c9fb42f6-81cc-4684-8b76-3328ab716549.png"
+✅ Image 7/10: c9fb42f6-81cc-4684-8b76-3328ab716549.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Analytics dashboard flashes zeros for view counts while hidden packets of myster...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/6b21973e-94a0-44c3-b361-c0e4833c5b16.png"
+✅ Image 8/10: 6b21973e-94a0-44c3-b361-c0e4833c5b16.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Researchers stare at code running autonomously - no human input detected - the p...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/192197c4-1a03-40ba-968c-8261fce0504c.png"
+✅ Image 9/10: 192197c4-1a03-40ba-968c-8261fce0504c.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide tracking shot through darkness - countless screens power on silently in uni...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/c2300e31-1ac2-42c4-b246-71e05531d2ee.png"
+✅ Image 10/10: c2300e31-1ac2-42c4-b246-71e05531d2ee.png
+✅ Total images: 10
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/35ae26cf-64bf-4ca9-ad1b-1b46ba06a256.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/35ae26cf-64bf-4ca9-ad1b-1b46ba06a256.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-21 08:27:49,189 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 08:27:49,690 INFO Processing audio with duration 00:28.200
+2026-04-21 08:27:49,773 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 08:27:50,464 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 66 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db-ed81-4767-ad86-47a56f67747d.mp4.
+MoviePy - Writing audio in d2a505db-ed81-4767-ad86-47a56f67747dTEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db-ed81-4767-ad86-47a56f67747d.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db-ed81-4767-ad86-47a56f67747d.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db-ed81-4767-ad86-47a56f67747d.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db-ed81-4767-ad86-47a56f67747d.mp4 (4.1 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-21 08:29:24,458 INFO Initializing YouTube upload for: Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who
+98 characters. This is the title.
+2026-04-21 08:29:26,009 INFO {"event": "youtube_upload", "phase": "init", "title": "Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who\n98 characters. This is the title.", "account_id": "default"}
+2026-04-21 08:29:26,009 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 08:29:31,158 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 4337102, "total_bytes": 4337102}
+2026-04-21 08:29:31,159 INFO {"event": "youtube_upload", "phase": "metadata", "title": "Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who\n98 characters. This is the title."}
+2026-04-21 08:29:31,159 INFO Upload successful! Video ID: iK_6o0JOh6A
+2026-04-21 08:29:31,159 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "iK_6o0JOh6A", "url": "https://www.youtube.com/watch?v=iK_6o0JOh6A"}
+✅ Uploaded: https://www.youtube.com/watch?v=iK_6o0JOh6A
+2026-04-21 08:29:31,172 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db-ed81-4767-ad86-47a56f67747d.mp4
+✅ Added video: Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who
+98 characters. This is the title. (youtube)
+2026-04-21 08:29:31,184 INFO Video saved to DB with ID: 8
+2026-04-21 08:29:31,196 INFO Uploaded: https://www.youtube.com/watch?v=iK_6o0JOh6A

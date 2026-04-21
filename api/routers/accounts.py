@@ -20,95 +20,22 @@ router = APIRouter()
 
 @router.get("/accounts")
 async def list_accounts():
-    """List all accounts from .mp cache files and DB."""
-    from db import get_accounts, get_oauth_credentials
+    """List all accounts from DB."""
+    from db import get_oauth_credentials
 
-    result = []
-
-    # Read youtube accounts directly from .mp/youtube.json
-    yt_path = os.path.join(_project_root, ".mp", "youtube.json")
-    if os.path.exists(yt_path):
-        import json
-
-        with open(yt_path, "r") as f:
-            yt_data = json.load(f)
-            for acc in yt_data.get("accounts", []):
-                account_id = acc.get("id", "")
-                # Check OAuth status
-                oauth_creds = get_oauth_credentials(
-                    platform="youtube", account_name=account_id
-                )
-                oauth_status = "connected" if oauth_creds else "not_connected"
-                oauth_updated = (
-                    oauth_creds[0].get("updated_at") if oauth_creds else None
-                )
-                result.append(
-                    {
-                        "id": account_id,
-                        "platform": "youtube",
-                        "username": account_id,
-                        "nickname": acc.get("nickname", ""),
-                        "profile_path": acc.get("firefox_profile", ""),
-                        "niche": acc.get("niche", ""),
-                        "topics": json.loads(acc.get("topics", "[]")) if isinstance(acc.get("topics"), str) else acc.get("topics", []),
-                        "language": acc.get("language", "English"),
-                        "oauth_status": oauth_status,
-                        "oauth_updated": oauth_updated,
-                    }
-                )
-
-    # Read twitter accounts directly from .mp/twitter.json
-    tw_path = os.path.join(_project_root, ".mp", "twitter.json")
-    if os.path.exists(tw_path):
-        import json
-
-        with open(tw_path, "r") as f:
-            tw_data = json.load(f)
-            for acc in tw_data.get("accounts", []):
-                account_id = acc.get("id", "")
-                # Check OAuth status
-                oauth_creds = get_oauth_credentials(
-                    platform="twitter", account_name=account_id
-                )
-                oauth_status = "connected" if oauth_creds else "not_connected"
-                oauth_updated = (
-                    oauth_creds[0].get("updated_at") if oauth_creds else None
-                )
-                result.append(
-                    {
-                        "id": account_id,
-                        "platform": "twitter",
-                        "username": account_id,
-                        "nickname": acc.get("nickname", ""),
-                        "profile_path": acc.get("firefox_profile", ""),
-                        "niche": acc.get("niche", ""),
-                        "topics": json.loads(acc.get("topics", "[]")) if isinstance(acc.get("topics"), str) else acc.get("topics", []),
-                        "language": acc.get("language", "English"),
-                        "oauth_status": oauth_status,
-                        "oauth_updated": oauth_updated,
-                    }
-                )
-
-    # Also get accounts from database
+    # Get accounts from database only (no cache files)
     from db import list_accounts_with_topics
-    db_accounts = list_accounts_with_topics()
-    for acc in db_accounts:
-        # Avoid duplicates by checking username+platform
-        if not any(
-            a["username"] == acc["username"] and a["platform"] == acc["platform"]
-            for a in result
-        ):
-            # Check OAuth status
-            oauth_creds = get_oauth_credentials(
-                platform=acc.get("platform"), account_name=acc.get("username")
-            )
-            oauth_status = "connected" if oauth_creds else "not_connected"
-            oauth_updated = oauth_creds[0].get("updated_at") if oauth_creds else None
-            acc["oauth_status"] = oauth_status
-            acc["oauth_updated"] = oauth_updated
-            result.append(acc)
+    accounts = list_accounts_with_topics()
 
-    return result
+    # Add OAuth status to each account
+    for acc in accounts:
+        oauth_creds = get_oauth_credentials(
+            platform=acc.get("platform"), account_name=acc.get("username")
+        )
+        acc["oauth_status"] = "connected" if oauth_creds else "not_connected"
+        acc["oauth_updated"] = oauth_creds[0].get("updated_at") if oauth_creds else None
+
+    return accounts
 
 
 @router.get("/oauth/credentials")
@@ -132,21 +59,16 @@ async def list_oauth_credentials(platform: str = "youtube"):
 
 @router.get("/accounts/{username}/last-topic")
 async def get_last_topic(username: str):
-    """Get the niche for an account from youtube.json."""
-    import json
-
-    # Read from .mp/youtube.json
-    yt_path = os.path.join(_project_root, ".mp", "youtube.json")
-    if os.path.exists(yt_path):
-        with open(yt_path, "r") as f:
-            yt_data = json.load(f)
-            for acc in yt_data.get("accounts", []):
-                if acc.get("id") == username:
-                    return {
-                        "topic": acc.get("niche", ""),
-                        "niche": acc.get("niche", ""),
-                    }
-
+    """Get the niche for an account from DB."""
+    from db import list_accounts_with_topics
+    
+    accounts = list_accounts_with_topics()
+    for acc in accounts:
+        if acc.get("username") == username:
+            return {
+                "topic": acc.get("niche", ""),
+                "niche": acc.get("niche", ""),
+            }
     return {"topic": None, "niche": None}
 
 

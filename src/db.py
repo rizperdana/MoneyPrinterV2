@@ -533,25 +533,6 @@ def list_accounts_with_topics() -> list[dict]:
         elif topics is None:
             acc["topics"] = []
 
-    # Load topics from cache files
-    for acc in accounts:
-        cache_file = os.path.join(cache_dir, f"{acc['platform']}.json")
-        if os.path.exists(cache_file):
-            with open(cache_file) as f:
-                cache = json.load(f)
-                for entry in cache if isinstance(cache, list) else []:
-                    if entry.get("id") == acc.get("id") or entry.get("username") == acc.get("username"):
-                        topics = entry.get("topics", [])
-                        if isinstance(topics, str):
-                            topics = json.loads(topics)
-                        acc["topics"] = topics
-                        acc["niche"] = entry.get("niche", "")
-                        acc["language"] = entry.get("language", "English")
-                        acc["profile_path"] = entry.get("profile_path") or acc.get("profile_path") or entry.get("firefox_profile", "")
-                        break
-        # Ensure topics key exists even if not in cache
-        if "topics" not in acc:
-            acc["topics"] = []
     return accounts
 
 

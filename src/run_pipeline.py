@@ -153,7 +153,7 @@ def run_pipeline(
                 oauth_token = get_access_token("default")
                 if oauth_token:
                     upload_result = youtubeApiUpload(
-                        video_path=video_path,
+                        video_path=youtube.video_path,
                         title=result.get("title", "Untitled"),
                         description=result.get("description", ""),
                         tags=result.get("tags", []),

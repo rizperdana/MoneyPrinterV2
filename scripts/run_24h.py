@@ -39,7 +39,6 @@ DARK_NICHES = [
 ]
 
 STATE_FILE = Path.home() / ".mp" / "24h_state.json"
-CACHE_FILE = ROOT / ".mp" / "youtube.json"
 
 
 def load_state():
@@ -110,7 +109,7 @@ def main():
     accounts = load_accounts()
 
     if not accounts:
-        logger.error("No accounts found in .mp/youtube.json")
+        logger.error("No accounts found in database")
         return
 
     # Pick the account with fewest runs (round-robin across accounts too)

@@ -1,0 +1,113 @@
+2026-04-21 00:40:24,004 INFO === Run #7 ===
+2026-04-21 00:40:24,005 INFO Account: awoogle-mysteries (1)
+2026-04-21 00:40:24,005 INFO Topic: [
+2026-04-21 00:40:24,642 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unknown%20%5B%20secrets 200
+2026-04-21 00:40:24,988 INFO response: https://grokipedia.com/api/typeahead?query=unknown+%5B+secrets&limit=1 200
+2026-04-21 00:40:26,628 INFO Error in engine duckduckgo: DDGSException("ConnectError: ConnectError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/')")
+2026-04-21 00:40:28,267 INFO response: https://yandex.com/search/site/?text=unknown+%5B+secrets&web=1&searchid=5021800 200
+2026-04-21 00:40:43,086 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 00:40:48,747 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 00:41:28,595 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 00:42:20,213 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 00:42:22,137 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 02:21:00,579 INFO === Run #7 ===
+2026-04-21 02:21:00,581 INFO Account: awoogle-mysteries (1)
+2026-04-21 02:21:00,581 INFO Topic: [
+2026-04-21 02:21:06,708 INFO response: https://grokipedia.com/api/typeahead?query=unusual+facts+%5B&limit=1 200
+2026-04-21 02:21:06,708 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unusual%20facts%20%5B 200
+2026-04-21 02:21:07,114 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=Unusual%20face%20syndrome&explaintext=0&exintro=0&redirects=1 200
+2026-04-21 02:21:09,982 INFO response: https://www.mojeek.com/search?q=unusual+facts+%5B 200
+2026-04-21 02:21:22,684 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 02:21:27,298 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 02:22:04,966 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 02:22:08,045 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 02:22:13,902 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 02:22:19,137 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 02:27:31,229 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 02:27:32,431 INFO Processing audio with duration 00:24.504
+2026-04-21 02:27:32,671 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 02:27:34,591 INFO Detected language 'en' with probability 0.99
+2026-04-21 02:29:46,962 INFO Initializing YouTube upload for: This sleeping disorder makes people hear gunshots as they drift off—and doctors can't explain why, leaving them terrified.
+2026-04-21 02:29:49,068 INFO {"event": "youtube_upload", "phase": "init", "title": "This sleeping disorder makes people hear gunshots as they drift off\u2014and doctors can't explain why, leaving them terrified.", "account_id": "default"}
+2026-04-21 02:29:49,068 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 02:29:54,181 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 3491226, "total_bytes": 3491226}
+2026-04-21 02:29:54,181 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This sleeping disorder makes people hear gunshots as they drift off\u2014and doctors can't explain why, leaving them terrified."}
+2026-04-21 02:29:54,182 INFO Upload successful! Video ID: cD_GonkdNrM
+2026-04-21 02:29:54,182 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "cD_GonkdNrM", "url": "https://www.youtube.com/watch?v=cD_GonkdNrM"}
+2026-04-21 02:29:54,200 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/278e1e10-54e5-471d-a3bd-b3d87011b8db.mp4
+2026-04-21 02:29:54,217 INFO Video saved to DB with ID: 6
+2026-04-21 02:29:54,231 INFO Uploaded: https://www.youtube.com/watch?v=cD_GonkdNrM
+2026-04-21 04:21:00,615 INFO === Run #8 ===
+2026-04-21 04:21:00,617 INFO Account: awoogle-mysteries (1)
+2026-04-21 04:21:00,617 INFO Topic: [
+2026-04-21 04:21:00,618 INFO Same topic as last run, advanced to: [
+2026-04-21 04:21:06,594 INFO response: https://grokipedia.com/api/typeahead?query=%5B+2026+facts&limit=1 200
+2026-04-21 04:21:06,594 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%202026%20facts 200
+2026-04-21 04:21:07,004 INFO response: https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles=2026%20FC%20Seoul%20season&explaintext=0&exintro=0&redirects=1 200
+2026-04-21 04:21:07,268 INFO Error in engine yahoo: DDGSException("RequestError: RequestError('error sending request for url (https://search.yahoo.com/search;_ylt=9FLvW2WvzZ70wuPpNei6Qlkt;_ylu=p4zPfTbsGdfk0ZvhLA3AwuSf0OcdFIjtHSH1XtCprvk6jig?p=%5B+2026+facts)', 'https://search.yahoo.com/search;_ylt=9FLvW2WvzZ70wuPpNei6Qlkt;_ylu=p4zPfTbsGdfk0ZvhLA3AwuSf0OcdFIjtHSH1XtCprvk6jig?p=%5B+2026+facts')")
+2026-04-21 04:21:09,255 INFO response: https://yandex.com/search/site/?text=%5B+2026+facts&web=1&searchid=4674814 200
+2026-04-21 04:21:15,856 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 04:21:20,737 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 04:21:26,665 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 04:21:29,823 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 04:21:34,845 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 04:22:18,346 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 04:26:39,284 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 04:26:41,526 INFO Processing audio with duration 00:25.152
+2026-04-21 04:26:41,767 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 04:26:43,892 INFO Detected language 'en' with probability 1.00
+2026-04-21 04:29:00,609 INFO Initializing YouTube upload for: What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching
+2026-04-21 04:29:02,774 INFO {"event": "youtube_upload", "phase": "init", "title": "What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching", "account_id": "default"}
+2026-04-21 04:29:02,774 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 04:29:06,613 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 90.0, "bytes_sent": 5242880, "total_bytes": 5554268}
+2026-04-21 04:29:08,097 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5554268, "total_bytes": 5554268}
+2026-04-21 04:29:08,097 INFO {"event": "youtube_upload", "phase": "metadata", "title": "What Scientists Found About Navy Suddenly Trending On Google And Why Everyone Is Searching"}
+2026-04-21 04:29:08,098 INFO Upload successful! Video ID: -Wyn2FlfItk
+2026-04-21 04:29:08,098 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "-Wyn2FlfItk", "url": "https://www.youtube.com/watch?v=-Wyn2FlfItk"}
+2026-04-21 04:29:08,107 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/14036ae6-52c0-4907-afcd-68465da9c47b.mp4
+2026-04-21 04:29:08,121 INFO Video saved to DB with ID: 7
+2026-04-21 04:29:08,133 INFO Uploaded: https://www.youtube.com/watch?v=-Wyn2FlfItk
+2026-04-21 06:21:01,119 INFO === Run #9 ===
+2026-04-21 06:21:01,120 INFO Account: awoogle-mysteries (1)
+2026-04-21 06:21:01,120 INFO Topic: [
+2026-04-21 06:21:01,120 INFO Same topic as last run, advanced to: [
+2026-04-21 06:21:01,738 INFO Error in engine wikipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%20viral%20moments)', 'https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=%5B%20viral%20moments')")
+2026-04-21 06:21:01,738 INFO Error in engine grokipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://grokipedia.com/api/typeahead?query=%5B+viral+moments&limit=1)', 'https://grokipedia.com/api/typeahead?query=%5B+viral+moments&limit=1')")
+2026-04-21 06:21:01,739 INFO Error in engine google: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.google.com/search?q=%5B+viral+moments&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS)', 'https://www.google.com/search?q=%5B+viral+moments&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS')")
+2026-04-21 06:21:01,739 INFO Error in engine yahoo: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.yahoo.com/search;_ylt=fMTV7RAIjlQMbdo1gjCW6B8O;_ylu=hIWFyByIbtyQJwvmxxtxGEutKVVapnRpbKTfyIjOb-6ID_I?p=%5B+viral+moments)', 'https://search.yahoo.com/search;_ylt=fMTV7RAIjlQMbdo1gjCW6B8O;_ylu=hIWFyByIbtyQJwvmxxtxGEutKVVapnRpbKTfyIjOb-6ID_I?p=%5B+viral+moments')")
+2026-04-21 06:21:01,739 INFO Error in engine duckduckgo: DDGSException("ConnectError: ConnectError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/')")
+2026-04-21 06:21:01,740 INFO Error in engine brave: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.brave.com/search?q=%5B+viral+moments&source=web)', 'https://search.brave.com/search?q=%5B+viral+moments&source=web')")
+2026-04-21 06:21:01,740 INFO Error in engine mojeek: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.mojeek.com/search?q=%5B+viral+moments)', 'https://www.mojeek.com/search?q=%5B+viral+moments')")
+2026-04-21 06:21:01,740 INFO Error in engine yandex: DDGSException("ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=%5B+viral+moments&web=1&searchid=8368900)', 'https://yandex.com/search/site/?text=%5B+viral+moments&web=1&searchid=8368900')")
+2026-04-21 06:21:03,511 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 06:21:03,529 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 06:21:03,537 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 06:21:03,544 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 06:21:03,547 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+2026-04-21 08:21:01,874 INFO === Run #10 ===
+2026-04-21 08:21:01,875 INFO Account: awoogle-mysteries (1)
+2026-04-21 08:21:01,875 INFO Topic: unsolved mysteries & internet rabbit holes
+2026-04-21 08:21:06,645 INFO response: https://grokipedia.com/api/typeahead?query=unsolved+mysteries+%26+internet+rabbit+holes+2026+facts&limit=1 200
+2026-04-21 08:21:06,645 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unsolved%20mysteries%20%26%20internet%20rabbit%20holes%202026%20facts 200
+2026-04-21 08:21:09,412 INFO response: https://www.mojeek.com/search?q=unsolved+mysteries+%26+internet+rabbit+holes+2026+facts 200
+2026-04-21 08:21:15,560 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 08:21:21,473 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 08:21:29,279 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 08:21:33,616 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 08:21:36,790 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 08:21:43,517 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 08:27:49,189 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 08:27:49,690 INFO Processing audio with duration 00:28.200
+2026-04-21 08:27:49,773 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 08:27:50,464 INFO Detected language 'en' with probability 1.00
+2026-04-21 08:29:24,458 INFO Initializing YouTube upload for: Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who
+98 characters. This is the title.
+2026-04-21 08:29:26,009 INFO {"event": "youtube_upload", "phase": "init", "title": "Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who\n98 characters. This is the title.", "account_id": "default"}
+2026-04-21 08:29:26,009 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 08:29:31,158 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 4337102, "total_bytes": 4337102}
+2026-04-21 08:29:31,159 INFO {"event": "youtube_upload", "phase": "metadata", "title": "Number-Only YouTube Videos Appeared for One Month with Zero Views - Mystery Uploaded by Who\n98 characters. This is the title."}
+2026-04-21 08:29:31,159 INFO Upload successful! Video ID: iK_6o0JOh6A
+2026-04-21 08:29:31,159 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "iK_6o0JOh6A", "url": "https://www.youtube.com/watch?v=iK_6o0JOh6A"}
+2026-04-21 08:29:31,172 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/d2a505db-ed81-4767-ad86-47a56f67747d.mp4
+2026-04-21 08:29:31,184 INFO Video saved to DB with ID: 8
+2026-04-21 08:29:31,196 INFO Uploaded: https://www.youtube.com/watch?v=iK_6o0JOh6A

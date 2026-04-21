@@ -141,6 +141,12 @@ def generate_text(prompt: str, model_name: str = None, job: str = None) -> str:
     primary = model_name or _selected_model or "kilo-auto/free"
     candidates = [primary]
 
+    # Job-specific timeouts (seconds) — faster fail-over for slow models
+    JOB_TIMEOUTS = {
+        "image_prompts": 60.0,
+    }
+    timeout = JOB_TIMEOUTS.get(job, 180.0)
+
     # Add fallback models from config or default routing
     if job:
         fallback_chain = get_fallback_chain(job)
@@ -162,7 +168,7 @@ def generate_text(prompt: str, model_name: str = None, job: str = None) -> str:
 
     print(f"[llm] Using model: {primary}")
     for model in candidates:
-        result = _try_generate(prompt, model)
+        result = _try_generate(prompt, model, timeout=timeout)
         if result is not None:
             if model != primary:
                 print(f"[llm] ↩️ Fell back to: {model}")
@@ -210,10 +216,9 @@ MODEL_ROUTING = {
         "arcee-ai/trinity-large-thinking:free",
     ],
     "image_prompts": [
+        "gpt-4o-free",
         "kilo-auto/free",
         "qwen/qwen3-next-80b-a3b-instruct:free",
-        "bytedance-seed/dola-seed-2.0-pro:free",
-        "arcee-ai/trinity-large-thinking:free",
     ],
     "title_desc": [
         "kilo-auto/free",
