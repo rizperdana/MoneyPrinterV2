@@ -515,6 +515,18 @@ def list_accounts_with_topics() -> list[dict]:
     cache_dir = ".mp"
     accounts = get_accounts()  # Get DB accounts first
 
+    # Normalize topics from DB (TEXT column may contain JSON string)
+    for acc in accounts:
+        topics = acc.get("topics")
+        if isinstance(topics, str):
+            import json
+            try:
+                acc["topics"] = json.loads(topics)
+            except (json.JSONDecodeError, TypeError):
+                acc["topics"] = []
+        elif topics is None:
+            acc["topics"] = []
+
     # Load topics from cache files
     for acc in accounts:
         cache_file = os.path.join(cache_dir, f"{acc['platform']}.json")
@@ -525,10 +537,11 @@ def list_accounts_with_topics() -> list[dict]:
                     if entry.get("id") == acc.get("id") or entry.get("username") == acc.get("username"):
                         topics = entry.get("topics", [])
                         if isinstance(topics, str):
-                            topics = _json.loads(topics)
+                            topics = json.loads(topics)
                         acc["topics"] = topics
                         acc["niche"] = entry.get("niche", "")
                         acc["language"] = entry.get("language", "English")
+                        acc["profile_path"] = entry.get("profile_path") or acc.get("profile_path") or entry.get("firefox_profile", "")
                         break
         # Ensure topics key exists even if not in cache
         if "topics" not in acc:
