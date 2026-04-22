@@ -230,30 +230,17 @@ MODEL_ROUTING = {
 
 
 def get_model_for_job(job: str) -> str | None:
-    """Get the configured model for a job, falling back to default routing."""
-    import json as _json
-
-    # Check config for model_X setting
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
-    )
+    """Get the configured model for a job from config, falling back to default routing."""
+    # Try config.py first (reads from DB)
     try:
-        if os.path.exists(config_path):
-            with open(config_path) as f:
-                cfg = _json.load(f)
-
-            # Get primary model
-            selected = cfg.get(f"model_{job}")
-            if selected:
-                return selected
-
-            # Fall back to first in default chain
-            models = MODEL_ROUTING.get(job)
-            if models:
-                return models[0]
-    except:
+        from config import _get_config
+        selected = _get_config(f"model_{job}")
+        if selected:
+            return selected
+    except Exception:
         pass
-
+    
+    # Fall back to default routing
     models = MODEL_ROUTING.get(job)
     if models:
         return models[0]
@@ -263,29 +250,23 @@ def get_model_for_job(job: str) -> str | None:
 def get_fallback_chain(job: str) -> list[str]:
     """Get the fallback chain for a job from config or default."""
     import json as _json
-
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"
-    )
+    
+    # Try config.py first (reads from DB)
     try:
-        if os.path.exists(config_path):
-            with open(config_path) as f:
-                cfg = _json.load(f)
-
-            # Get stored fallback chain (stored as JSON string in config)
-            chain_key = f"model_{job}_fallback"
-            stored = cfg.get(chain_key)
-            if stored:
-                if isinstance(stored, list):
-                    return stored
-                # If it's a JSON string, parse it
-                if isinstance(stored, str):
-                    try:
-                        return _json.loads(stored)
-                    except:
-                        pass
-    except:
+        from config import _get_config
+        chain_key = f"model_{job}_fallback"
+        stored = _get_config(chain_key)
+        if stored:
+            if isinstance(stored, list):
+                return stored
+            # If it's a JSON string, parse it
+            if isinstance(stored, str):
+                try:
+                    return _json.loads(stored)
+                except:
+                    pass
+    except Exception:
         pass
-
+    
     # Return default chain from MODEL_ROUTING
     return MODEL_ROUTING.get(job, [])
