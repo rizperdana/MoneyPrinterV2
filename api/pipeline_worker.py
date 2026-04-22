@@ -8,6 +8,7 @@ via asyncio.to_thread() and an event Queue on the Job object.
 import os
 import sys
 import asyncio
+import logging
 
 # Ensure src/ is importable
 _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -249,8 +250,9 @@ async def run_job(job_id: str):
                 try:
                     oauth_token = get_access_token(job.account or "default")
                     if not oauth_token:
-                        on_progress("upload", "done", detail="No OAuth token — link YouTube account")
                         on_progress("upload", "error", error="No OAuth token — please link your YouTube account in Settings")
+                        job.status = JobStatus.failed
+                        return
                     else:
                         upload_result = youtubeApiUpload(
                             video_path=youtube.video_path,
@@ -268,10 +270,12 @@ async def run_job(job_id: str):
                             update_video_youtube_url(video_id, url)
                             on_progress("upload", "done", detail=url)
                         else:
-                            on_progress("upload", "done", detail="Upload failed")
+                            on_progress("upload", "error", error="Upload failed")
+                            job.status = JobStatus.failed
                 except Exception as e:
-                    on_progress("upload", "done", detail=f"Error: {str(e)}")
+                    logging.error(f"Auto-upload failed: {e}")
                     on_progress("upload", "error", error=str(e))
+                    job.status = JobStatus.failed
 
             # Return all video data
             return {
