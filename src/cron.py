@@ -13,6 +13,8 @@ from cache import get_accounts
 from config import get_verbose
 from classes.Twitter import Twitter
 from classes.YouTube import YouTube
+from src.youtube_oauth import get_access_token
+from src.youtube_api import youtubeApiUpload
 from llm_provider import select_model
 from tracker import (
     record_attempt,
@@ -146,10 +148,27 @@ def main():
                 # Mark as uploading
                 record_uploading(upload_id)
 
-                # Upload (returns tuple)
-                upload_success, upload_result = youtube.upload_video(
-                    upload_id=upload_id
-                )
+                # Upload (OAuth-based)
+                oauth_token = get_access_token(youtube._account_nickname)
+                if not oauth_token:
+                    upload_success = False
+                    upload_result = "No OAuth token"
+                else:
+                    try:
+                        upload_api_result = youtubeApiUpload(
+                            video_path=youtube.video_path,
+                            title=result.get("title", "Untitled") if result else "Untitled",
+                            description=result.get("description", "") if result else "",
+                            tags=result.get("tags", []) if result else [],
+                            oauth_token=oauth_token,
+                            account_id=youtube._account_nickname,
+                            progress_callback=None,
+                        )
+                        upload_success = bool(upload_api_result and upload_api_result.get("url"))
+                        upload_result = upload_api_result.get("url", "") if upload_api_result else ""
+                    except Exception as e:
+                        upload_success = False
+                        upload_result = str(e)
 
                 if upload_success:
                     # Record success
