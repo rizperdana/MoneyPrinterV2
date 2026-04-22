@@ -35,6 +35,7 @@ from llm_provider import select_model
 from classes.YouTube import YouTube
 from classes.Tts import TTS
 from db import get_existing_videos_for_niche
+from research import extract_facts
 
 
 def run_pipeline(
@@ -87,6 +88,7 @@ def run_pipeline(
         youtube.image_prompts = None
         youtube.tts_path = None
         youtube.video_path = None
+        youtube.extracted_facts = None
 
         # Query existing videos for this niche (to avoid duplicates)
         existing_videos = []
@@ -99,7 +101,16 @@ def run_pipeline(
 
         # Step 1: Generate Topic
         info("Step 1/7: Generating topic...")
-        topic = youtube.generate_topic(existing_videos=existing_videos if existing_videos else None)
+
+        # Research first, then extract facts before topic generation
+        research_text = youtube._research_trending_topics()
+        youtube.extracted_facts = extract_facts(research_text, niche)
+        info(f" => Extracted facts: {youtube.extracted_facts.get('extraction_note', 'none')}")
+
+        topic = youtube.generate_topic(
+            existing_videos=existing_videos if existing_videos else None,
+            extracted_facts=youtube.extracted_facts,
+        )
         result["topic"] = topic
         success(f"Topic: {topic}")
 

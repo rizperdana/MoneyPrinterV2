@@ -462,7 +462,7 @@ class YouTube:
             return "\n\n".join(context_parts)
         return ""
 
-    def generate_topic(self, existing_videos: list[dict] = None) -> str:
+    def generate_topic(self, existing_videos: list[dict] = None, extracted_facts: dict = None) -> str:
         """
         Generates a topic based on trending subjects in the niche.
         Uses web research to find real trending topics, then picks the best one.
@@ -470,10 +470,15 @@ class YouTube:
         Args:
             existing_videos: Optional list of dicts with 'title'/'topic'/'niche' from
                              previously generated videos (to avoid duplicates).
+            extracted_facts: Optional dict from extract_facts() with person_names, locations, dates,
+                          organizations, key_facts, topic_identifier, etc.
 
         Returns:
             topic (str): The generated topic.
         """
+        # Store extracted facts on instance for downstream use
+        self.extracted_facts = extracted_facts
+
         # Build existing video context for the LLM prompt
         existing_context = ""
         if existing_videos:
@@ -485,7 +490,28 @@ class YouTube:
             if existing_lines:
                 existing_context = "\nAVOID these already-generated topics (generate something DIFFERENT):\n" + "\n".join(existing_lines)
 
-        research_context = self._research_trending_topics()
+        # Build extracted facts context for grounding topic selection
+        facts_context = ""
+        if extracted_facts and extracted_facts.get("confidence") != "low":
+            fact_parts = []
+            if extracted_facts.get("person_names"):
+                fact_parts.append(f"Names: {', '.join(extracted_facts['person_names'])}")
+            if extracted_facts.get("locations"):
+                fact_parts.append(f"Locations: {', '.join(extracted_facts['locations'])}")
+            if extracted_facts.get("key_facts"):
+                fact_parts.append(f"Key facts: {'; '.join(extracted_facts['key_facts'][:3])}")
+            if fact_parts:
+                facts_context = "\nEXTRACTED FACTS FROM RESEARCH (use these to ground the topic):\n" + "\n".join(fact_parts) + "\n"
+
+        # Use pre-gathered research if extracted_facts provided, otherwise research now
+        research_context = ""
+        if extracted_facts:
+            # Facts already extracted, use them for topic grounding
+            if get_verbose():
+                info(f" => Using extracted facts for topic: {extracted_facts.get('extraction_note', 'none')}")
+        else:
+            # Fallback: research now if no facts provided
+            research_context = self._research_trending_topics()
 
         if research_context:
             if get_verbose():
@@ -495,6 +521,9 @@ class YouTube:
 
             # Feed real research data into the LLM
             trend_prompt = f"""You are a YouTube content strategist. Your ONLY job is to generate topics STRICTLY about: {self.niche}
+
+{facts_context}
+=== END EXTRACTED FACTS ===
 
 === RESEARCH DATA (for inspiration only) ===
 {research_context}
@@ -511,11 +540,14 @@ Every video must feel: "I found something strange, I do not fully understand it,
 - AVOID: happy, positive, resolved, complete, known topics
 - PRIORITIZE: strange, impossible, unexplained, contradiction, puzzle, hidden
 
+⚠️ WHEN EXTRACTED FACTS ARE PROVIDED: You MUST incorporate at least one specific fact into your topic. Instead of "A judge stored strange things" use "Judge John Smith stored 3000 hearts". Ground your topic in the extracted facts.
+
 Generate 3 specific, engaging video topic ideas that:
 1. Are STRICTLY and EXCLUSIVELY about: {self.niche}
 2. Would perform well as YouTube Shorts (curiosity-driven, visual, surprising)
 3. Are specific enough to make a 45-60 second video about
 4. FEEL like a mystery - strange, unexplained, or puzzling
+5. Include specific names/locations from extracted facts when available
 
 Each topic should be one sentence, specific, and curiosity-driven.
 
