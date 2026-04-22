@@ -8,6 +8,70 @@ from termcolor import colored
 # Always use project root (parent of src folder)
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
+# DB-based settings cache (lazy-loaded, avoids circular import with db.py)
+_settings_cache: dict | None = None
+_config_json_fallback: dict | None = None
+
+
+def _load_settings() -> dict:
+    """
+    Load settings from DB, fall back to config.json if DB empty.
+    Avoids circular import: db.py imports from config.py, so we do runtime import.
+    """
+    global _settings_cache, _config_json_fallback
+
+    # Try DB first (lazy import to avoid circular dependency)
+    try:
+        from src.db import get_settings as _db_get_settings
+        db_settings = _db_get_settings()
+        if db_settings:
+            _settings_cache = db_settings
+            return _settings_cache
+    except Exception:
+        pass
+
+    # Fall back to config.json
+    if _config_json_fallback is not None:
+        return _config_json_fallback
+
+    config_path = os.path.join(ROOT_DIR, "config.json")
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            _config_json_fallback = json.load(f)
+            return _config_json_fallback
+
+    return {}
+
+
+def _get_config(key: str, default=None):
+    """Get config value from cached settings or default."""
+    settings = _load_settings()
+    value = settings.get(key, default)
+
+    # Handle string "true"/"false" to bool conversion
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+
+    # Handle numeric strings
+    if isinstance(value, str) and value:
+        try:
+            if "." in value:
+                return float(value)
+            return int(value)
+        except (ValueError, TypeError):
+            pass
+
+    return value
+
+
+def reload_config() -> None:
+    """Force reload config from DB and JSON."""
+    global _settings_cache, _config_json_fallback
+    _settings_cache = None
+    _config_json_fallback = None
+
 
 def assert_folder_structure() -> None:
     """
@@ -40,24 +104,31 @@ def get_first_time_running() -> bool:
 
 def get_email_credentials() -> dict:
     """
-    Gets the email credentials from the config file.
+    Gets the email credentials from settings.
 
     Returns:
         credentials (dict): The email credentials
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["email"]
+    email_json = _get_config("email")
+    if isinstance(email_json, dict):
+        return email_json
+    if email_json:
+        try:
+            return json.loads(email_json)
+        except:
+            pass
+    return {}
 
 
 def get_verbose() -> bool:
     """
-    Gets the verbose flag from the config file.
+    Gets the verbose flag from settings.
 
     Returns:
         verbose (bool): The verbose flag
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["verbose"]
+    value = _get_config("verbose", False)
+    return bool(value) if value else False
 
 
 def get_firefox_profile_path() -> str:
@@ -67,19 +138,18 @@ def get_firefox_profile_path() -> str:
     Returns:
         path (str): The path to the Firefox profile
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["firefox_profile"]
+    return _get_config("firefox_profile", "")
 
 
 def get_headless() -> bool:
     """
-    Gets the headless flag from the config file.
+    Gets the headless flag from settings.
 
     Returns:
         headless (bool): The headless flag
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["headless"]
+    value = _get_config("headless", True)
+    return bool(value) if value else True
 
 
 def get_llm_base_url() -> str:
@@ -89,30 +159,27 @@ def get_llm_base_url() -> str:
     Returns:
         url (str): The LLM API base URL
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("llm_base_url", "http://localhost:8317/v1")
+    return _get_config("llm_base_url", "http://localhost:8317/v1")
 
 
 def get_default_model() -> str:
     """
-    Gets the default LLM model name from the config file.
+    Gets the default LLM model name from settings.
 
     Returns:
         model (str): The model name, or empty string if not set.
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("llm_model", "")
+    return _get_config("llm_model", "")
 
 
 def get_twitter_language() -> str:
     """
-    Gets the Twitter language from the config file.
+    Gets the Twitter language from settings.
 
     Returns:
         language (str): The Twitter language
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["twitter_language"]
+    return _get_config("twitter_language", "English")
 
 
 def get_tiktok_username() -> str:
@@ -122,8 +189,7 @@ def get_tiktok_username() -> str:
     Returns:
         username (str): The TikTok username
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("tiktok_username", "")
+    return _get_config("tiktok_username", "")
 
 
 def get_threads() -> int:
@@ -133,8 +199,7 @@ def get_threads() -> int:
     Returns:
         threads (int): Amount of threads
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["threads"]
+    return int(_get_config("threads", 2))
 
 
 def get_zip_url() -> str:
@@ -144,19 +209,18 @@ def get_zip_url() -> str:
     Returns:
         url (str): The URL to the zip file
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["zip_url"]
+    return _get_config("zip_url", "")
 
 
 def get_is_for_kids() -> bool:
     """
-    Gets the is for kids flag from the config file.
+    Gets the is for kids flag from settings.
 
     Returns:
         is_for_kids (bool): The is for kids flag
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["is_for_kids"]
+    value = _get_config("is_for_kids", False)
+    return bool(value) if value else False
 
 
 def get_google_maps_scraper_zip_url() -> str:
@@ -166,8 +230,7 @@ def get_google_maps_scraper_zip_url() -> str:
     Returns:
         url (str): The URL to the zip file
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["google_maps_scraper"]
+    return _get_config("google_maps_scraper", "")
 
 
 def get_google_maps_scraper_niche() -> str:
@@ -177,8 +240,7 @@ def get_google_maps_scraper_niche() -> str:
     Returns:
         niche (str): The niche
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["google_maps_scraper_niche"]
+    return _get_config("google_maps_scraper_niche", "")
 
 
 def get_scraper_timeout() -> int:
@@ -188,8 +250,7 @@ def get_scraper_timeout() -> int:
     Returns:
         timeout (int): The timeout
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["scraper_timeout"] or 300
+    return int(_get_config("scraper_timeout", 300))
 
 
 def get_outreach_message_subject() -> str:
@@ -199,8 +260,7 @@ def get_outreach_message_subject() -> str:
     Returns:
         subject (str): The outreach message subject
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["outreach_message_subject"]
+    return _get_config("outreach_message_subject", "")
 
 
 def get_outreach_message_body_file() -> str:
@@ -210,19 +270,17 @@ def get_outreach_message_body_file() -> str:
     Returns:
         file (str): The outreach message body file
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["outreach_message_body_file"]
+    return _get_config("outreach_message_body_file", "outreach_message.html")
 
 
 def get_tts_voice() -> str:
     """
-    Gets the TTS voice from the config file.
+    Gets the TTS voice from settings.
 
     Returns:
         voice (str): The TTS voice
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("tts_voice", "en-US-JennyNeural")
+    return _get_config("tts_voice", "en-US-JennyNeural")
 
 
 def get_assemblyai_api_key() -> str:
@@ -232,8 +290,7 @@ def get_assemblyai_api_key() -> str:
     Returns:
         key (str): The AssemblyAI API key
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["assembly_ai_api_key"]
+    return _get_config("assembly_ai_api_key", "")
 
 
 def get_stt_provider() -> str:
@@ -243,8 +300,7 @@ def get_stt_provider() -> str:
     Returns:
         provider (str): The STT provider
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("stt_provider", "local_whisper")
+    return _get_config("stt_provider", "local_whisper")
 
 
 def get_whisper_model() -> str:
@@ -254,8 +310,7 @@ def get_whisper_model() -> str:
     Returns:
         model (str): Whisper model name
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("whisper_model", "base")
+    return _get_config("whisper_model", "base")
 
 
 def get_whisper_device() -> str:
@@ -265,8 +320,7 @@ def get_whisper_device() -> str:
     Returns:
         device (str): Whisper device
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("whisper_device", "auto")
+    return _get_config("whisper_device", "auto")
 
 
 def get_whisper_compute_type() -> str:
@@ -276,8 +330,7 @@ def get_whisper_compute_type() -> str:
     Returns:
         compute_type (str): Whisper compute type
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("whisper_compute_type", "int8")
+    return _get_config("whisper_compute_type", "int8")
 
 
 def equalize_subtitles(srt_path: str, max_chars: int = 10) -> None:
@@ -296,13 +349,12 @@ def equalize_subtitles(srt_path: str, max_chars: int = 10) -> None:
 
 def get_font() -> str:
     """
-    Gets the font from the config file.
+    Gets the font from settings.
 
     Returns:
         font (str): The font
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["font"]
+    return _get_config("font", "bold_font.ttf")
 
 
 def get_fonts_dir() -> str:
@@ -322,8 +374,7 @@ def get_imagemagick_path() -> str:
     Returns:
         path (str): The path to ImageMagick
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file)["imagemagick_path"]
+    return _get_config("imagemagick_path", "/usr/bin/convert")
 
 
 def get_script_sentence_length() -> int:
@@ -334,21 +385,18 @@ def get_script_sentence_length() -> int:
     Returns:
         length (int): Length of script's sentence
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        config_json = json.load(file)
-        if config_json.get("script_sentence_length") is not None:
-            return config_json["script_sentence_length"]
-        else:
-            return 4
+    value = _get_config("script_sentence_length")
+    if value is not None:
+        return int(value)
+    return 4
 
 
 def get_images_per_video() -> int:
     """
-    Gets the number of images to generate per video from config.
+    Gets the number of images to generate per video from settings.
     Default is 8 images per video.
 
     Returns:
         count (int): Number of images per video
     """
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as file:
-        return json.load(file).get("images_per_video", 8)
+    return int(_get_config("images_per_video", 8))
