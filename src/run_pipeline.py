@@ -17,8 +17,12 @@ import argparse
 
 from dotenv import load_dotenv
 
-# Add src to path before local imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add project root and src to path (same pattern as api/main.py)
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_src_dir = os.path.dirname(os.path.abspath(__file__))
+for _p in [_project_root, _src_dir]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 # Load .env before other imports that need env vars
 load_dotenv(

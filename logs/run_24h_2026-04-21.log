@@ -182,3 +182,106 @@
 2026-04-21 12:30:38,700 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7d1dde1f-500c-4987-80c6-7b632536ff01.mp4
 2026-04-21 12:30:38,732 INFO Video saved to DB with ID: 10
 2026-04-21 12:30:38,760 INFO Uploaded: https://www.youtube.com/watch?v=LTIDXGehg9k
+2026-04-21 14:21:05,787 INFO === Run #14 ===
+2026-04-21 14:21:05,788 INFO Account: creepy-historcal (17)
+2026-04-21 14:21:05,788 INFO Topic: Creepy real historical fact
+2026-04-21 14:21:11,186 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts 200
+2026-04-21 14:21:12,222 INFO response: https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1 200
+2026-04-21 14:21:13,193 INFO response: https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web 200
+2026-04-21 14:21:38,531 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 14:22:03,509 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 14:25:56,753 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 14:26:21,260 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 14:27:07,968 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 14:28:51,009 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 14:34:07,589 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 14:34:09,244 INFO Processing audio with duration 00:32.352
+2026-04-21 14:34:09,394 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 14:34:10,524 INFO Detected language 'en' with probability 1.00
+2026-04-21 14:37:20,981 INFO Initializing YouTube upload for: This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image—Who Was She?
+2026-04-21 14:37:22,662 INFO {"event": "youtube_upload", "phase": "init", "title": "This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image\u2014Who Was She?", "account_id": "default"}
+2026-04-21 14:37:22,662 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 14:37:30,653 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 4004903, "total_bytes": 4004903}
+2026-04-21 14:37:30,653 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image\u2014Who Was She?"}
+2026-04-21 14:37:30,653 INFO Upload successful! Video ID: rgz59SswHEE
+2026-04-21 14:37:30,654 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "rgz59SswHEE", "url": "https://www.youtube.com/watch?v=rgz59SswHEE"}
+2026-04-21 14:37:30,665 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/ec58d616-ce5d-4fdc-9432-7ed39f0516eb.mp4
+2026-04-21 14:37:30,693 INFO Video saved to DB with ID: 13
+2026-04-21 14:37:30,719 INFO Uploaded: https://www.youtube.com/watch?v=rgz59SswHEE
+2026-04-21 16:21:05,987 INFO === Run #15 ===
+2026-04-21 16:21:05,988 INFO Account: creepy-historcal (17)
+2026-04-21 16:21:05,988 INFO Topic: Creepy real historical fact
+2026-04-21 16:21:05,988 INFO Same topic as last run for this account: Creepy real historical fact
+2026-04-21 16:21:11,108 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%20viral%20moments 200
+2026-04-21 16:21:12,464 INFO response: https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+viral+moments&limit=1 200
+2026-04-21 16:21:17,466 INFO Error in engine duckduckgo: TimeoutException(TimeoutError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/'))
+2026-04-21 16:21:17,875 INFO response: https://search.yahoo.com/search;_ylt=HbAyvZUDgh9ssldcGwl9ZFsd;_ylu=HNnpc1JsuMqDJAfRViQ3xSZV_Q1Goy1k9_SLlswMLWSrl1c?p=Creepy+real+historical+fact+viral+moments 200
+2026-04-21 16:21:18,444 INFO response: https://search.brave.com/search?q=Creepy+real+historical+fact+viral+moments&source=web 200
+2026-04-21 16:21:44,007 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 16:22:06,404 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 16:23:13,673 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 16:23:27,944 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 16:23:50,416 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 16:24:51,284 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 16:31:24,260 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 16:31:26,528 INFO Processing audio with duration 00:31.152
+2026-04-21 16:31:26,721 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 16:31:28,366 INFO Detected language 'en' with probability 1.00
+2026-04-21 16:35:05,377 INFO Initializing YouTube upload for: Scientists Found 12 Vampire Graves in Poland—buried with iron nails and sickles, but why? The mystery shocks historians.
+2026-04-21 16:35:07,333 INFO {"event": "youtube_upload", "phase": "init", "title": "Scientists Found 12 Vampire Graves in Poland\u2014buried with iron nails and sickles, but why? The mystery shocks historians.", "account_id": "default"}
+2026-04-21 16:35:07,333 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 16:35:13,163 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 88.1, "bytes_sent": 5242880, "total_bytes": 5680312}
+2026-04-21 16:35:17,367 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5680312, "total_bytes": 5680312}
+2026-04-21 16:35:17,367 INFO {"event": "youtube_upload", "phase": "metadata", "title": "Scientists Found 12 Vampire Graves in Poland\u2014buried with iron nails and sickles, but why? The mystery shocks historians."}
+2026-04-21 16:35:17,367 INFO Upload successful! Video ID: Mj5wFsLV9Zc
+2026-04-21 16:35:17,367 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "Mj5wFsLV9Zc", "url": "https://www.youtube.com/watch?v=Mj5wFsLV9Zc"}
+2026-04-21 16:35:17,383 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/f2ea47a5-48f4-4afc-9c42-76514f6df124.mp4
+2026-04-21 16:35:17,412 INFO Video saved to DB with ID: 14
+2026-04-21 16:35:17,439 INFO Uploaded: https://www.youtube.com/watch?v=Mj5wFsLV9Zc
+2026-04-21 22:30:58,090 INFO === Run #16 ===
+2026-04-21 22:30:58,091 INFO Account: creepy-historcal (17)
+2026-04-21 22:30:58,091 INFO Topic: Creepy real historical fact
+2026-04-21 22:30:58,091 INFO Same topic as last run for this account: Creepy real historical fact
+2026-04-21 22:30:59,835 INFO Error in engine wikipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts)', 'https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts')")
+2026-04-21 22:30:59,835 INFO Error in engine grokipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1)', 'https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1')")
+2026-04-21 22:30:59,835 INFO Error in engine google: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.google.com/search?q=Creepy+real+historical+fact+2026+facts&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS)', 'https://www.google.com/search?q=Creepy+real+historical+fact+2026+facts&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS')")
+2026-04-21 22:30:59,836 INFO Error in engine brave: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web)', 'https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web')")
+2026-04-21 22:30:59,836 INFO Error in engine mojeek: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.mojeek.com/search?q=Creepy+real+historical+fact+2026+facts)', 'https://www.mojeek.com/search?q=Creepy+real+historical+fact+2026+facts')")
+2026-04-21 22:30:59,837 INFO Error in engine yahoo: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.yahoo.com/search;_ylt=5TACmz1u9dYui3xgzfvsr3Bu;_ylu=k9RejIwQgvRZiLxOmFnT3kV3SBDxlOyr1gKDH0lVu4IJXQE?p=Creepy+real+historical+fact+2026+facts)', 'https://search.yahoo.com/search;_ylt=5TACmz1u9dYui3xgzfvsr3Bu;_ylu=k9RejIwQgvRZiLxOmFnT3kV3SBDxlOyr1gKDH0lVu4IJXQE?p=Creepy+real+historical+fact+2026+facts')")
+2026-04-21 22:30:59,837 INFO Error in engine duckduckgo: DDGSException("ConnectError: ConnectError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/')")
+2026-04-21 22:30:59,838 INFO Error in engine yandex: DDGSException("ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=9972307)', 'https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=9972307')")
+2026-04-21 22:31:01,692 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 22:31:01,710 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 22:31:01,718 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 22:31:01,725 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+2026-04-21 22:31:01,728 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+2026-04-21 22:35:46,437 INFO === Run #17 ===
+2026-04-21 22:35:46,437 INFO Account: creepy-historcal (17)
+2026-04-21 22:35:46,437 INFO Topic: Creepy real historical fact
+2026-04-21 22:35:46,437 INFO Same topic as last run for this account: Creepy real historical fact
+2026-04-21 22:35:51,943 INFO response: https://grokipedia.com/api/typeahead?query=unknown+Creepy+real+historical+fact+secrets&limit=1 200
+2026-04-21 22:35:51,945 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unknown%20Creepy%20real%20historical%20fact%20secrets 200
+2026-04-21 22:35:52,500 INFO response: https://search.yahoo.com/search;_ylt=4uY9Ui86GpIjZ-key54RDaVG;_ylu=nudki_KnXfjkQjvU9pxGCW7lad7cQx2Ow8pPcPmADC6F0rY?p=unknown+Creepy+real+historical+fact+secrets 200
+2026-04-21 22:35:54,488 INFO response: https://www.google.com/search?q=unknown+Creepy+real+historical+fact+secrets&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-21 22:35:56,632 INFO response: https://www.mojeek.com/search?q=unknown+Creepy+real+historical+fact+secrets 200
+2026-04-21 22:36:19,297 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 22:36:27,327 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 22:36:31,774 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 22:36:33,661 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 22:36:36,810 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 22:37:56,798 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-21 22:42:28,793 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 22:42:29,114 INFO Processing audio with duration 00:27.312
+2026-04-21 22:42:29,193 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 22:42:29,743 INFO Detected language 'en' with probability 1.00
+2026-04-21 22:44:09,675 INFO Initializing YouTube upload for: Scientists Found Mysterious Green Children in 12th Century England—One Died After Eating, the Other Vanished Forever
+2026-04-21 22:44:11,814 INFO {"event": "youtube_upload", "phase": "init", "title": "Scientists Found Mysterious Green Children in 12th Century England\u2014One Died After Eating, the Other Vanished Forever", "account_id": "default"}
+2026-04-21 22:44:11,814 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 22:44:17,140 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 87.8, "bytes_sent": 5242880, "total_bytes": 5701817}
+2026-04-21 22:44:18,876 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5701817, "total_bytes": 5701817}
+2026-04-21 22:44:18,876 INFO {"event": "youtube_upload", "phase": "metadata", "title": "Scientists Found Mysterious Green Children in 12th Century England\u2014One Died After Eating, the Other Vanished Forever"}
+2026-04-21 22:44:18,876 INFO Upload successful! Video ID: 0WQl1Y7oEvI
+2026-04-21 22:44:18,876 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "0WQl1Y7oEvI", "url": "https://www.youtube.com/watch?v=0WQl1Y7oEvI"}
+2026-04-21 22:44:18,878 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/af434b5b-6953-44bd-8df8-14ab300ccf78.mp4
+2026-04-21 22:44:18,898 INFO Video saved to DB with ID: 15
+2026-04-21 22:44:18,911 INFO Uploaded: https://www.youtube.com/watch?v=0WQl1Y7oEvI

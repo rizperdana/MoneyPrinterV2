@@ -928,3 +928,1149 @@ MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7d1dde1f
 ✅ Added video: This CES 2026 AI reads your emotions before you feel them—but researchers won't explain, so it could control your feelings. (youtube)
 2026-04-21 12:30:38,732 INFO Video saved to DB with ID: 10
 2026-04-21 12:30:38,760 INFO Uploaded: https://www.youtube.com/watch?v=LTIDXGehg9k
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-21 14:21:05,787 INFO === Run #14 ===
+2026-04-21 14:21:05,788 INFO Account: creepy-historcal (17)
+2026-04-21 14:21:05,788 INFO Topic: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 6 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 14:21:11,186 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts 200
+2026-04-21 14:21:12,222 INFO response: https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1 200
+2026-04-21 14:21:13,193 INFO response: https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5545 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 14:21:38,531 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][23s] ✅ Done
+[✅ LLM] Generated 384 chars
+ℹ️  🎯 Topic selected: The unknown woman of the Seine whose drowned face became one of the most reprodu...
+✅ Topic: The unknown woman of the Seine whose drowned face became one of the most reproduced images in history—and nobody knows who she was
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 14:22:03,509 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][24s] ✅ Done
+[✅ LLM] Generated 472 chars
+⚠️ Script estimated duration: 36s (target 20-30s)
+ℹ️  => Timing: ~91 words, 8 sentences, 36s TTS
+ℹ️  => Script: 8 sentences, 472 chars
+✅ Script: 472 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API                                                                      [llm][180s] ⏱️ Timeout (attempt 1/2)
+[llm][183s] ⠙ kilo-auto/free calling API2026-04-21 14:25:56,753 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][233s] ✅ Done
+[✅ LLM] Generated 85 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 14:26:21,260 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][24s] ✅ Done
+[✅ LLM] Generated 372 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 14:27:07,968 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][46s] ✅ Done
+[✅ LLM] Generated 426 chars
+ℹ️  => Generated 15 SEO tags
+✅ Title: This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image—Who Was She?
+✅ Tags: 15 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 14:28:51,009 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][103s] ✅ Done
+[✅ LLM] Generated 1361 chars
+✅ Generated 8 Image Prompts (8 scenes, ~3s each).
+✅ Generated 8 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A spectral, pale face, eyes gently closed, emerges from dark water under a singl...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/a8aba489-aa88-4a78-a591-49bee5581782.png"
+✅ Image 1/8: a8aba489-aa88-4a78-a591-49bee5581782.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Aerial view of the Seine at dawn, mist drifting over the river, a lone boat near...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/b9c0ad28-6338-4291-a380-2cc371bccb5d.png"
+✅ Image 2/8: b9c0ad28-6338-4291-a380-2cc371bccb5d.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Close-up of the porcelain mask, its smooth surface catching dim light, a subtle ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/2363ee94-24be-4409-b1f5-27054d72d12a.png"
+✅ Image 3/8: 2363ee94-24be-4409-b1f5-27054d72d12a.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide shot of a dimly lit studio filled with dozens of identical masks, an artist...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/1136b2a2-b676-4afc-a032-a3f544350349.png"
+✅ Image 4/8: 1136b2a2-b676-4afc-a032-a3f544350349.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Panoramic view of a modern Parisian boulevard, a glowing mural of the mask on a ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/63448a57-5e00-436d-ba98-0aea5147aa21.png"
+✅ Image 5/8: 63448a57-5e00-436d-ba98-0aea5147aa21.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of Some think she was an artist who painted herself as a jo...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/d1bacf1a-f38d-4007-92c0-f1d36a65fc38.png"
+✅ Image 6/8: d1bacf1a-f38d-4007-92c0-f1d36a65fc38.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: wide establishing shot of Who was she really, cinematic, detailed...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/14131de0-51d8-476d-85a8-91ed405f602a.png"
+✅ Image 7/8: 14131de0-51d8-476d-85a8-91ed405f602a.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of And why does her face still haunt us today, cinematic, d...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/b2b4e3d0-d1ba-420b-be49-df392b284e23.png"
+✅ Image 8/8: b2b4e3d0-d1ba-420b-be49-df392b284e23.png
+✅ Total images: 8
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/b13d6ae1-25a2-4393-8e3c-e357136267fe.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/b13d6ae1-25a2-4393-8e3c-e357136267fe.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-21 14:34:07,589 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 14:34:09,244 INFO Processing audio with duration 00:32.352
+2026-04-21 14:34:09,394 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 14:34:10,524 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 92 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/ec58d616-ce5d-4fdc-9432-7ed39f0516eb.mp4.
+MoviePy - Writing audio in ec58d616-ce5d-4fdc-9432-7ed39f0516ebTEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/ec58d616-ce5d-4fdc-9432-7ed39f0516eb.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/ec58d616-ce5d-4fdc-9432-7ed39f0516eb.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/ec58d616-ce5d-4fdc-9432-7ed39f0516eb.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/ec58d616-ce5d-4fdc-9432-7ed39f0516eb.mp4 (3.8 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-21 14:37:20,981 INFO Initializing YouTube upload for: This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image—Who Was She?
+2026-04-21 14:37:22,662 INFO {"event": "youtube_upload", "phase": "init", "title": "This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image\u2014Who Was She?", "account_id": "default"}
+2026-04-21 14:37:22,662 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 14:37:30,653 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 4004903, "total_bytes": 4004903}
+2026-04-21 14:37:30,653 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image\u2014Who Was She?"}
+2026-04-21 14:37:30,653 INFO Upload successful! Video ID: rgz59SswHEE
+2026-04-21 14:37:30,654 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "rgz59SswHEE", "url": "https://www.youtube.com/watch?v=rgz59SswHEE"}
+✅ Uploaded: https://www.youtube.com/watch?v=rgz59SswHEE
+2026-04-21 14:37:30,665 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/ec58d616-ce5d-4fdc-9432-7ed39f0516eb.mp4
+✅ Added video: This Unknown Seine Woman's Drowned Face Became the Most Reproduced Image—Who Was She? (youtube)
+2026-04-21 14:37:30,693 INFO Video saved to DB with ID: 13
+2026-04-21 14:37:30,719 INFO Uploaded: https://www.youtube.com/watch?v=rgz59SswHEE
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-21 16:21:05,987 INFO === Run #15 ===
+2026-04-21 16:21:05,988 INFO Account: creepy-historcal (17)
+2026-04-21 16:21:05,988 INFO Topic: Creepy real historical fact
+2026-04-21 16:21:05,988 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 1 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 8 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 16:21:11,108 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%20viral%20moments 200
+2026-04-21 16:21:12,464 INFO response: https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+viral+moments&limit=1 200
+2026-04-21 16:21:17,466 INFO Error in engine duckduckgo: TimeoutException(TimeoutError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/'))
+2026-04-21 16:21:17,875 INFO response: https://search.yahoo.com/search;_ylt=HbAyvZUDgh9ssldcGwl9ZFsd;_ylu=HNnpc1JsuMqDJAfRViQ3xSZV_Q1Goy1k9_SLlswMLWSrl1c?p=Creepy+real+historical+fact+viral+moments 200
+2026-04-21 16:21:18,444 INFO response: https://search.brave.com/search?q=Creepy+real+historical+fact+viral+moments&source=web 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (6202 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 16:21:44,007 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][24s] ✅ Done
+[✅ LLM] Generated 382 chars
+ℹ️  🎯 Topic selected: Archaeologists discovered 12 "vampire graves" in Poland—all from outcasts buried...
+✅ Topic: Archaeologists discovered 12 "vampire graves" in Poland—all from outcasts buried with iron nails and sickles, and no one knows why
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 16:22:06,404 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][22s] ✅ Done
+[✅ LLM] Generated 864 chars
+⚠️ Script too long: 148 words (max 120). Truncating...
+⚠️ Too many sentences: 14 (target 6-8). Truncating...
+⚠️ Script estimated duration: 44s (target 20-30s)
+ℹ️  => Timing: ~109 words, 14 sentences, 44s TTS
+ℹ️  => Script: 8 sentences, 468 chars
+✅ Script: 468 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 16:23:13,673 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][67s] ✅ Done
+[✅ LLM] Generated 120 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 16:23:27,944 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][14s] ✅ Done
+[✅ LLM] Generated 539 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 16:23:50,416 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][22s] ✅ Done
+[✅ LLM] Generated 429 chars
+ℹ️  => Generated 15 SEO tags
+✅ Title: Scientists Found 12 Vampire Graves in Poland—buried with iron nails and sickles, but why? The mystery shocks historians.
+✅ Tags: 15 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 16:24:51,284 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][60s] ✅ Done
+[✅ LLM] Generated 1488 chars
+✅ Generated 10 Image Prompts (10 scenes, ~2s each).
+✅ Generated 10 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide aerial view of a dark plowed field at dawn, twelve shallow graves arranged ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/4bea6e6c-461a-43b5-b3b6-c76fe5a93e40.png"
+✅ Image 1/10: 4bea6e6c-461a-43b5-b3b6-c76fe5a93e40.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Extreme low angle looking up at a rusted iron nail driven directly through a hum...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/939ac240-d3af-44d7-9895-65663e65bd96.png"
+✅ Image 2/10: 939ac240-d3af-44d7-9895-65663e65bd96.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide panoramic shot of rural Polish farmland landscape with distant village chur...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/fff6116a-f8ef-48a4-a9c8-58a34c7f60bf.png"
+✅ Image 3/10: fff6116a-f8ef-48a4-a9c8-58a34c7f60bf.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Drone overhead view showing the cemetery's isolated location—a hilltop far from ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/2c9e9910-ff1f-4127-8d7f-c92e663478b5.png"
+✅ Image 4/10: 2c9e9910-ff1f-4127-8d7f-c92e663478b5.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Extreme close-up macro shot of an iron nail, oxidized dark red-brown, sitting at...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/0eb72cc2-627e-4a56-ba9a-bea1689a35da.png"
+✅ Image 5/10: 0eb72cc2-627e-4a56-ba9a-bea1689a35da.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Side-profile close-up of a human skull buried face-down, teeth gritted, eye sock...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/dc3a6000-590d-4996-98ba-1bf052412dcc.png"
+✅ Image 6/10: dc3a6000-590d-4996-98ba-1bf052412dcc.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Top-down wide shot revealing a rusted sickle placed perfectly curved around a ne...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/e3986d7c-342f-40b3-a5ad-998d7b44c7f3.png"
+✅ Image 7/10: e3986d7c-342f-40b3-a5ad-998d7b44c7f3.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide shot showing that all twelve graves face DIFFERENT directions—not aligned w...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/cd9f5281-215a-4eb8-b8ff-69ecf5cc7b2c.png"
+✅ Image 8/10: cd9f5281-215a-4eb8-b8ff-69ecf5cc7b2c.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Cinematic slow push-in toward one gravesite, an iron nail catching the last ligh...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/9a1a7088-7b7c-42c7-8b5a-341c66b4d91d.png"
+✅ Image 9/10: 9a1a7088-7b7c-42c7-8b5a-341c66b4d91d.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Fade to black frame with silhouettes of twelve standing stones (temporary marker...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/c4e86d92-2c3f-4f92-ba8f-d92c24cf7aa4.png"
+✅ Image 10/10: c4e86d92-2c3f-4f92-ba8f-d92c24cf7aa4.png
+✅ Total images: 10
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/096d7654-aaea-4615-9827-49e6fa4f6219.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/096d7654-aaea-4615-9827-49e6fa4f6219.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-21 16:31:24,260 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 16:31:26,528 INFO Processing audio with duration 00:31.152
+2026-04-21 16:31:26,721 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 16:31:28,366 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 79 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/f2ea47a5-48f4-4afc-9c42-76514f6df124.mp4.
+MoviePy - Writing audio in f2ea47a5-48f4-4afc-9c42-76514f6df124TEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/f2ea47a5-48f4-4afc-9c42-76514f6df124.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/f2ea47a5-48f4-4afc-9c42-76514f6df124.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/f2ea47a5-48f4-4afc-9c42-76514f6df124.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/f2ea47a5-48f4-4afc-9c42-76514f6df124.mp4 (5.4 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-21 16:35:05,377 INFO Initializing YouTube upload for: Scientists Found 12 Vampire Graves in Poland—buried with iron nails and sickles, but why? The mystery shocks historians.
+2026-04-21 16:35:07,333 INFO {"event": "youtube_upload", "phase": "init", "title": "Scientists Found 12 Vampire Graves in Poland\u2014buried with iron nails and sickles, but why? The mystery shocks historians.", "account_id": "default"}
+2026-04-21 16:35:07,333 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 16:35:13,163 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 88.1, "bytes_sent": 5242880, "total_bytes": 5680312}
+2026-04-21 16:35:17,367 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5680312, "total_bytes": 5680312}
+2026-04-21 16:35:17,367 INFO {"event": "youtube_upload", "phase": "metadata", "title": "Scientists Found 12 Vampire Graves in Poland\u2014buried with iron nails and sickles, but why? The mystery shocks historians."}
+2026-04-21 16:35:17,367 INFO Upload successful! Video ID: Mj5wFsLV9Zc
+2026-04-21 16:35:17,367 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "Mj5wFsLV9Zc", "url": "https://www.youtube.com/watch?v=Mj5wFsLV9Zc"}
+✅ Uploaded: https://www.youtube.com/watch?v=Mj5wFsLV9Zc
+2026-04-21 16:35:17,383 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/f2ea47a5-48f4-4afc-9c42-76514f6df124.mp4
+✅ Added video: Scientists Found 12 Vampire Graves in Poland—buried with iron nails and sickles, but why? The mystery shocks historians. (youtube)
+2026-04-21 16:35:17,412 INFO Video saved to DB with ID: 14
+2026-04-21 16:35:17,439 INFO Uploaded: https://www.youtube.com/watch?v=Mj5wFsLV9Zc
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-21 22:30:58,090 INFO === Run #16 ===
+2026-04-21 22:30:58,091 INFO Account: creepy-historcal (17)
+2026-04-21 22:30:58,091 INFO Topic: Creepy real historical fact
+2026-04-21 22:30:58,091 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 2 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+⚠️ Tavily failed: HTTPSConnectionPool(host='api.tavily.com', port=443): Max retries exceeded with url: /search (Caused by NameResolutionError("HTTPSConnection(host='api.tavily.com', port=443): Failed to resolve 'api.tavily.com' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching Exa...
+⚠️ Exa failed: HTTPSConnectionPool(host='api.exa.ai', port=443): Max retries exceeded with url: /search (Caused by NameResolutionError("HTTPSConnection(host='api.exa.ai', port=443): Failed to resolve 'api.exa.ai' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 22:30:59,835 INFO Error in engine wikipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts)', 'https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts')")
+2026-04-21 22:30:59,835 INFO Error in engine grokipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1)', 'https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1')")
+2026-04-21 22:30:59,835 INFO Error in engine google: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.google.com/search?q=Creepy+real+historical+fact+2026+facts&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS)', 'https://www.google.com/search?q=Creepy+real+historical+fact+2026+facts&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS')")
+2026-04-21 22:30:59,836 INFO Error in engine brave: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web)', 'https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web')")
+2026-04-21 22:30:59,836 INFO Error in engine mojeek: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.mojeek.com/search?q=Creepy+real+historical+fact+2026+facts)', 'https://www.mojeek.com/search?q=Creepy+real+historical+fact+2026+facts')")
+2026-04-21 22:30:59,837 INFO Error in engine yahoo: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.yahoo.com/search;_ylt=5TACmz1u9dYui3xgzfvsr3Bu;_ylu=k9RejIwQgvRZiLxOmFnT3kV3SBDxlOyr1gKDH0lVu4IJXQE?p=Creepy+real+historical+fact+2026+facts)', 'https://search.yahoo.com/search;_ylt=5TACmz1u9dYui3xgzfvsr3Bu;_ylu=k9RejIwQgvRZiLxOmFnT3kV3SBDxlOyr1gKDH0lVu4IJXQE?p=Creepy+real+historical+fact+2026+facts')")
+2026-04-21 22:30:59,837 INFO Error in engine duckduckgo: DDGSException("ConnectError: ConnectError('error sending request for url (https://html.duckduckgo.com/html/)', 'https://html.duckduckgo.com/html/')")
+2026-04-21 22:30:59,838 INFO Error in engine yandex: DDGSException("ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=9972307)', 'https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=9972307')")
+⚠️ ddgs failed: ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=9972307)', 'https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=9972307')
+ℹ️    🔍 Fetching Wikipedia...
+⚠️ Wikipedia API failed: HTTPSConnectionPool(host='en.wikipedia.org', port=443): Max retries exceeded with url: /api/rest_v1/feed/featured/2026/04/21 (Caused by NameResolutionError("HTTPSConnection(host='en.wikipedia.org', port=443): Failed to resolve 'en.wikipedia.org' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Fetching Google Trends...
+⚠️ Google Trends failed: HTTPSConnectionPool(host='trends.google.com', port=443): Max retries exceeded with url: /trending/rss?geo=US (Caused by NameResolutionError("HTTPSConnection(host='trends.google.com', port=443): Failed to resolve 'trends.google.com' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching Firecrawl...
+⚠️ Firecrawl failed: 'NoneType' object has no attribute 'status_code'
+⚠️ Web research unavailable. Using LLM knowledge for topic generation.
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:31:01,692 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:31:01,710 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ gpt-4o-free calling API2026-04-21 22:31:01,718 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ gpt-4.1-free calling API2026-04-21 22:31:01,725 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+❌ Pipeline failed: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+2026-04-21 22:31:01,728 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-21 22:35:46,437 INFO === Run #17 ===
+2026-04-21 22:35:46,437 INFO Account: creepy-historcal (17)
+2026-04-21 22:35:46,437 INFO Topic: Creepy real historical fact
+2026-04-21 22:35:46,437 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 2 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 7 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-21 22:35:51,943 INFO response: https://grokipedia.com/api/typeahead?query=unknown+Creepy+real+historical+fact+secrets&limit=1 200
+2026-04-21 22:35:51,945 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unknown%20Creepy%20real%20historical%20fact%20secrets 200
+2026-04-21 22:35:52,500 INFO response: https://search.yahoo.com/search;_ylt=4uY9Ui86GpIjZ-key54RDaVG;_ylu=nudki_KnXfjkQjvU9pxGCW7lad7cQx2Ow8pPcPmADC6F0rY?p=unknown+Creepy+real+historical+fact+secrets 200
+2026-04-21 22:35:54,488 INFO response: https://www.google.com/search?q=unknown+Creepy+real+historical+fact+secrets&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-21 22:35:56,632 INFO response: https://www.mojeek.com/search?q=unknown+Creepy+real+historical+fact+secrets 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 9 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5781 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:36:19,297 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][20s] ✅ Done
+[✅ LLM] Generated 632 chars
+ℹ️  🎯 Topic selected: The Green Children of Woolpit: Two mysterious green-skinned children appeared in...
+✅ Topic: The Green Children of Woolpit: Two mysterious green-skinned children appeared in 12th century England speaking an unknown language—one learned to eat food but died, the other vanished—what were they?
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:36:27,327 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][8s] ✅ Done
+[✅ LLM] Generated 414 chars
+ℹ️  => Timing: ~73 words, 7 sentences, 29s TTS
+ℹ️  => Script: 7 sentences, 414 chars
+✅ Script: 414 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:36:31,774 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 116 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:36:33,661 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][1s] ✅ Done
+[✅ LLM] Generated 404 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:36:36,810 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 496 chars
+ℹ️  => Generated 14 SEO tags
+✅ Title: Scientists Found Mysterious Green Children in 12th Century England—One Died After Eating, the Other Vanished Forever
+✅ Tags: 14 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-21 22:37:56,798 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][80s] ✅ Done
+[✅ LLM] Generated 1377 chars
+✅ Generated 7 Image Prompts (7 scenes, ~4s each).
+✅ Generated 7 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Aerial view of a small medieval village at dawn, two small figures with vivid em...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/4f5ce2bf-bd48-457c-8e86-abe557a46461.png"
+✅ Image 1/7: 4f5ce2bf-bd48-457c-8e86-abe557a46461.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide landscape of rolling green hills under a pale sky, a small thatched village...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/9528ed61-06d6-47ab-9c4c-1539cd4a3220.png"
+✅ Image 2/7: 9528ed61-06d6-47ab-9c4c-1539cd4a3220.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide shot of the green-skinned children walking through a misty meadow, their em...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/7a9216ba-e3ff-427c-88ce-f61d298c61ae.png"
+✅ Image 3/7: 7a9216ba-e3ff-427c-88ce-f61d298c61ae.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: The boy lies on a wooden table, his green skin turned gray, villagers mourning a...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/ee54e6a3-19ff-4d3b-90ec-1288f14a76f4.png"
+✅ Image 4/7: ee54e6a3-19ff-4d3b-90ec-1288f14a76f4.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: An empty village street at dusk, a faint green glow lingering near the well, no ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/ff8819c0-429a-4daf-9261-ece20967644b.png"
+✅ Image 5/7: ff8819c0-429a-4daf-9261-ece20967644b.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of Some people think their world lies beneath our hills, ci...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/8e785318-428c-41da-9df9-1dcc8a2934db.png"
+✅ Image 6/7: 8e785318-428c-41da-9df9-1dcc8a2934db.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: wide establishing shot of But what were they really, cinematic, detailed...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/7c2aee43-868f-4ef4-8bcd-58e6f1b9855c.png"
+✅ Image 7/7: 7c2aee43-868f-4ef4-8bcd-58e6f1b9855c.png
+✅ Total images: 7
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/1ca90deb-1626-4ce8-98d3-dc0f63ab9bdb.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/1ca90deb-1626-4ce8-98d3-dc0f63ab9bdb.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-21 22:42:28,793 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-21 22:42:29,114 INFO Processing audio with duration 00:27.312
+2026-04-21 22:42:29,193 INFO VAD filter removed 00:00.000 of audio
+2026-04-21 22:42:29,743 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 73 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/af434b5b-6953-44bd-8df8-14ab300ccf78.mp4.
+MoviePy - Writing audio in af434b5b-6953-44bd-8df8-14ab300ccf78TEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/af434b5b-6953-44bd-8df8-14ab300ccf78.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/af434b5b-6953-44bd-8df8-14ab300ccf78.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/af434b5b-6953-44bd-8df8-14ab300ccf78.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/af434b5b-6953-44bd-8df8-14ab300ccf78.mp4 (5.4 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-21 22:44:09,675 INFO Initializing YouTube upload for: Scientists Found Mysterious Green Children in 12th Century England—One Died After Eating, the Other Vanished Forever
+2026-04-21 22:44:11,814 INFO {"event": "youtube_upload", "phase": "init", "title": "Scientists Found Mysterious Green Children in 12th Century England\u2014One Died After Eating, the Other Vanished Forever", "account_id": "default"}
+2026-04-21 22:44:11,814 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-21 22:44:17,140 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 87.8, "bytes_sent": 5242880, "total_bytes": 5701817}
+2026-04-21 22:44:18,876 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5701817, "total_bytes": 5701817}
+2026-04-21 22:44:18,876 INFO {"event": "youtube_upload", "phase": "metadata", "title": "Scientists Found Mysterious Green Children in 12th Century England\u2014One Died After Eating, the Other Vanished Forever"}
+2026-04-21 22:44:18,876 INFO Upload successful! Video ID: 0WQl1Y7oEvI
+2026-04-21 22:44:18,876 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "0WQl1Y7oEvI", "url": "https://www.youtube.com/watch?v=0WQl1Y7oEvI"}
+✅ Uploaded: https://www.youtube.com/watch?v=0WQl1Y7oEvI
+2026-04-21 22:44:18,878 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/af434b5b-6953-44bd-8df8-14ab300ccf78.mp4
+✅ Added video: Scientists Found Mysterious Green Children in 12th Century England—One Died After Eating, the Other Vanished Forever (youtube)
+2026-04-21 22:44:18,898 INFO Video saved to DB with ID: 15
+2026-04-21 22:44:18,911 INFO Uploaded: https://www.youtube.com/watch?v=0WQl1Y7oEvI
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-22 00:35:47,103 INFO === Run #18 ===
+2026-04-22 00:35:47,103 INFO Account: creepy-historcal (17)
+2026-04-22 00:35:47,103 INFO Topic: Creepy real historical fact
+2026-04-22 00:35:47,103 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 3 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 7 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-22 00:35:51,451 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=what%27s%20trending%20in%20Creepy%20real%20historical%20fact%20right%20now 200
+2026-04-22 00:35:52,335 INFO response: https://grokipedia.com/api/typeahead?query=what%27s+trending+in+Creepy+real+historical+fact+right+now&limit=1 200
+2026-04-22 00:35:53,360 INFO response: https://search.brave.com/search?q=what%27s+trending+in+Creepy+real+historical+fact+right+now&source=web 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5597 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 00:36:01,554 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][7s] ✅ Done
+[✅ LLM] Generated 2369 chars
+ℹ️  🎯 Topic selected: I need to generate 3 YouTube Shorts topics about "Creepy real historical fact"...
+✅ Topic: I need to generate 3 YouTube Shorts topics about "Creepy real historical fact"
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 00:36:13,043 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][11s] ✅ Done
+[✅ LLM] Generated 1125 chars
+⚠️ Script too long: 200 words (max 120). Truncating...
+⚠️ Too many sentences: 44 (target 6-8). Truncating...
+⚠️ Script estimated duration: 46s (target 20-30s)
+ℹ️  => Timing: ~115 words, 44 sentences, 46s TTS
+ℹ️  => Script: 8 sentences, 313 chars
+✅ Script: 313 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 00:36:21,725 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][8s] ✅ Done
+[✅ LLM] Generated 78 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 00:36:24,006 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][2s] ✅ Done
+[✅ LLM] Generated 426 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 00:36:27,152 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 381 chars
+ℹ️  => Generated 13 SEO tags
+✅ Title: This Hidden Arctic Town Mystery Reveals Why 1,500 Villagers Vanished Overnight
+✅ Tags: 13 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API                                                                      [llm][180s] ⏱️ Timeout (attempt 1/2)
+[llm][183s] ⠙ kilo-auto/free calling API2026-04-22 00:41:36,608 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][309s] ✅ Done
+[✅ LLM] Generated 1450 chars
+✅ Generated 8 Image Prompts (8 scenes, ~3s each).
+✅ Generated 8 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A high-angle view of a stone burial chamber reveals a faint pulsating glow emana...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/2494b9e0-ec2d-4de1-95e9-ca281d88fb43.png"
+✅ Image 1/8: 2494b9e0-ec2d-4de1-95e9-ca281d88fb43.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A sweeping aerial shot of a barren desert landscape shows a fenced excavation si...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/934ee49c-6174-496e-bb6c-51d70e0da277.png"
+✅ Image 2/8: 934ee49c-6174-496e-bb6c-51d70e0da277.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A medium close-up of a bronze clockwork device displays intricately carved gears...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/a6007a7f-2a15-4dd2-8b7c-c2d38ae632f2.png"
+✅ Image 3/8: a6007a7f-2a15-4dd2-8b7c-c2d38ae632f2.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: A side view shows the sealed stone door, the clock's gears still rotating, while...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/6d771484-70eb-4f0c-9657-2d6c89e097db.png"
+✅ Image 4/8: 6d771484-70eb-4f0c-9657-2d6c89e097db.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: The exterior of the tomb glows faintly once more, the same pulsating light spill...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/2c40a230-e92a-4d4c-adab-925613d9387f.png"
+✅ Image 5/8: 2c40a230-e92a-4d4c-adab-925613d9387f.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of How did it keep moving, cinematic, detailed...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/40db3e9a-2f21-4fc5-827b-3ecb8431136c.png"
+✅ Image 6/8: 40db3e9a-2f21-4fc5-827b-3ecb8431136c.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: wide establishing shot of Scientists say it should have stopped, cinematic, deta...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/03d7b9f7-c051-4238-bff8-247b268ad41a.png"
+✅ Image 7/8: 03d7b9f7-c051-4238-bff8-247b268ad41a.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of The spring lost its power long ago, cinematic, detailed...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/637fb5a9-d308-439f-bca0-d9e24283362b.png"
+✅ Image 8/8: 637fb5a9-d308-439f-bca0-d9e24283362b.png
+✅ Total images: 8
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/30ec1817-b7f3-45ef-88fd-26c2acf77b01.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/30ec1817-b7f3-45ef-88fd-26c2acf77b01.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-22 00:46:36,645 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-22 00:46:37,087 INFO Processing audio with duration 00:26.856
+2026-04-22 00:46:37,151 INFO VAD filter removed 00:00.000 of audio
+2026-04-22 00:46:37,712 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 58 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/3c8bd456-7a72-4f0e-a032-5191dd0f791a.mp4.
+MoviePy - Writing audio in 3c8bd456-7a72-4f0e-a032-5191dd0f791aTEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/3c8bd456-7a72-4f0e-a032-5191dd0f791a.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/3c8bd456-7a72-4f0e-a032-5191dd0f791a.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/3c8bd456-7a72-4f0e-a032-5191dd0f791a.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/3c8bd456-7a72-4f0e-a032-5191dd0f791a.mp4 (4.5 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-22 00:47:49,404 INFO Initializing YouTube upload for: This Hidden Arctic Town Mystery Reveals Why 1,500 Villagers Vanished Overnight
+2026-04-22 00:47:51,190 INFO {"event": "youtube_upload", "phase": "init", "title": "This Hidden Arctic Town Mystery Reveals Why 1,500 Villagers Vanished Overnight", "account_id": "default"}
+2026-04-22 00:47:51,190 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-22 00:47:55,801 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 4691274, "total_bytes": 4691274}
+2026-04-22 00:47:55,801 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This Hidden Arctic Town Mystery Reveals Why 1,500 Villagers Vanished Overnight"}
+2026-04-22 00:47:55,801 INFO Upload successful! Video ID: GlypnBPdv_g
+2026-04-22 00:47:55,801 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "GlypnBPdv_g", "url": "https://www.youtube.com/watch?v=GlypnBPdv_g"}
+✅ Uploaded: https://www.youtube.com/watch?v=GlypnBPdv_g
+2026-04-22 00:47:55,803 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/3c8bd456-7a72-4f0e-a032-5191dd0f791a.mp4
+✅ Added video: This Hidden Arctic Town Mystery Reveals Why 1,500 Villagers Vanished Overnight (youtube)
+2026-04-22 00:47:55,823 INFO Video saved to DB with ID: 17
+2026-04-22 00:47:55,835 INFO Uploaded: https://www.youtube.com/watch?v=GlypnBPdv_g
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-22 02:35:48,581 INFO === Run #19 ===
+2026-04-22 02:35:48,581 INFO Account: creepy-historcal (17)
+2026-04-22 02:35:48,581 INFO Topic: Creepy real historical fact
+2026-04-22 02:35:48,581 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 4 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 7 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-22 02:35:54,440 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=what%27s%20trending%20in%20Creepy%20real%20historical%20fact%20right%20now 200
+2026-04-22 02:35:54,850 INFO response: https://grokipedia.com/api/typeahead?query=what%27s+trending+in+Creepy+real+historical+fact+right+now&limit=1 200
+2026-04-22 02:35:56,390 INFO response: https://yandex.com/search/site/?text=what%27s+trending+in+Creepy+real+historical+fact+right+now&web=1&searchid=6495307 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5540 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 02:36:01,098 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 633 chars
+ℹ️  🎯 Topic selected: In 1518, hundreds of people in Strasbourg started dancing and couldn't stop for ...
+✅ Topic: In 1518, hundreds of people in Strasbourg started dancing and couldn't stop for months—some danced until they died from heart attacks or exhaustion, and doctors still can't explain why
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 02:36:18,007 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][16s] ✅ Done
+[✅ LLM] Generated 577 chars
+⚠️ Script estimated duration: 39s (target 20-30s)
+ℹ️  => Timing: ~97 words, 6 sentences, 39s TTS
+ℹ️  => Script: 6 sentences, 577 chars
+✅ Script: 577 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 02:38:25,078 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][127s] ✅ Done
+[✅ LLM] Generated 119 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 02:38:39,304 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][14s] ✅ Done
+[✅ LLM] Generated 438 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 02:38:42,757 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 431 chars
+ℹ️  => Generated 14 SEO tags
+✅ Title: This 1518 Strasbourg dance plague left hundreds dead after months of nonstop dancing - puzzling scholars remain baffled
+✅ Tags: 14 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 02:38:48,090 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][5s] ✅ Done
+[✅ LLM] Generated 1639 chars
+✅ Generated 10 Image Prompts (10 scenes, ~2s each).
+✅ Generated 10 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: AERIAL VIEW:dozens of people in medieval town squares suddenly jerk into synchro...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/fc293293-ac32-4de9-892b-fff26d77d9cb.png"
+✅ Image 1/10: fc293293-ac32-4de9-892b-fff26d77d9cb.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: WIDE SHOT: Renaissance European city with cobblestone streets, half-timbered hou...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/de8172ec-b0fb-4aaa-bdff-e0450b2047bf.png"
+✅ Image 2/10: de8172ec-b0fb-4aaa-bdff-e0450b2047bf.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: WIDE SHOT: Hundreds of men, women, and children jumping and spinning endlessly, ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/b9ee128a-7ee4-42dd-a510-10428ee84229.png"
+✅ Image 3/10: b9ee128a-7ee4-42dd-a510-10428ee84229.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: AERIAL VIEW: A collapsed figure lying prostrate on cobblestones, legs still twit...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/d61b7318-3001-4812-81f0-63f43fef30ed.png"
+✅ Image 4/10: d61b7318-3001-4812-81f0-63f43fef30ed.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: WIDE SHOT: Doctors in dark robes standing helplessly at a distance, gesturing co...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/60cefb55-33e4-4997-90fe-c5f6cdaa8208.png"
+✅ Image 5/10: 60cefb55-33e4-4997-90fe-c5f6cdaa8208.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: WIDE SHOT: Weeks later—the same square, fewer dancers remain standing, more lie ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/18a1ffb1-91bc-4efc-9ff0-77909b62f2f9.png"
+✅ Image 6/10: 18a1ffb1-91bc-4efc-9ff0-77909b62f2f9.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: WIDE SHOT: Hollow-eyed villagers shuffling stiffly, some supporting each other, ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/11ad8940-6d5c-4b01-bdeb-38869e21bbbe.png"
+✅ Image 7/10: 11ad8940-6d5c-4b01-bdeb-38869e21bbbe.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: AERIAL VIEW: Harvest fields with rye grain—close but wide—showing fungal ergot c...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/6b1de161-dbfe-45ac-9d51-071117a910c8.png"
+✅ Image 8/10: 6b1de161-dbfe-45ac-9d51-071117a910c8.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: WIDE SHOT: An empty plaza at dusk, abandoned dancing shoes scattered on cobblest...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/f0352497-6661-4ba1-bcdf-1bf7e453d3c3.png"
+✅ Image 9/10: f0352497-6661-4ba1-bcdf-1bf7e453d3c3.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: AERIAL VIEW: Dawn breaks over Strasbourg's rooftops, the camera pulls backreveal...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/892de1e8-d3ad-433b-a931-19192f4dec1c.png"
+✅ Image 10/10: 892de1e8-d3ad-433b-a931-19192f4dec1c.png
+✅ Total images: 10
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/f4b688be-ef3c-4517-aaae-349f7d871378.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/f4b688be-ef3c-4517-aaae-349f7d871378.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-22 02:44:59,911 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-22 02:45:00,198 INFO Processing audio with duration 00:34.920
+2026-04-22 02:45:00,276 INFO VAD filter removed 00:00.000 of audio
+2026-04-22 02:45:00,718 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 97 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/16e4c71b-7b78-458c-8fa1-d2c3c07f92a7.mp4.
+MoviePy - Writing audio in 16e4c71b-7b78-458c-8fa1-d2c3c07f92a7TEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/16e4c71b-7b78-458c-8fa1-d2c3c07f92a7.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/16e4c71b-7b78-458c-8fa1-d2c3c07f92a7.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/16e4c71b-7b78-458c-8fa1-d2c3c07f92a7.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/16e4c71b-7b78-458c-8fa1-d2c3c07f92a7.mp4 (8.2 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-22 02:46:42,137 INFO Initializing YouTube upload for: This 1518 Strasbourg dance plague left hundreds dead after months of nonstop dancing - puzzling scholars remain baffled
+2026-04-22 02:46:44,665 INFO {"event": "youtube_upload", "phase": "init", "title": "This 1518 Strasbourg dance plague left hundreds dead after months of nonstop dancing - puzzling scholars remain baffled", "account_id": "default"}
+2026-04-22 02:46:44,665 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-22 02:46:48,740 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 60.1, "bytes_sent": 5242880, "total_bytes": 8571115}
+2026-04-22 02:46:54,093 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 8571115, "total_bytes": 8571115}
+2026-04-22 02:46:54,093 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This 1518 Strasbourg dance plague left hundreds dead after months of nonstop dancing - puzzling scholars remain baffled"}
+2026-04-22 02:46:54,093 INFO Upload successful! Video ID: nHrAQhrJfi4
+2026-04-22 02:46:54,093 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "nHrAQhrJfi4", "url": "https://www.youtube.com/watch?v=nHrAQhrJfi4"}
+✅ Uploaded: https://www.youtube.com/watch?v=nHrAQhrJfi4
+2026-04-22 02:46:54,095 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/16e4c71b-7b78-458c-8fa1-d2c3c07f92a7.mp4
+✅ Added video: This 1518 Strasbourg dance plague left hundreds dead after months of nonstop dancing - puzzling scholars remain baffled (youtube)
+2026-04-22 02:46:54,115 INFO Video saved to DB with ID: 18
+2026-04-22 02:46:54,127 INFO Uploaded: https://www.youtube.com/watch?v=nHrAQhrJfi4
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-22 04:35:49,530 INFO === Run #20 ===
+2026-04-22 04:35:49,530 INFO Account: creepy-historcal (17)
+2026-04-22 04:35:49,530 INFO Topic: Creepy real historical fact
+2026-04-22 04:35:49,530 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 5 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 7 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-22 04:35:54,473 INFO response: https://grokipedia.com/api/typeahead?query=what%27s+trending+in+Creepy+real+historical+fact+right+now&limit=1 200
+2026-04-22 04:35:54,882 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=what%27s%20trending%20in%20Creepy%20real%20historical%20fact%20right%20now 200
+2026-04-22 04:35:55,239 INFO response: https://www.google.com/search?q=what%27s+trending+in+Creepy+real+historical+fact+right+now&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS 200
+2026-04-22 04:35:57,033 INFO response: https://yandex.com/search/site/?text=what%27s+trending+in+Creepy+real+historical+fact+right+now&web=1&searchid=3478380 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 9 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5440 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 04:36:22,340 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][24s] ✅ Done
+[✅ LLM] Generated 485 chars
+ℹ️  🎯 Topic selected: Six Irish railroad workers were murdered and buried under train tracks in 1852—t...
+✅ Topic: Six Irish railroad workers were murdered and buried under train tracks in 1852—their bodies weren't found for over a century, and historians still don't know why
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 04:36:46,186 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][23s] ✅ Done
+[✅ LLM] Generated 517 chars
+⚠️ Too many sentences: 12 (target 6-8). Truncating...
+⚠️ Script estimated duration: 38s (target 20-30s)
+ℹ️  => Timing: ~95 words, 12 sentences, 38s TTS
+ℹ️  => Script: 8 sentences, 358 chars
+✅ Script: 358 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 04:37:58,892 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][72s] ✅ Done
+[✅ LLM] Generated 121 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 04:38:05,854 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][6s] ✅ Done
+[✅ LLM] Generated 376 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 04:38:39,927 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][34s] ✅ Done
+[✅ LLM] Generated 504 chars
+ℹ️  => Generated 15 SEO tags
+✅ Title: This Irish railroad murder mystery: six workers killed and buried under tracks in 1852, bodies hidden for 100+ years—why?
+✅ Tags: 15 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 04:38:57,669 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][17s] ✅ Done
+[✅ LLM] Generated 1143 chars
+✅ Generated 10 Image Prompts (10 scenes, ~2s each).
+✅ Generated 10 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Aerial view of rusted railroad tracks cutting through fog-shrouded green Irish h...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/df02f6b1-46d5-4269-b25a-02e16488298e.png"
+✅ Image 1/10: df02f6b1-46d5-4269-b25a-02e16488298e.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide shot reveals crumbling 1850s stone bridge spanning a dark bog, tracks disap...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/af3e2983-fcf4-44e3-8912-b967cd8e9b3d.png"
+✅ Image 2/10: af3e2983-fcf4-44e3-8912-b967cd8e9b3d.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Low angle view of wooden railroad ties partially unearthed, revealing dark earth...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/d7a397df-71fa-44b2-96f3-5496d8b8df41.png"
+✅ Image 3/10: d7a397df-71fa-44b2-96f3-5496d8b8df41.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Time-lapse dissolve shows modern construction equipment lifting rails while orig...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/be505e41-358c-4a0c-a744-cd0cba429e27.png"
+✅ Image 4/10: be505e41-358c-4a0c-a744-cd0cba429e27.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide landscape at sunset shows remote County Clare countryside, isolated farmhou...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/65a00d4f-c721-4cdb-a6fe-c22edaa0a564.png"
+✅ Image 5/10: 65a00d4f-c721-4cdb-a6fe-c22edaa0a564.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Six weathered work boots arranged neatly in a row on damp ground, mud caked on s...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/15327090-c59a-4187-ab73-55fde02ec389.png"
+✅ Image 6/10: 15327090-c59a-4187-ab73-55fde02ec389.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Empty work site at dawn, tools abandoned but undisturbed, no signs of struggle v...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/44ee6ef4-a8dd-4cf1-884d-c8a9f53a9c16.png"
+✅ Image 7/10: 44ee6ef4-a8dd-4cf1-884d-c8a9f53a9c16.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Historians examining faded Victorian-era documents and maps spread across wooden...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/31f4c774-0d08-4d5e-b0c9-97e453df9465.png"
+✅ Image 8/10: 31f4c774-0d08-4d5e-b0c9-97e453df9465.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Modern archaeologists carefully brushing soil from objects, uncovering scattered...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/167fdda8-2a14-4fbe-9f2a-853e6da53cae.png"
+✅ Image 9/10: 167fdda8-2a14-4fbe-9f2a-853e6da53cae.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Silhouette of lone figure standing on railroad tracks at dusk, fog rolling acros...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/36b2202b-0044-48d3-9da4-0c961ae8eb0b.png"
+✅ Image 10/10: 36b2202b-0044-48d3-9da4-0c961ae8eb0b.png
+✅ Total images: 10
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/63802af7-5db7-4653-89d1-b15d344a48db.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/63802af7-5db7-4653-89d1-b15d344a48db.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-22 04:45:18,705 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-22 04:45:18,988 INFO Processing audio with duration 00:27.456
+2026-04-22 04:45:19,053 INFO VAD filter removed 00:00.000 of audio
+2026-04-22 04:45:19,502 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 67 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/064e8804-2d44-4f62-96df-b789cb5cc572.mp4.
+MoviePy - Writing audio in 064e8804-2d44-4f62-96df-b789cb5cc572TEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/064e8804-2d44-4f62-96df-b789cb5cc572.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/064e8804-2d44-4f62-96df-b789cb5cc572.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/064e8804-2d44-4f62-96df-b789cb5cc572.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/064e8804-2d44-4f62-96df-b789cb5cc572.mp4 (6.4 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+✅ Added/updated OAuth credential: default (youtube)
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-22 04:46:38,769 INFO Initializing YouTube upload for: This Irish railroad murder mystery: six workers killed and buried under tracks in 1852, bodies hidden for 100+ years—why?
+2026-04-22 04:46:40,523 INFO {"event": "youtube_upload", "phase": "init", "title": "This Irish railroad murder mystery: six workers killed and buried under tracks in 1852, bodies hidden for 100+ years\u2014why?", "account_id": "default"}
+2026-04-22 04:46:40,524 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-22 04:46:44,527 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 75.8, "bytes_sent": 5242880, "total_bytes": 6665589}
+2026-04-22 04:46:47,078 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 6665589, "total_bytes": 6665589}
+2026-04-22 04:46:47,078 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This Irish railroad murder mystery: six workers killed and buried under tracks in 1852, bodies hidden for 100+ years\u2014why?"}
+2026-04-22 04:46:47,078 INFO Upload successful! Video ID: hSO-0BVpAIE
+2026-04-22 04:46:47,078 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "hSO-0BVpAIE", "url": "https://www.youtube.com/watch?v=hSO-0BVpAIE"}
+✅ Uploaded: https://www.youtube.com/watch?v=hSO-0BVpAIE
+2026-04-22 04:46:47,080 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/064e8804-2d44-4f62-96df-b789cb5cc572.mp4
+✅ Added video: This Irish railroad murder mystery: six workers killed and buried under tracks in 1852, bodies hidden for 100+ years—why? (youtube)
+2026-04-22 04:46:47,100 INFO Video saved to DB with ID: 19
+2026-04-22 04:46:47,112 INFO Uploaded: https://www.youtube.com/watch?v=hSO-0BVpAIE
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-22 06:47:52,544 INFO === Run #21 ===
+2026-04-22 06:47:52,544 INFO Account: creepy-historcal (17)
+2026-04-22 06:47:52,544 INFO Topic: Creepy real historical fact
+2026-04-22 06:47:52,544 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: x-ai/grok-code-fast-1:optimized:free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 6 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+⚠️ Tavily failed: HTTPSConnectionPool(host='api.tavily.com', port=443): Max retries exceeded with url: /search (Caused by NameResolutionError("HTTPSConnection(host='api.tavily.com', port=443): Failed to resolve 'api.tavily.com' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching Exa...
+⚠️ Exa failed: HTTPSConnectionPool(host='api.exa.ai', port=443): Max retries exceeded with url: /search (Caused by NameResolutionError("HTTPSConnection(host='api.exa.ai', port=443): Failed to resolve 'api.exa.ai' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-22 06:47:53,048 INFO Error in engine wikipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts)', 'https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=Creepy%20real%20historical%20fact%202026%20facts')")
+2026-04-22 06:47:53,049 INFO Error in engine grokipedia: DDGSException("ConnectError: ConnectError('error sending request for url (https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1)', 'https://grokipedia.com/api/typeahead?query=Creepy+real+historical+fact+2026+facts&limit=1')")
+2026-04-22 06:47:53,057 INFO Error in engine yahoo: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.yahoo.com/search;_ylt=xTZbCCbMRXStygRV7wa4Zmak;_ylu=cvtlIkZ8oQz7BPQ3CsmYf-VePPSakWERGq5acKTOVmIk15s?p=Creepy+real+historical+fact+2026+facts)', 'https://search.yahoo.com/search;_ylt=xTZbCCbMRXStygRV7wa4Zmak;_ylu=cvtlIkZ8oQz7BPQ3CsmYf-VePPSakWERGq5acKTOVmIk15s?p=Creepy+real+historical+fact+2026+facts')")
+2026-04-22 06:47:53,057 INFO Error in engine mojeek: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.mojeek.com/search?q=Creepy+real+historical+fact+2026+facts)', 'https://www.mojeek.com/search?q=Creepy+real+historical+fact+2026+facts')")
+2026-04-22 06:47:53,057 INFO Error in engine brave: DDGSException("ConnectError: ConnectError('error sending request for url (https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web)', 'https://search.brave.com/search?q=Creepy+real+historical+fact+2026+facts&source=web')")
+2026-04-22 06:47:53,058 INFO Error in engine google: DDGSException("ConnectError: ConnectError('error sending request for url (https://www.google.com/search?q=Creepy+real+historical+fact+2026+facts&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS)', 'https://www.google.com/search?q=Creepy+real+historical+fact+2026+facts&filter=1&start=0&hl=en-US&lr=lang_en&cr=countryUS')")
+2026-04-22 06:47:53,058 INFO Error in engine yandex: DDGSException("ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=4401883)', 'https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=4401883')")
+⚠️ ddgs failed: ConnectError: ConnectError('error sending request for url (https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=4401883)', 'https://yandex.com/search/site/?text=Creepy+real+historical+fact+2026+facts&web=1&searchid=4401883')
+ℹ️    🔍 Fetching Wikipedia...
+⚠️ Wikipedia API failed: HTTPSConnectionPool(host='en.wikipedia.org', port=443): Max retries exceeded with url: /api/rest_v1/feed/featured/2026/04/22 (Caused by NameResolutionError("HTTPSConnection(host='en.wikipedia.org', port=443): Failed to resolve 'en.wikipedia.org' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Fetching Google Trends...
+⚠️ Google Trends failed: HTTPSConnectionPool(host='trends.google.com', port=443): Max retries exceeded with url: /trending/rss?geo=US (Caused by NameResolutionError("HTTPSConnection(host='trends.google.com', port=443): Failed to resolve 'trends.google.com' ([Errno -3] Temporary failure in name resolution)"))
+ℹ️    🔍 Searching Firecrawl...
+⚠️ Firecrawl failed: 'NoneType' object has no attribute 'status_code'
+⚠️ Web research unavailable. Using LLM knowledge for topic generation.
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 06:47:54,756 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 06:47:54,773 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ gpt-4o-free calling API2026-04-22 06:47:54,780 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+[llm][0s] ⠋ gpt-4.1-free calling API2026-04-22 06:47:54,786 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 500 Internal Server Error"
+                                                                      [llm][0s] 🔴 HTTP 500
+❌ Pipeline failed: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+2026-04-22 06:47:54,796 ERROR Pipeline error: All models failed (tried: kilo-auto/free, kilo-auto/free, gpt-4o-free, gpt-4.1-free)
+[llm_provider] Importing with CLIPROXY_API_KEY = sk-dIMp6qoD0oWyMvswe
+ℹ️ Database initialized successfully
+ℹ️ Retrieved 9 accounts
+2026-04-22 08:02:18,580 INFO === Run #22 ===
+2026-04-22 08:02:18,581 INFO Account: creepy-historcal (17)
+2026-04-22 08:02:18,581 INFO Topic: Creepy real historical fact
+2026-04-22 08:02:18,581 INFO Same topic as last run for this account: Creepy real historical fact
+ℹ️ Using LLM model: kilo-auto/free
+TTS: Getting voice...
+TTS: Voice selected: en-US-AriaNeural
+TTS: Initializing EdgeTTS...
+TTS initialized
+ℹ️  => Loaded 8 existing videos for dedup context
+ℹ️ Step 1/7: Generating topic...
+ℹ️    🔍 Starting dynamic topic research...
+ℹ️    🔍 Searching Tavily...
+ℹ️    ✅ Tavily: 8 results
+ℹ️    🔍 Searching Exa...
+ℹ️    ✅ Exa: 8 results
+ℹ️    🔍 Searching DuckDuckGo (ddgs)...
+2026-04-22 08:02:22,989 INFO response: https://grokipedia.com/api/typeahead?query=unknown+Creepy+real+historical+fact+secrets&limit=1 200
+2026-04-22 08:02:22,998 INFO response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=unknown%20Creepy%20real%20historical%20fact%20secrets 200
+2026-04-22 08:02:24,256 INFO response: https://yandex.com/search/site/?text=unknown+Creepy+real+historical+fact+secrets&web=1&searchid=6897303 200
+ℹ️    ✅ ddgs: 8 results
+ℹ️    🔍 Fetching Wikipedia...
+ℹ️    ✅ Wikipedia: fetched
+ℹ️    🔍 Fetching Google Trends...
+ℹ️    ✅ Google Trends: 10 topics
+ℹ️    🔍 Searching Firecrawl...
+ℹ️  => Research context (5362 chars) gathered from web search
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 08:02:31,500 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][6s] ✅ Done
+[✅ LLM] Generated 569 chars
+ℹ️  🎯 Topic selected: The 1922 Hinterkaifeck murders: a farmer and his family were killed on a Bavaria...
+✅ Topic: The 1922 Hinterkaifeck murders: a farmer and his family were killed on a Bavarian homestead, the killer was never identified, and locals reported hearing screams for days
+ℹ️ Step 2/7: Generating script...
+ℹ️  ✍️ Generating script...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 08:02:42,865 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][11s] ✅ Done
+[✅ LLM] Generated 514 chars
+⚠️ Script estimated duration: 37s (target 20-30s)
+ℹ️  => Timing: ~93 words, 7 sentences, 37s TTS
+ℹ️  => Script: 7 sentences, 514 chars
+✅ Script: 514 chars
+ℹ️ Step 3/7: Generating metadata...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 08:03:25,091 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][42s] ✅ Done
+[✅ LLM] Generated 121 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 08:03:29,500 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][4s] ✅ Done
+[✅ LLM] Generated 407 chars
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 08:03:32,981 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][3s] ✅ Done
+[✅ LLM] Generated 483 chars
+ℹ️  => Generated 14 SEO tags
+✅ Title: This 1922 Hinterkaifeck murders remained unsolved – why did locals hear screams for days? the killer was never identified
+✅ Tags: 14 SEO tags
+ℹ️ Step 4/7: Generating image prompts...
+[📝 LLM] Using model: kilo-auto/free
+[llm] Using model: kilo-auto/free
+[llm][0s] ⠋ kilo-auto/free calling API2026-04-22 08:03:46,095 INFO HTTP Request: POST http://localhost:8317/v1/chat/completions "HTTP/1.1 200 OK"
+                                                                      [llm][13s] ✅ Done
+[✅ LLM] Generated 1320 chars
+✅ Generated 7 Image Prompts (7 scenes, ~4s each).
+✅ Generated 7 image prompts
+ℹ️ Step 5/7: Generating images...
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Wide aerial view of an isolated Bavarian farmhouse at night, silhouetted against...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/954a39a9-95c5-4bbb-a098-e854e294ce09.png"
+✅ Image 1/7: 954a39a9-95c5-4bbb-a098-e854e294ce09.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: LongTracking shot sweeping across misty mountain fields in rural Bavaria, reveal...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/2395d23f-b232-485d-bb55-8c44390cbd3e.png"
+✅ Image 2/7: 2395d23f-b232-485d-bb55-8c44390cbd3e.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Extreme low-angle shot of the farmhouse door standing open, the darkness inside ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/f5415a7c-24b1-4a26-89f4-32210b06342d.png"
+✅ Image 3/7: f5415a7c-24b1-4a26-89f4-32210b06342d.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Slow push-in toward a first-floor window, showing a perfectly intact pane of gla...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/084c7310-0715-43b8-a12a-f77167018bac.png"
+✅ Image 4/7: 084c7310-0715-43b8-a12a-f77167018bac.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: Same aerial perspective as the opening, the isolated farmhouse again silhouetted...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/5acd1ea9-69e6-45fa-9afb-d3b93115e2bf.png"
+✅ Image 5/7: 5acd1ea9-69e6-45fa-9afb-d3b93115e2bf.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: close-up detail view of To this day, nobody knows who did it or why, cinematic, ...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/1dde4f85-63bf-4aca-9e8f-559ca587d159.png"
+✅ Image 6/7: 1dde4f85-63bf-4aca-9e8f-559ca587d159.png
+ℹ️ Trying Pollinations zimage...
+Generating AI image via Pollinations zimage: wide establishing shot of So how did someone hide in a house full of people with...
+ℹ️  => Wrote image from Pollinations API zimage to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/28838ae4-563c-429b-af27-ead4fea9a2e4.png"
+✅ Image 7/7: 28838ae4-563c-429b-af27-ead4fea9a2e4.png
+✅ Total images: 7
+ℹ️ Step 6/7: Generating text-to-speech...
+ℹ️  => Wrote TTS to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/fab40c12-a076-4c92-8d1a-331d571bd6b3.wav"
+✅ TTS: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/fab40c12-a076-4c92-8d1a-331d571bd6b3.wav
+ℹ️ Step 7/7: Combining video...
+[+] Combining images...
+2026-04-22 08:08:02,612 INFO HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+2026-04-22 08:08:02,895 INFO Processing audio with duration 00:32.064
+2026-04-22 08:08:02,982 INFO VAD filter removed 00:00.000 of audio
+2026-04-22 08:08:03,465 INFO Detected language 'en' with probability 1.00
+ℹ️  => Loaded 93 subtitle segments
+✅  => Chose song: ambient.mp3
+MoviePy - Building video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7b43924c-887c-429d-9136-8270d27581bb.mp4.
+MoviePy - Writing audio in 7b43924c-887c-429d-9136-8270d27581bbTEMP_MPY_wvf_snd.mp3
+MoviePy - Done.
+MoviePy - Writing video /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7b43924c-887c-429d-9136-8270d27581bb.mp4
+
+MoviePy - Done !
+MoviePy - video ready /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7b43924c-887c-429d-9136-8270d27581bb.mp4
+✅ Wrote Video to "/home/anon/Projects/experiment/MoneyPrinterV2/.mp/7b43924c-887c-429d-9136-8270d27581bb.mp4"
+✅ Video: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7b43924c-887c-429d-9136-8270d27581bb.mp4 (5.0 MB)
+ℹ️ Uploading to YouTube...
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+ℹ️ Retrieved 1 OAuth credentials
+2026-04-22 08:09:45,112 INFO Initializing YouTube upload for: This 1922 Hinterkaifeck murders remained unsolved – why did locals hear screams for days? the killer was never identified
+2026-04-22 08:09:47,053 INFO {"event": "youtube_upload", "phase": "init", "title": "This 1922 Hinterkaifeck murders remained unsolved \u2013 why did locals hear screams for days? the killer was never identified", "account_id": "default"}
+2026-04-22 08:09:47,053 INFO Uploading video to: https://www.googleapis.com/upload/youtube/v3/videos?part=snippet%2Cstatus&upload...
+2026-04-22 08:09:52,528 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 94.8, "bytes_sent": 5242880, "total_bytes": 5253102}
+2026-04-22 08:09:53,846 INFO {"event": "youtube_upload", "phase": "uploading", "progress": 95.0, "bytes_sent": 5253102, "total_bytes": 5253102}
+2026-04-22 08:09:53,847 INFO {"event": "youtube_upload", "phase": "metadata", "title": "This 1922 Hinterkaifeck murders remained unsolved \u2013 why did locals hear screams for days? the killer was never identified"}
+2026-04-22 08:09:53,847 INFO Upload successful! Video ID: HC2CPpLrJKk
+2026-04-22 08:09:53,847 INFO {"event": "youtube_upload", "phase": "complete", "video_id": "HC2CPpLrJKk", "url": "https://www.youtube.com/watch?v=HC2CPpLrJKk"}
+✅ Uploaded: https://www.youtube.com/watch?v=HC2CPpLrJKk
+2026-04-22 08:09:53,849 INFO Generated: /home/anon/Projects/experiment/MoneyPrinterV2/.mp/7b43924c-887c-429d-9136-8270d27581bb.mp4
+✅ Added video: This 1922 Hinterkaifeck murders remained unsolved – why did locals hear screams for days? the killer was never identified (youtube)
+2026-04-22 08:09:53,861 INFO Video saved to DB with ID: 22
+2026-04-22 08:09:53,874 INFO Uploaded: https://www.youtube.com/watch?v=HC2CPpLrJKk

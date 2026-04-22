@@ -5,7 +5,7 @@ Runs the video pipeline using round-robin across DB accounts and their topics.
 Uses model settings from DB.
 
 Usage:
-    python src/run_24_7.py [--interval 7200] [--output-dir output/]
+    python src/run_24_7.py [--interval 3600] [--output-dir output/] [--upload]
 
 Environment:
     Same as run_pipeline.py — loads .env automatically
@@ -151,8 +151,8 @@ def main():
     parser.add_argument(
         "--interval",
         type=int,
-        default=7200,
-        help="Seconds between videos (default: 7200 = 2 hours)",
+        default=3600,
+        help="Seconds between videos (default: 3600 = 1 hour)",
     )
     parser.add_argument(
         "--output-dir",
@@ -191,10 +191,12 @@ def main():
     default_language = settings.get("twitter_language", "English")
     logger.info(f"Default language: {default_language}")
 
-    # Get accounts with topics
+    # Get accounts with topics and shuffle to ensure rotation
     accounts = get_accounts()
     # Filter to only accounts with topic
     accounts = [a for a in accounts if a.get("topic")]
+    # Shuffle to break deterministic ORDER BY created_at DESC ordering
+    random.shuffle(accounts)
     
     if not accounts:
         logger.error("No accounts with topic found in DB. Add accounts with topics first.")
@@ -266,7 +268,7 @@ def main():
                     description=result.get("description", ""),
                     script=result.get("script", ""),
                     tags=",".join(result.get("tags", [])),
-                    video_path=result["video_path"],
+                    file_path=result["video_path"],
                     platform="youtube",
                     account=account_name,
                 )
