@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-import json
 import os
 import sys
 from typing import Tuple
 
 import requests
 
-
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_PATH = os.path.join(ROOT_DIR, "config.json")
+sys.path.insert(0, os.path.join(ROOT_DIR, "src"))
 
 
 def ok(msg: str) -> None:
@@ -32,20 +30,24 @@ def check_url(url: str, timeout: int = 3) -> Tuple[bool, str]:
 
 
 def main() -> int:
-    if not os.path.exists(CONFIG_PATH):
-        fail(f"Missing config file: {CONFIG_PATH}")
-        return 1
+    from config import (
+        get_stt_provider,
+        get_imagemagick_path,
+        get_firefox_profile_path,
+        get_llm_base_url,
+    )
 
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
+    stt_provider = get_stt_provider()
+    imagemagick_path = get_imagemagick_path()
+    firefox_profile = get_firefox_profile_path()
+    llm_base_url = get_llm_base_url()
 
     failures = 0
 
-    stt_provider = str(cfg.get("stt_provider", "local_whisper")).lower()
+    stt_provider = str(stt_provider).lower()
 
     ok(f"stt_provider={stt_provider}")
 
-    imagemagick_path = cfg.get("imagemagick_path", "")
     if imagemagick_path and os.path.exists(imagemagick_path):
         ok(f"imagemagick_path exists: {imagemagick_path}")
     else:
@@ -54,7 +56,6 @@ def main() -> int:
             "MoviePy subtitle rendering may fail."
         )
 
-    firefox_profile = cfg.get("firefox_profile", "")
     if firefox_profile:
         if os.path.isdir(firefox_profile):
             ok(f"firefox_profile exists: {firefox_profile}")
@@ -64,7 +65,7 @@ def main() -> int:
         warn("firefox_profile is empty. Twitter/YouTube automation requires this.")
 
     # cliproxyapi (LLM)
-    cliproxy_base = str(cfg.get("llm_base_url", "http://localhost:8317/v1")).rstrip("/")
+    cliproxy_base = str(llm_base_url).rstrip("/") if llm_base_url else "http://localhost:8317/v1"
     reachable, detail = check_url(f"{cliproxy_base}/models", timeout=5)
     if not reachable:
         fail(f"cliproxyapi is not reachable at {cliproxy_base}: {detail}")
@@ -75,7 +76,7 @@ def main() -> int:
             import httpx
 
             headers = {}
-            api_key = cfg.get("llm_api_key", os.environ.get("CLIPROXY_API_KEY", ""))
+            api_key = os.environ.get("CLIPROXY_API_KEY", "")
             if api_key:
                 headers["Authorization"] = f"Bearer {api_key}"
             resp = requests.get(f"{cliproxy_base}/models", headers=headers, timeout=5)
