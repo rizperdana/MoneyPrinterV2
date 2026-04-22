@@ -53,7 +53,7 @@ async def run_job(job_id: str):
 
         load_dotenv(os.path.join(_project_root, ".env"))
 
-        from config import get_firefox_profile_path, get_default_model
+        from config import get_firefox_profile_path, get_default_model, get_verbose
         from llm_provider import select_model
         from classes.YouTube import YouTube
         from classes.Tts import TTS
@@ -83,6 +83,7 @@ async def run_job(job_id: str):
         youtube.image_prompts = None
         youtube.tts_path = None
         youtube.video_path = None
+        youtube.extracted_facts = None  # will be set below after research
         youtube._browser_initialized = False
         youtube._options = None
         youtube._browser = None
@@ -100,6 +101,19 @@ async def run_job(job_id: str):
                 print(f" => Loaded {len(existing_videos)} existing videos for dedup context")
         except Exception as e:
             print(f"Warning: could not load existing videos: {e}")
+
+        # RESEARCH & EXTRACT FACTS (before topic generation)
+        from research import extract_facts as _extract_facts
+        try:
+            research_text = youtube._research_trending_topics()
+            if research_text:
+                facts = _extract_facts(research_text, job.niche)
+                youtube.extracted_facts = facts
+                if get_verbose():
+                    print(f" => Extracted facts: confidence={facts.get('confidence')}, names={facts.get('person_names')}, locs={facts.get('locations')}")
+        except Exception as e:
+            print(f"Warning: could not extract facts: {e}")
+            youtube.extracted_facts = None
 
         try:
             # Step 1: Topic
