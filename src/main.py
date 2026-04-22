@@ -103,7 +103,33 @@ def upload(account, filepath):
     )
     yt.video_path = os.path.abspath(filepath)
     try:
-        success_flag, result = yt.upload_video()
+        from src.youtube_oauth import get_access_token
+        from src.youtube_api import youtubeApiUpload
+
+        oauth_token = get_access_token("default")
+        if not oauth_token:
+            click.echo("Error: No OAuth token. Link YouTube account first.")
+            return
+        try:
+            upload_result = youtubeApiUpload(
+                video_path=os.path.abspath(filepath),
+                title="Untitled",  # CLI doesn't have metadata
+                description="",
+                tags=[],
+                oauth_token=oauth_token,
+                account_id="default",
+                progress_callback=None,
+            )
+            if upload_result and upload_result.get("url"):
+                success_flag = True
+                result = upload_result["url"]
+            else:
+                success_flag = False
+                result = "Upload returned no URL"
+        except Exception as e:
+            success_flag = False
+            result = str(e)
+
         if success_flag:
             click.echo(f"✅ Uploaded: {result}")
         else:
