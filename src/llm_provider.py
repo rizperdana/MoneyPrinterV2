@@ -9,8 +9,18 @@ print(
     f"[llm_provider] Importing with CLIPROXY_API_KEY = {os.environ.get('CLIPROXY_API_KEY', 'NOT SET')}"
 )
 
-_API_KEY = "sk-dIMp6qoD0oWyMvswe"
-_CLIPROXY_BASE = "http://localhost:8317/v1"
+_API_KEY = os.environ.get("CLIPROXY_API_KEY", "")
+
+
+def _get_llm_base_url() -> str:
+    """Get LLM base URL from config with hardcoded fallback."""
+    try:
+        from config import get_llm_base_url
+        return get_llm_base_url()
+    except Exception:
+        return "http://localhost:8317/v1"
+
+
 _selected_model: str | None = None
 
 
@@ -50,7 +60,7 @@ def _try_generate(prompt: str, model: str, timeout: float = 180.0) -> str | None
         try:
             show_spinner("calling API")
             response = httpx.post(
-                f"{_CLIPROXY_BASE}/chat/completions",
+                f"{_get_llm_base_url()}/chat/completions",
                 headers=_get_headers(),
                 json={
                     "model": model,
@@ -127,7 +137,7 @@ def list_models() -> list[str]:
     """Return list of available models from the API"""
     try:
         response = httpx.get(
-            f"{_CLIPROXY_BASE}/models", headers=_get_headers(), timeout=30.0
+            f"{_get_llm_base_url()}/models", headers=_get_headers(), timeout=30.0
         )
         response.raise_for_status()
         data = response.json()

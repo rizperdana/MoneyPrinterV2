@@ -9,13 +9,6 @@ import requests
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT_DIR)
 
-from src.config import (
-    get_stt_provider,
-    get_firefox_profile_path,
-    get_imagemagick_path,
-    get_llm_base_url,
-)
-
 
 def ok(msg: str) -> None:
     print(f"[OK] {msg}")
@@ -38,12 +31,24 @@ def check_url(url: str, timeout: int = 3) -> Tuple[bool, str]:
 
 
 def main() -> int:
-    failures = 0
+    from src.config import (
+        get_stt_provider,
+        get_imagemagick_path,
+        get_firefox_profile_path,
+        get_llm_base_url,
+    )
 
     stt_provider = get_stt_provider()
+    imagemagick_path = get_imagemagick_path()
+    firefox_profile = get_firefox_profile_path()
+    llm_base_url = get_llm_base_url()
+
+    failures = 0
+
+    stt_provider = str(stt_provider).lower()
+
     ok(f"stt_provider={stt_provider}")
 
-    imagemagick_path = get_imagemagick_path()
     if imagemagick_path and os.path.exists(imagemagick_path):
         ok(f"imagemagick_path exists: {imagemagick_path}")
     else:
@@ -52,7 +57,6 @@ def main() -> int:
             "MoviePy subtitle rendering may fail."
         )
 
-    firefox_profile = get_firefox_profile_path()
     if firefox_profile:
         if os.path.isdir(firefox_profile):
             ok(f"firefox_profile exists: {firefox_profile}")
@@ -62,7 +66,7 @@ def main() -> int:
         warn("firefox_profile is empty. Twitter/YouTube automation requires this.")
 
     # cliproxyapi (LLM)
-    cliproxy_base = get_llm_base_url().rstrip("/")
+    cliproxy_base = str(llm_base_url).rstrip("/") if llm_base_url else "http://localhost:8317/v1"
     reachable, detail = check_url(f"{cliproxy_base}/models", timeout=5)
     if not reachable:
         fail(f"cliproxyapi is not reachable at {cliproxy_base}: {detail}")
