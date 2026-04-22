@@ -13,15 +13,15 @@ load_dotenv()
 import requests
 
 ROOT_DIR = Path(__file__).parent.parent
-CONFIG_FILE = ROOT_DIR / "config.json"
 
 
 def load_config() -> dict:
-    """Load config from config.json."""
-    if CONFIG_FILE.exists():
-        with open(CONFIG_FILE) as f:
-            return json.load(f)
-    return {}
+    """Load config from config.py (reads from DB)."""
+    try:
+        from config import get_oauth_credentials
+        return get_oauth_credentials()
+    except Exception:
+        return {}
 
 
 def get_oauth_config() -> dict:

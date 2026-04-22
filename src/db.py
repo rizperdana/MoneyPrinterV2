@@ -11,6 +11,9 @@ DB_FILE = os.path.join(ROOT_DIR, "data", "moneyprinter.db")
 # Global database connection
 _conn: Optional[sqlite3.Connection] = None
 
+# In-memory cache for settings (populated on first read)
+_settings_cache: dict | None = None
+
 
 def _get_connection() -> sqlite3.Connection:
     """Get or create the database connection."""
@@ -158,6 +161,16 @@ def init_db() -> None:
         cursor.execute("ALTER TABLE videos ADD COLUMN account_id INTEGER REFERENCES accounts(id)")
 
     info("Database initialized successfully")
+
+    # Auto-import config into DB if settings table is empty
+    try:
+        cursor.execute("SELECT COUNT(*) FROM settings")
+        count = cursor.fetchone()[0]
+        if count == 0:
+            import_config_to_db()
+            reload_settings()  # Refresh in-memory cache after import
+    except sqlite3.OperationalError:
+        pass
 
 
 def add_topic(topic: str, niche: str, account: Optional[str] = None) -> int:
@@ -455,6 +468,35 @@ def get_settings() -> dict:
     cursor.execute("SELECT key, value FROM settings")
     rows = cursor.fetchall()
     return {row["key"]: row["value"] for row in rows}
+
+
+def _ensure_settings_loaded() -> None:
+    """Ensure settings are loaded into cache."""
+    global _settings_cache
+    if _settings_cache is None:
+        _settings_cache = get_settings()
+
+
+def get_setting(key: str, default: str = "") -> str:
+    """
+    Get a single setting value.
+
+    Args:
+        key: Settings key
+        default: Default value if not found
+
+    Returns:
+        Setting value or default
+    """
+    _ensure_settings_loaded()
+    return _settings_cache.get(key, default)
+
+
+def reload_settings() -> None:
+    """Force reload settings from database."""
+    global _settings_cache
+    _settings_cache = None
+    _ensure_settings_loaded()
 
 
 def set_setting(key: str, value: str) -> None:
