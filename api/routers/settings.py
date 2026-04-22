@@ -139,7 +139,7 @@ async def get_model_routing() -> dict:
     # Fetch models from cliproxy API
     available_models = []
     try:
-        api_key = os.environ.get("CLIPROXY_API_KEY", "sk-dIMp6qoD0oWyMvswe")
+        api_key = os.environ.get("CLIPROXY_API_KEY", "")
         base_url = config.get("llm_base_url", "http://localhost:8317")
         if not base_url.startswith("http"):
             base_url = f"http://{base_url}"
