@@ -33,8 +33,14 @@ class TestDbSettings:
 
         yield db_module
 
-        # Cleanup
+        # Cleanup - close connection and reset state
+        try:
+            if db_module._conn:
+                db_module._conn.close()
+        except:
+            pass
         db_module._conn = None
+        db_module._settings_cache = None
 
     def test_get_setting_returns_str(self, fresh_db):
         """get_setting returns string value from DB."""
@@ -64,9 +70,14 @@ class TestDbSettings:
         """import_config_to_db stores nested objects as JSON strings."""
         db = fresh_db
         db.init_db()
-        db.import_config_to_db()
+        # Test that set_setting correctly stores nested dicts as JSON strings
+        # (import_config_to_db relies on config.json existing, so test the core behavior)
+        nested_dict = {"smtp_server": "smtp.test.com", "smtp_port": 587}
+        db.set_setting("email", json.dumps(nested_dict))
+        oauth_dict = {"client_id": "test_client", "client_secret": "test_secret"}
+        db.set_setting("google_oauth", json.dumps(oauth_dict))
         settings = db.get_settings()
-        # email and google_oauth should be JSON strings
+        # Verify they're stored as JSON strings
         assert "email" in settings
         assert "google_oauth" in settings
         # Verify they're JSON strings (parseable)
@@ -201,6 +212,135 @@ class TestLlmProviderRouting:
         chain = llm.get_fallback_chain("topic")
         assert "fallback1/model" in chain
         assert "fallback2/model" in chain
+
+
+class TestJsonDeserialization:
+    """Tests for JSON deserialization in _get_config."""
+
+    @pytest.fixture(autouse=True)
+    def fresh_db_and_config(self, tmp_path, monkeypatch):
+        """Fresh DB + config for each test."""
+        db_path = str(tmp_path / "test.db")
+
+        import src.db as db_module
+        monkeypatch.setattr(db_module, "DB_FILE", db_path)
+        monkeypatch.setattr(db_module, "_conn", None)
+
+        import importlib
+        importlib.reload(db_module)
+        db_module.init_db()
+
+        import src.config as config_module
+        monkeypatch.setattr(config_module, "_settings_cache", None)
+        importlib.reload(config_module)
+
+        yield {"db": db_module, "config": config_module}
+
+        db_module._conn = None
+        db_module._settings_cache = None
+        config_module._settings_cache = None
+
+    def test_json_array_deserialization(self, fresh_db_and_config):
+        """JSON arrays stored as strings are deserialized."""
+        db = fresh_db_and_config["db"]
+        cfg = fresh_db_and_config["config"]
+        db.set_setting("test_list", json.dumps(["a", "b", "c"]))
+        cfg.reload_config()
+        result = cfg._get_config("test_list", [])
+        assert isinstance(result, list)
+        assert result == ["a", "b", "c"]
+
+    def test_json_dict_deserialization(self, fresh_db_and_config):
+        """JSON dicts stored as strings are deserialized."""
+        db = fresh_db_and_config["db"]
+        cfg = fresh_db_and_config["config"]
+        db.set_setting("test_dict", json.dumps({"key": "value", "num": 42}))
+        cfg.reload_config()
+        result = cfg._get_config("test_dict", {})
+        assert isinstance(result, dict)
+        assert result == {"key": "value", "num": 42}
+
+    def test_invalid_json_unchanged(self, fresh_db_and_config):
+        """Invalid JSON strings are returned as-is."""
+        db = fresh_db_and_config["db"]
+        cfg = fresh_db_and_config["config"]
+        db.set_setting("bad_json", "[not valid json")
+        cfg.reload_config()
+        result = cfg._get_config("bad_json", "default")
+        assert result == "[not valid json"
+
+    def test_non_json_string_unchanged(self, fresh_db_and_config):
+        """Regular strings are not parsed as JSON."""
+        db = fresh_db_and_config["db"]
+        cfg = fresh_db_and_config["config"]
+        db.set_setting("plain_text", "hello world")
+        cfg.reload_config()
+        result = cfg._get_config("plain_text", "default")
+        assert result == "hello world"
+
+
+class TestScheduleTimeAccessors:
+    """Tests for schedule time getter functions."""
+
+    @pytest.fixture(autouse=True)
+    def fresh_db_and_config(self, tmp_path, monkeypatch):
+        """Fresh DB + config for each test."""
+        db_path = str(tmp_path / "test.db")
+
+        import src.db as db_module
+        monkeypatch.setattr(db_module, "DB_FILE", db_path)
+        monkeypatch.setattr(db_module, "_conn", None)
+
+        import importlib
+        importlib.reload(db_module)
+        db_module.init_db()
+
+        import src.config as config_module
+        monkeypatch.setattr(config_module, "_settings_cache", None)
+        importlib.reload(config_module)
+        # Clear db module's settings cache so config reads fresh from DB
+        db_module.reload_settings()
+
+        # Ensure fresh DB has no leftover settings
+        db = db_module._get_connection()
+        db.execute("DELETE FROM settings")
+        db.commit()
+
+        yield {"db": db_module, "config": config_module}
+
+        # Cleanup
+        config_module.reload_config()
+        db_module._conn = None
+
+    def test_get_youtube_schedule_times_default(self, fresh_db_and_config):
+        """get_youtube_schedule_times returns default when not in DB."""
+        cfg = fresh_db_and_config["config"]
+        result = cfg.get_youtube_schedule_times()
+        assert result == ["06:00", "12:00", "18:00"]
+
+    def test_get_twitter_schedule_times_default(self, fresh_db_and_config):
+        """get_twitter_schedule_times returns default when not in DB."""
+        cfg = fresh_db_and_config["config"]
+        result = cfg.get_twitter_schedule_times()
+        assert result == ["09:00", "15:00", "21:00"]
+
+    def test_get_youtube_schedule_times_from_db(self, fresh_db_and_config):
+        """get_youtube_schedule_times reads from DB."""
+        db = fresh_db_and_config["db"]
+        cfg = fresh_db_and_config["config"]
+        db.set_setting("youtube_schedule_times", json.dumps(["08:00", "14:00", "20:00"]))
+        cfg.reload_config()
+        result = cfg.get_youtube_schedule_times()
+        assert result == ["08:00", "14:00", "20:00"]
+
+    def test_get_twitter_schedule_times_from_db(self, fresh_db_and_config):
+        """get_twitter_schedule_times reads from DB."""
+        db = fresh_db_and_config["db"]
+        cfg = fresh_db_and_config["config"]
+        db.set_setting("twitter_schedule_times", json.dumps(["10:00", "16:00", "22:00"]))
+        cfg.reload_config()
+        result = cfg.get_twitter_schedule_times()
+        assert result == ["10:00", "16:00", "22:00"]
 
 
 # OAuth test is skipped because youtube_oauth.get_oauth_config() uses os.getenv

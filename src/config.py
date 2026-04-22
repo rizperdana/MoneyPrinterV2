@@ -10,37 +10,23 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # DB-based settings cache (lazy-loaded, avoids circular import with db.py)
 _settings_cache: dict | None = None
-_config_json_fallback: dict | None = None
 
 
 def _load_settings() -> dict:
     """
-    Load settings from DB, fall back to config.json if DB empty.
-    Avoids circular import: db.py imports from config.py, so we do runtime import.
+    Load settings from database only.
+    Falls back to empty dict if DB unavailable.
     """
-    global _settings_cache, _config_json_fallback
+    global _settings_cache
 
-    # Try DB first (lazy import to avoid circular dependency)
-    try:
-        from src.db import get_settings as _db_get_settings
-        db_settings = _db_get_settings()
-        if db_settings:
-            _settings_cache = db_settings
-            return _settings_cache
-    except Exception:
-        pass
+    if _settings_cache is None:
+        try:
+            from src.db import get_settings as _db_get_settings
+            _settings_cache = _db_get_settings()
+        except Exception:
+            _settings_cache = {}
 
-    # Fall back to config.json
-    if _config_json_fallback is not None:
-        return _config_json_fallback
-
-    config_path = os.path.join(ROOT_DIR, "config.json")
-    if os.path.exists(config_path):
-        with open(config_path, "r") as f:
-            _config_json_fallback = json.load(f)
-            return _config_json_fallback
-
-    return {}
+    return _settings_cache
 
 
 def _get_config(key: str, default=None):
@@ -63,14 +49,21 @@ def _get_config(key: str, default=None):
         except (ValueError, TypeError):
             pass
 
+    # Handle JSON-serialized arrays and dicts
+    if isinstance(value, str):
+        if value.startswith("[") or value.startswith("{"):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                pass
+
     return value
 
 
 def reload_config() -> None:
-    """Force reload config from DB and JSON."""
-    global _settings_cache, _config_json_fallback
+    """Force reload settings from database."""
+    global _settings_cache
     _settings_cache = None
-    _config_json_fallback = None
 
 
 def assert_folder_structure() -> None:
@@ -115,7 +108,7 @@ def get_email_credentials() -> dict:
     if email_json:
         try:
             return json.loads(email_json)
-        except:
+        except (json.JSONDecodeError, TypeError, ValueError):
             pass
     return {}
 
@@ -134,7 +127,7 @@ def get_oauth_credentials() -> dict:
         try:
             import json as _json
             return _json.loads(oauth_json)
-        except:
+        except (json.JSONDecodeError, TypeError, ValueError):
             pass
     return {}
 
@@ -419,3 +412,29 @@ def get_images_per_video() -> int:
         count (int): Number of images per video
     """
     return int(_get_config("images_per_video", 8))
+
+
+# ─── Schedule Time Defaults ────────────────────────────────────────────────────
+
+DEFAULT_YOUTUBE_SCHEDULE_TIMES = ["06:00", "12:00", "18:00"]
+DEFAULT_TWITTER_SCHEDULE_TIMES = ["09:00", "15:00", "21:00"]
+
+
+def get_youtube_schedule_times() -> list:
+    """
+    Gets the YouTube upload schedule times.
+
+    Returns:
+        list: List of time strings, e.g. ["06:00", "12:00", "18:00"]
+    """
+    return _get_config("youtube_schedule_times", DEFAULT_YOUTUBE_SCHEDULE_TIMES)
+
+
+def get_twitter_schedule_times() -> list:
+    """
+    Gets the Twitter posting schedule times.
+
+    Returns:
+        list: List of time strings, e.g. ["09:00", "15:00", "21:00"]
+    """
+    return _get_config("twitter_schedule_times", DEFAULT_TWITTER_SCHEDULE_TIMES)
