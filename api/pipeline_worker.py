@@ -58,6 +58,8 @@ async def run_job(job_id: str):
         from classes.YouTube import YouTube
         from classes.Tts import TTS
         from db import add_topic, add_video, topic_exists, get_existing_videos_for_niche
+        from src.youtube_oauth import get_access_token
+        from src.youtube_api import youtubeApiUpload
 
         # Select LLM model
         model = get_default_model()
@@ -244,12 +246,32 @@ async def run_job(job_id: str):
             upload_url = None
             if job.auto_upload:
                 on_progress("upload", "running")
-                success, url = youtube.upload_video()
-                if success and url:
-                    job.upload_url = url
-                    upload_url = url
-                    update_video_youtube_url(video_id, url)
-                on_progress("upload", "done", detail=url if success else "failed")
+                try:
+                    oauth_token = get_access_token(job.account or "default")
+                    if not oauth_token:
+                        on_progress("upload", "done", detail="No OAuth token — link YouTube account")
+                        on_progress("upload", "error", error="No OAuth token — please link your YouTube account in Settings")
+                    else:
+                        upload_result = youtubeApiUpload(
+                            video_path=youtube.video_path,
+                            title=metadata.get("title", "Untitled") if metadata else "Untitled",
+                            description=metadata.get("description", "") if metadata else "",
+                            tags=tags_list if tags_list else [],
+                            oauth_token=oauth_token,
+                            account_id=job.account or "default",
+                            progress_callback=lambda step, status, pct: on_progress("upload", step, detail=status) if step != "uploading" else None,
+                        )
+                        if upload_result and upload_result.get("url"):
+                            url = upload_result["url"]
+                            job.upload_url = url
+                            upload_url = url
+                            update_video_youtube_url(video_id, url)
+                            on_progress("upload", "done", detail=url)
+                        else:
+                            on_progress("upload", "done", detail="Upload failed")
+                except Exception as e:
+                    on_progress("upload", "done", detail=f"Error: {str(e)}")
+                    on_progress("upload", "error", error=str(e))
 
             # Return all video data
             return {
