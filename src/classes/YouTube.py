@@ -177,6 +177,41 @@ class YouTube:
         self._ensure_browser()
         return self._wait
 
+    def _upload_via_oauth(self, oauth_token: str = None) -> tuple:
+        """Upload video via OAuth API (preferred).
+
+        Args:
+            oauth_token: OAuth token. If None, gets from get_access_token().
+
+        Returns:
+            (success, result_or_url) tuple
+        """
+        from src.youtube_oauth import get_access_token
+        from src.youtube_api import youtubeApiUpload
+
+        if not oauth_token:
+            oauth_token = get_access_token(self._account_nickname)
+
+        if not oauth_token:
+            return (False, "No OAuth token — please link YouTube account")
+
+        try:
+            result = youtubeApiUpload(
+                video_path=self.video_path,
+                title=self.metadata.get("title", "Untitled") if self.metadata else "Untitled",
+                description=self.metadata.get("description", "") if self.metadata else "",
+                tags=self.metadata.get("tags", []) if self.metadata else [],
+                oauth_token=oauth_token,
+                account_id=self._account_nickname,
+                progress_callback=None,
+            )
+            if result and result.get("url"):
+                self.uploaded_video_url = result["url"]
+                return (True, result["url"])
+            return (False, "Upload returned no URL")
+        except Exception as e:
+            return (False, str(e))
+
     @property
     def niche(self) -> str:
         """
@@ -1423,7 +1458,7 @@ Output format (one per line):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Photorealistic watercolor"
+        enhanced_prompt = f"{prompt}, Surreal Retro Photorealistic Crisp Clear Image"
         print(f"Generating AI image via Pollinations zimage: {prompt[:80]}...")
 
         try:
@@ -1479,7 +1514,7 @@ Output format (one per line):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Photorealistic watercolor"
+        enhanced_prompt = f"{prompt}, Surreal Retro Photorealistic Crisp Clear Image"
         print(f"Generating AI image via Pollinations flux: {prompt[:80]}...")
 
         try:
@@ -1535,7 +1570,7 @@ Output format (one per line):
                 )
             return None
 
-        enhanced_prompt = f"{prompt}, Photorealistic watercolor, high quality, detailed"
+        enhanced_prompt = f"{prompt}, Surreal Retro Photorealistic Crisp Clear Image, high quality, detailed"
 
         # Model fallback chain: Leonardo Phoenix > Flux Schnell > Flux Klein > Flux Dev > SDXL
         models = [
@@ -2573,6 +2608,9 @@ Output format (one per line):
 
     def upload_video(self, upload_id: int = None) -> tuple:
         """
+        DEPRECATED: Use _upload_via_oauth() instead.
+        This method uses Selenium browser automation which breaks when YouTube UI changes.
+
         Uploads the video to YouTube using Selenium (synchronous).
 
         Args:
@@ -2582,6 +2620,17 @@ Output format (one per line):
             (success, result) (tuple[bool, str]): (True, youtube_url) on success,
                                                    (False, error_message) on failure.
         """
+        # Try OAuth first (preferred path)
+        oauth_result = self._upload_via_oauth()
+        if oauth_result[0]:  # Success
+            return oauth_result
+
+        # OAuth failed — log warning and fall back to browser
+        import logging
+        logging.warning(f"OAuth upload failed ({oauth_result[1]}), falling back to browser automation")
+        from status import warning
+        warning(f"OAuth upload failed, using browser fallback: {oauth_result[1]}")
+
         self._ensure_browser()
         browser = self.browser
 
