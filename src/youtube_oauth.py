@@ -25,13 +25,13 @@ def load_config() -> dict:
 
 
 def get_oauth_config() -> dict:
-    # Try env vars first, fall back to config.json
+    # Try env vars first, fall back to config.py (DB-backed)
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
     redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
     scopes_env = os.getenv("GOOGLE_SCOPES", "")
 
-    # Fall back to config.json if env vars not set
+    # Fall back to config.py (DB-backed) if env vars not set
     if not client_id or not client_secret or not redirect_uri:
         config = load_config()
         google_oauth = config.get("google_oauth", {})
