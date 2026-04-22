@@ -26,6 +26,8 @@ load_dotenv(
 from config import get_firefox_profile_path
 from run_pipeline import run_pipeline
 from classes.YouTube import YouTube
+from src.youtube_oauth import get_access_token
+from src.youtube_api import youtubeApiUpload
 
 # Define the niches - mixing popular + niche topics
 NICHES = {
@@ -87,8 +89,27 @@ def upload_to_platforms(video_path: str, title: str, description: str):
 
     # Upload to YouTube
     print("\n=== Uploading to YouTube ===")
-    yt_success, yt_url = youtube.upload_video()
-    results["youtube"] = {"success": yt_success, "url": yt_url if yt_success else None}
+    oauth_token = get_access_token("default")
+    if not oauth_token:
+        yt_success = False
+        yt_url = "No OAuth token"
+    else:
+        try:
+            upload_result = youtubeApiUpload(
+                video_path=video_path,
+                title=title,
+                description=description,
+                tags=["science", "facts", "viral"],
+                oauth_token=oauth_token,
+                account_id="default",
+                progress_callback=None,
+            )
+            yt_success = bool(upload_result and upload_result.get("url"))
+            yt_url = upload_result.get("url", "") if upload_result else ""
+        except Exception as e:
+            yt_success = False
+            yt_url = str(e)
+    results["youtube"] = {"success": yt_success, "url": yt_url}
     print(f"YouTube: {yt_success} - {yt_url}")
 
     if yt_success:
