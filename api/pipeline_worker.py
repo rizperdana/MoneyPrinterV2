@@ -250,7 +250,10 @@ async def run_job(job_id: str):
                 try:
                     oauth_token = get_access_token(job.account or "default")
                     if not oauth_token:
-                        on_progress("upload", "error", error="No OAuth token — please link your YouTube account in Settings")
+                        loop.call_soon_threadsafe(job.events.put_nowait, {
+                            "type": "upload_error",
+                            "error": "No OAuth token — please link your YouTube account in Settings",
+                        })
                         job.status = JobStatus.failed
                         return
                     else:
@@ -270,11 +273,17 @@ async def run_job(job_id: str):
                             update_video_youtube_url(video_id, url)
                             on_progress("upload", "done", detail=url)
                         else:
-                            on_progress("upload", "error", error="Upload failed")
+                            loop.call_soon_threadsafe(job.events.put_nowait, {
+                                "type": "upload_error",
+                                "error": "Upload failed",
+                            })
                             job.status = JobStatus.failed
                 except Exception as e:
                     logging.error(f"Auto-upload failed: {e}")
-                    on_progress("upload", "error", error=str(e))
+                    loop.call_soon_threadsafe(job.events.put_nowait, {
+                        "type": "upload_error",
+                        "error": str(e),
+                    })
                     job.status = JobStatus.failed
 
             # Return all video data
