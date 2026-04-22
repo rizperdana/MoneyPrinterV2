@@ -256,9 +256,9 @@ def run_reddit_twitter_job(account_id: str, model: str, logger: logging.Logger) 
 
 def get_active_model() -> str:
     """Get the primary model from config."""
-    with open(os.path.join(ROOT_DIR, "config.json"), "r") as f:
-        cfg = json.load(f)
-    return cfg.get("llm_model", "xiaomi/mimo-v2-pro:free")
+    from config import get_default_model
+    model = get_default_model()
+    return model if model else "xiaomi/mimo-v2-pro:free"
 
 
 def main_loop(logger: logging.Logger):
