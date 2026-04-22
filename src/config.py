@@ -120,6 +120,25 @@ def get_email_credentials() -> dict:
     return {}
 
 
+def get_oauth_credentials() -> dict:
+    """
+    Gets the OAuth credentials from settings.
+
+    Returns:
+        credentials (dict): The OAuth credentials
+    """
+    oauth_json = _get_config("google_oauth")
+    if isinstance(oauth_json, dict):
+        return oauth_json
+    if oauth_json:
+        try:
+            import json as _json
+            return _json.loads(oauth_json)
+        except:
+            pass
+    return {}
+
+
 def get_verbose() -> bool:
     """
     Gets the verbose flag from settings.
