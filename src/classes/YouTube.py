@@ -730,8 +730,44 @@ Format: Just list 5 topics, one per line, numbered 1-5.""",
         info(" ✍️ Generating script...")
         sentence_length = get_script_sentence_length()
 
+        # Build facts context from extracted_facts (if available)
+        facts_context = ""
+        use_topic_identifier_only = False
+        if self.extracted_facts:
+            facts = self.extracted_facts
+            names = ", ".join(facts.get("person_names", [])) or "none"
+            locs = ", ".join(facts.get("locations", [])) or "none"
+            kf = "; ".join(facts.get("key_facts", [])) or "none"
+            ti = facts.get("topic_identifier") or ""
+            conf = facts.get("confidence", "low")
+
+            # Only build facts_context if we have actual facts OR topic_identifier
+            if names != "none" or locs != "none" or kf != "none" or ti:
+                facts_context = f"""
+FACTS FROM RESEARCH (you MUST use these in the script):
+- Names to mention: {names}
+- Locations to include: {locs}
+- Specific claims to reference: {kf}
+- Topic identifier: {ti}
+- Confidence: {conf}
+
+⚠️ MANDATORY: Script must include at least one name, location, or specific fact from above. If confidence is 'low' and topic_identifier is set, you MUST use the topic_identifier explicitly (e.g., "Bigfoot", "Bermuda Triangle"). Do NOT write generic descriptions like "the mysterious creature" or "the unknown entity".
+"""
+            elif not ti:
+                # No facts and no identifier: fall back to topic string only
+                use_topic_identifier_only = True
+        else:
+            use_topic_identifier_only = True
+
         # Build prompt with explicit timing constraints
-        prompt = f"""Write a YouTube Shorts script about: {self.subject}
+        subject_line = self.subject
+        if use_topic_identifier_only:
+            # Current behavior: use topic string only
+            subject_line = self.subject
+
+        prompt = f"""Write a YouTube Shorts script about: {subject_line}
+
+{facts_context}
 
 ⚠️ TIMING CONSTRAINTS (STRICT):
 - Target TTS duration: 20-30 seconds
@@ -787,6 +823,13 @@ RULES:
 - Write in {self.language}
 - Each sentence punchy (under 15 words, fits in 4-6 seconds)
 - SPECIFIC over VAGUE: say "300 million years ago" not "a long time ago", say "as fast as a bullet" not "very fast"
+
+# HOOK TECHNQUES (deploy at your discretion — these are proven patterns):
+# - 3-second window: grab attention immediately
+# - Pattern interrupt: unexpected element breaks expectation
+# - Curiosity gap: start with mystery, withhold key info
+# - Bold statement/stats: lead with shocking number or claim
+# - Multiple hooks: 2-3 per short (open, midpoint, close)
 
 Subject: {self.subject}
 Language: {self.language}
@@ -1007,10 +1050,28 @@ Return ONLY the raw script text. No labels, no numbering."""
         Returns:
             metadata (dict): The generated metadata with keys: title, description, tags.
         """
+        # Build title facts context (optional identifier suffix for high confidence)
+        title_facts_context = ""
+        if self.extracted_facts:
+            facts = self.extracted_facts
+            ti = facts.get("topic_identifier")
+            conf = facts.get("confidence", "low")
+            dates = facts.get("dates", [])
+            if ti and conf == "high":
+                # Soft rule: model CAN include identifier at end
+                date_part = f", {dates[0]}" if dates else ""
+                title_facts_context = f"""
+TITLE SUFFIX (OPTIONAL, only if confidence is 'high'):
+- If appropriate, you MAY add identifier in parentheses at end: "({ti}{date_part})"
+- Example: "Judge's Hidden Hearts Scandal (Ohio, 2023) — Can You Believe It?"
+- This is optional — model decides. Keep the curiosity-driven hook formula.
+"""
+
         max_retries = 3
         for attempt in range(max_retries):
             title = self.generate_response(
                 f"Generate a YouTube Shorts title for: {self.subject}. "
+                f"{title_facts_context}"
                 f"⚠️ STRICT: Title must be EXACTLY 60-125 characters (count the letters). "
                 f"Title formula: [Strange fact] + [mystery] + [implied consequence]. "
                 f"Start with: This, Why, How, What, Scientists Found, Hidden. "
@@ -1020,19 +1081,32 @@ Return ONLY the raw script text. No labels, no numbering."""
                 model_name=get_model_for_job("title_desc"),
             )
 
-            if len(title) <= 125:
+            if 60 <= len(title) <= 125:
                 break
             if get_verbose():
                 warning(
-                    f"Generated Title is over 125 chars ({len(title)}). Retry {attempt + 1}/{max_retries}..."
+                    f"Title length {len(title)} not in 60-125 range. Retry {attempt + 1}/{max_retries}..."
                 )
 
         # If still too long after retries, truncate
         if len(title) > 125:
             title = title[:122] + "..."
 
+        # If still too short after retries, pad to minimum
+        if len(title) < 60:
+            title = title.rstrip() + " — Strange But True"
+
+        # Build description facts context for key facts inclusion
+        desc_facts = ""
+        if self.extracted_facts and self.extracted_facts.get("key_facts"):
+            kf = self.extracted_facts.get("key_facts", [])
+            facts_str = "; ".join(kf[:2])  # max 2 key facts
+            if facts_str:
+                desc_facts = f"Key facts from research (include naturally): {facts_str}\n"
+
         description = self.generate_response(
             f"Generate a YouTube Shorts description for: {self.subject}. "
+            f"{desc_facts}"
             f"Description formula:\n"
             f"1. Hook line - reinforce the shocking title '{title}'\n"
             f"2. Short context - 1-2 sentences adding info\n"
@@ -1040,6 +1114,7 @@ Return ONLY the raw script text. No labels, no numbering."""
             f"Rules:\n"
             f"- 1-3 short paragraphs\n"
             f"- Include main keyword naturally\n"
+            f"- Weave in the key facts naturally in context\n"
             f'- End with: "What do you think?" or "Can we ever know?"\n'
             f"- No long explanations\n"
             f"- Include 3-5 relevant hashtags at end\n"
@@ -1081,6 +1156,28 @@ Example: {{"main": "AI", "related": "ChatGPT prompts", "emotional": "AI taking o
                     "Failed to parse keywords JSON. Using subject words as fallback."
                 )
             tags = [w for w in self.subject.split() if len(w) > 2][:10]
+
+        # Augment tags with extracted facts (topic_identifier, locations, person_names)
+        augmented_tags = list(tags)  # start with existing tags
+        if self.extracted_facts:
+            facts = self.extracted_facts
+            # Add topic_identifier
+            ti = facts.get("topic_identifier")
+            if ti and ti not in augmented_tags:
+                augmented_tags.append(ti)
+            # Add locations
+            for loc in facts.get("locations", []):
+                loc_slug = loc.replace(" ", "")  # "Ohio" -> "Ohio"
+                if loc_slug not in augmented_tags:
+                    augmented_tags.append(loc_slug)
+            # Add person names as tags
+            for name in facts.get("person_names", []):
+                name_slug = name.replace(" ", "")  # "John Smith" -> "JohnSmith"
+                if name_slug not in augmented_tags:
+                    augmented_tags.append(name_slug)
+        # Cap at 15
+        augmented_tags = augmented_tags[:15]
+        tags = augmented_tags
 
         self.metadata = {
             "title": title,
@@ -1152,9 +1249,30 @@ Example: {{"main": "AI", "related": "ChatGPT prompts", "emotional": "AI taking o
         # Target configurable number of scenes for video
         n_scenes = get_images_per_video()  # Configurable: images per video
 
+        # Build visual grounding context from extracted facts
+        visual_grounding = ""
+        if self.extracted_facts:
+            facts = self.extracted_facts
+            primary_loc = facts.get("locations", [None])[0] if facts.get("locations") else None
+            primary_kf = facts.get("key_facts", [None])[0] if facts.get("key_facts") else None
+            topic_id = facts.get("topic_identifier") or self.subject
+            visual_grounding = f"""
+VISUAL GROUNDING (facts from research — these MUST appear in the visuals):
+- Subject: {topic_id}
+- Location: {primary_loc if primary_loc else 'unknown'}
+- Key visual element: {primary_kf if primary_kf else 'mysterious setting'}
+"""
+
         prompt = f"""You are a visual storyboard director creating a {n_scenes}-frame sequence for a YouTube Short about: {self.subject}
 
 SCRIPT: {self.script[:500]}...
+{visual_grounding}
+
+CRITICAL VISUAL RULE:
+- Each prompt MUST include the primary location (if found) OR the topic_identifier in the visual description
+- Good: "Ohio courthouse cellar with rows of preserved medical specimens" (grounded)
+- Bad: "a dark underground room" (generic, no facts)
+- Visual style can be creative, but subject/location grounding is mandatory
 
 Create exactly {n_scenes} visual scene prompts, one per phase:
 
