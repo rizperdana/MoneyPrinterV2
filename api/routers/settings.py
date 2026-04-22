@@ -29,45 +29,33 @@ _SENSITIVE_KEYS = {
 
 
 def _load_config() -> dict:
-    """Load config from database, fallback to config.json."""
+    """Load config from database only."""
     from db import get_settings
 
-    # Try DB first
     db_settings = get_settings()
-    if db_settings:
-        # Parse JSON values
-        result = {}
-        for k, v in db_settings.items():
-            try:
-                result[k] = json.loads(v)
-            except (json.JSONDecodeError, TypeError):
-                result[k] = v
-        return result
+    if not db_settings:
+        return {}
 
-    # Fallback to config.json
-    config_path = os.path.join(_project_root, "config.json")
-    if os.path.exists(config_path):
-        with open(config_path, "r") as f:
-            return json.load(f)
-    return {}
+    # Parse JSON values
+    result = {}
+    for k, v in db_settings.items():
+        try:
+            result[k] = json.loads(v)
+        except (json.JSONDecodeError, TypeError):
+            result[k] = v
+    return result
 
 
 def _save_config(config: dict) -> None:
-    """Save config to database and config.json."""
+    """Save config to database only."""
     from db import set_setting
 
-    # Save to DB
     for key, value in config.items():
         if value is not None:
             if isinstance(value, (dict, list)):
                 set_setting(key, json.dumps(value))
             else:
                 set_setting(key, str(value))
-
-    # Also save to config.json as backup
-    config_path = os.path.join(_project_root, "config.json")
-    with open(config_path, "w") as f:
-        json.dump(config, f, indent=2)
 
 
 # .env keys to expose via settings API
@@ -121,7 +109,7 @@ async def get_settings():
 
 @router.put("/settings")
 async def update_settings(body: SettingsUpdate):
-    """Update config.json with provided values."""
+    """Update config in database."""
     config = _load_config()
     updates = body.model_dump(exclude_none=True)
     config.update(updates)
