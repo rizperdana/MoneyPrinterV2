@@ -438,3 +438,33 @@ def get_twitter_schedule_times() -> list:
         list: List of time strings, e.g. ["09:00", "15:00", "21:00"]
     """
     return _get_config("twitter_schedule_times", DEFAULT_TWITTER_SCHEDULE_TIMES)
+
+
+def get_music_volume_speech() -> float:
+    """Music volume (0.0–1.0) during TTS speech segments."""
+    val = _get_config("music_volume_speech", 0.08)
+    try:
+        val = float(val)
+    except (TypeError, ValueError):
+        val = 0.08
+    return max(0.0, min(1.0, val))
+
+
+def get_music_volume_silence() -> float:
+    """Music volume (0.0–1.0) during TTS silence (between sentences)."""
+    val = _get_config("music_volume_silence", 0.35)
+    try:
+        val = float(val)
+    except (TypeError, ValueError):
+        val = 0.35
+    return max(0.0, min(1.0, val))
+
+
+def get_music_fade_duration_ms() -> int:
+    """Fade duration in ms at speech/silence transitions."""
+    val = _get_config("music_fade_duration_ms", 200)
+    try:
+        val = int(val)
+    except (TypeError, ValueError):
+        val = 200
+    return max(0, min(2000, val))
