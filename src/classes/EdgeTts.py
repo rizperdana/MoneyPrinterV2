@@ -14,7 +14,10 @@ class EdgeTTS:
         self._voice = voice
 
     def synthesize(
-        self, text: str, output_file: str = os.path.join(ROOT_DIR, ".mp", "audio.wav")
+        self,
+        text: str,
+        output_file: str = os.path.join(ROOT_DIR, ".mp", "audio.wav"),
+        metadata_path: str | None = None,
     ):
         output_dir = os.path.dirname(output_file)
         if output_dir and not os.path.exists(output_dir):
@@ -22,12 +25,11 @@ class EdgeTTS:
 
         text = text.strip()
 
-        # DO NOT strip SSML — Communicate handles both SSML and plain text
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp_mp3:
             tmp_mp3_path = tmp_mp3.name
 
         try:
-            asyncio.run(self._generate_mp3(text, tmp_mp3_path))
+            asyncio.run(self._generate_mp3(text, tmp_mp3_path, metadata_path))
             audio, sample_rate = sf.read(tmp_mp3_path)
             sf.write(output_file, audio, sample_rate)
         finally:
@@ -36,10 +38,12 @@ class EdgeTTS:
 
         return output_file
 
-    async def _generate_mp3(self, text: str, output_path: str) -> None:
+    async def _generate_mp3(
+        self, text: str, output_path: str, metadata_path: str | None = None
+    ) -> None:
         try:
             communicate = edge_tts.Communicate(text, self._voice)
-            await communicate.save(output_path)
+            await communicate.save(output_path, metadata_path)
         except Exception as e:
             # If SSML was passed but rejected, strip tags and retry once
             clean_text = re.sub(r"<[^>]+>", "", text)
@@ -47,6 +51,6 @@ class EdgeTTS:
             clean_text = clean_text.strip()
             if clean_text:
                 communicate = edge_tts.Communicate(clean_text, self._voice)
-                await communicate.save(output_path)
+                await communicate.save(output_path, metadata_path)
             else:
                 raise ValueError("Empty text after SSML cleanup") from e

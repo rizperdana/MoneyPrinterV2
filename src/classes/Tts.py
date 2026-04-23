@@ -19,5 +19,10 @@ class TTS:
         """Return the voice name."""
         return self._voice
 
-    def synthesize(self, text, output_file=os.path.join(ROOT_DIR, ".mp", "audio.wav")):
-        return self._model.synthesize(text, output_file)
+    def synthesize(
+        self,
+        text,
+        output_file=os.path.join(ROOT_DIR, ".mp", "audio.wav"),
+        metadata_path: str | None = None,
+    ):
+        return self._model.synthesize(text, output_file, metadata_path=metadata_path)
