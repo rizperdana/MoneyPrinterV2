@@ -259,6 +259,7 @@ async def run_job(job_id: str):
                         if all_oauth:
                             oauth_token = all_oauth[0].get("token")
                             logging.warning(f"Using fallback token from account: {all_oauth[0].get('account_name')}")
+                            job.account = all_oauth[0].get("account_name")  # Fix: use the account that has the token
                     if not oauth_token:
                         logging.error(f"ALL OAuth attempts failed for account '{job.account}'")
                         loop.call_soon_threadsafe(job.events.put_nowait, {
