@@ -12,6 +12,7 @@ import assemblyai as aai
 from PIL import Image
 
 from utils import close_running_selenium_instances, build_url, choose_random_song
+from utils_audio import load_speech_windows, make_volume_func
 from cache import get_accounts, add_account, get_youtube_cache_path
 from db import add_video as db_add_video
 from .Tts import TTS
@@ -31,6 +32,9 @@ from config import (
     get_font,
     get_is_for_kids,
     get_images_per_video,
+    get_music_volume_speech,
+    get_music_volume_silence,
+    get_music_fade_duration_ms,
 )
 from status import error, success, info, warning
 from uuid import uuid4
@@ -1801,7 +1805,8 @@ Output format (one per line):
         if not self.script.strip().startswith("<speak>"):
             self.script = re.sub(r"[^\w\s.?!]", "", self.script)
 
-        tts_instance.synthesize(self.script, path)
+        metadata_path = path.replace(".wav", "_sentences.jsonl")
+        tts_instance.synthesize(self.script, path, metadata_path=metadata_path)
 
         self.tts_path = path
 
