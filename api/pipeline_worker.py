@@ -214,8 +214,7 @@ async def run_job(job_id: str):
             # on_progress("thumbnail", "running")
             # youtube.generate_thumbnail()
             # hook_path = getattr(youtube, 'hook_frame_path', None)
-            # thumb_path = getattr(youtube, 'thumbnail_path', None)
-            # on_progress("thumbnail", "done", detail=f"hook:{bool(hook_path)} thumb:{bool(thumb_path)}")
+            # on_progress("thumbnail", "done", detail=f"hook:{bool(hook_path)}")
 
             # Add video to DB first (needed for auto-upload URL update)
             metadata = youtube.metadata or {}
@@ -311,7 +310,6 @@ async def run_job(job_id: str):
                 "metadata": metadata,
                 "niche": youtube._niche,
                 "language": youtube._language,
-                "thumbnail_path": thumb_path,
                 "hook_frame_path": hook_path,
                 "video_id": video_id,
                 "upload_url": upload_url,

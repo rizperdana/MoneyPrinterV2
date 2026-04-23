@@ -8,6 +8,7 @@ from typing import Any, Callable, Optional
 import requests
 
 from src.youtube_oauth import get_access_token, is_token_valid_for_token
+from src.db import _get_connection
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +85,14 @@ def youtubeApiUpload(
         if is_token_valid_for_token(oauth_token, account_id):
             access_token = oauth_token
         else:
-            # Token expired or invalid, refresh
-            logger.info("OAuth token expired, refreshing...")
+            # Token expired or invalid, try to find which account has this token
+            logger.info("OAuth token expired or not for this account, finding account...")
+            conn = _get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT account_name FROM oauth_credentials WHERE token = ? AND platform = ?", (oauth_token, "youtube"))
+            row = cursor.fetchone()
+            if row:
+                account_id = row[0]
             access_token = get_access_token(account_id)
     else:
         access_token = get_access_token(account_id)
