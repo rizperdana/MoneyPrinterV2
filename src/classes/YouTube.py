@@ -1796,8 +1796,10 @@ Output format (one per line):
         """
         path = os.path.join(ROOT_DIR, ".mp", str(uuid4()) + ".wav")
 
-        # Clean script, remove every character that is not a word character, a space, a period, a question mark, or an exclamation mark.
-        self.script = re.sub(r"[^\w\s.?!]", "", self.script)
+        # Only strip non-word chars if text is NOT SSML
+        # SSML scripts start with <speak> and must be preserved
+        if not self.script.strip().startswith("<speak>"):
+            self.script = re.sub(r"[^\w\s.?!]", "", self.script)
 
         tts_instance.synthesize(self.script, path)
 
