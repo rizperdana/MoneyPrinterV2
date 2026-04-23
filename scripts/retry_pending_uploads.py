@@ -9,16 +9,12 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 os.chdir(ROOT)
 
+from src.config import get_firefox_profile_path
 from src.db import get_videos, init_db, update_video_youtube_url
 from src.youtube_oauth import get_access_token
 from src.youtube_api import youtubeApiUpload
 
-config_path = os.path.join(ROOT, "config.json")
-import json
-with open(config_path) as f:
-    config = json.load(f)
-
-fp = config.get("firefox_profile", "")
+fp = get_firefox_profile_path()
 
 init_db()
 videos = get_videos()
