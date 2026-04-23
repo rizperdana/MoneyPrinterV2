@@ -5,6 +5,14 @@ from typing import Optional
 from typing import Sequence
 
 import requests
+from src.config import (
+    get_postbridge_api_base,
+    get_postbridge_retryable_codes,
+    get_postbridge_max_retries,
+    get_postbridge_media_upload_timeout,
+    get_postbridge_default_timeout,
+    get_postbridge_retry_delay_factor,
+)
 
 
 class PostBridgeClientError(RuntimeError):
@@ -24,14 +32,14 @@ class PostBridge:
     Docs: https://api.post-bridge.com/reference
     """
 
-    API_BASE = "https://api.post-bridge.com/v1"
-    RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+    API_BASE = get_postbridge_api_base()
+    RETRYABLE_STATUS_CODES = get_postbridge_retryable_codes()
 
     def __init__(
         self,
         api_key: str,
         session: Optional[requests.Session] = None,
-        max_retries: int = 3,
+        max_retries: int = get_postbridge_max_retries(),
     ) -> None:
         self._session = session or requests.Session()
         self._headers = {
@@ -126,7 +134,7 @@ class PostBridge:
                 upload_url,
                 data=media_file,
                 headers={"Content-Type": mime_type},
-                timeout=600,
+                timeout=get_postbridge_media_upload_timeout(),
                 expected_statuses={200, 201},
                 use_default_headers=False,
             )
@@ -203,7 +211,7 @@ class PostBridge:
         url: str,
         *,
         headers: Optional[dict] = None,
-        timeout: int = 60,
+        timeout: float = get_postbridge_default_timeout(),
         expected_statuses: Optional[set[int]] = None,
         use_default_headers: bool = True,
         **kwargs,
@@ -234,7 +242,7 @@ class PostBridge:
                 last_exception = exc
                 if attempt == self._max_retries:
                     break
-                time.sleep(0.5 * attempt)
+                time.sleep(get_postbridge_retry_delay_factor() * attempt)
                 continue
 
             if response.status_code in expected_statuses:
@@ -244,7 +252,7 @@ class PostBridge:
                 response.status_code in self.RETRYABLE_STATUS_CODES
                 and attempt < self._max_retries
             ):
-                time.sleep(0.5 * attempt)
+                time.sleep(get_postbridge_retry_delay_factor() * attempt)
                 continue
 
             raise PostBridgeClientError(
