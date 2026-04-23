@@ -310,7 +310,7 @@ async def run_job(job_id: str):
                 "metadata": metadata,
                 "niche": youtube._niche,
                 "language": youtube._language,
-                "hook_frame_path": hook_path,
+                "hook_frame_path": None,
                 "video_id": video_id,
                 "upload_url": upload_url,
             }
