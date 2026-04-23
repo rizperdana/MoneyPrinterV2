@@ -210,12 +210,12 @@ async def run_job(job_id: str):
             size_mb = os.path.getsize(youtube.video_path) / 1024 / 1024
             on_progress("combine", "done", detail=f"{size_mb} MB")
 
-            # Step 8: Thumbnail
-            on_progress("thumbnail", "running")
-            youtube.generate_thumbnail()
-            hook_path = getattr(youtube, 'hook_frame_path', None)
-            thumb_path = getattr(youtube, 'thumbnail_path', None)
-            on_progress("thumbnail", "done", detail=f"hook:{bool(hook_path)} thumb:{bool(thumb_path)}")
+            # Step 8: Thumbnail — removed (not required for YouTube)
+            # on_progress("thumbnail", "running")
+            # youtube.generate_thumbnail()
+            # hook_path = getattr(youtube, 'hook_frame_path', None)
+            # thumb_path = getattr(youtube, 'thumbnail_path', None)
+            # on_progress("thumbnail", "done", detail=f"hook:{bool(hook_path)} thumb:{bool(thumb_path)}")
 
             # Add video to DB first (needed for auto-upload URL update)
             metadata = youtube.metadata or {}
@@ -255,7 +255,7 @@ async def run_job(job_id: str):
                             "error": "No OAuth token — please link your YouTube account in Settings",
                         })
                         job.status = JobStatus.failed
-                        return
+                        return None
                     else:
                         upload_result = youtubeApiUpload(
                             video_path=youtube.video_path,
@@ -264,7 +264,7 @@ async def run_job(job_id: str):
                             tags=tags_list if tags_list else [],
                             oauth_token=oauth_token,
                             account_id=job.account or "default",
-                            progress_callback=lambda step, status, pct: on_progress("upload", step, detail=status) if step != "uploading" else None,
+                            progress_callback=lambda step, status, pct: loop.call_soon_threadsafe(job.events.put_nowait, {"type": "upload_error", "error": status}) if step == "error" else (on_progress("upload", step, detail=status) if step != "uploading" else None),
                         )
                         if upload_result and upload_result.get("url"):
                             url = upload_result["url"]
@@ -278,6 +278,7 @@ async def run_job(job_id: str):
                                 "error": "Upload failed",
                             })
                             job.status = JobStatus.failed
+                            return None
                 except Exception as e:
                     logging.error(f"Auto-upload failed: {e}")
                     loop.call_soon_threadsafe(job.events.put_nowait, {
@@ -285,6 +286,7 @@ async def run_job(job_id: str):
                         "error": str(e),
                     })
                     job.status = JobStatus.failed
+                    return None
 
             # Return all video data
             return {
