@@ -1,9 +1,16 @@
 import sqlite3
 import os
+from pathlib import Path
 from typing import Optional
 
-from config import ROOT_DIR
-from status import info, success, error, warning
+ROOT_DIR = str(Path(__file__).parent.parent)
+
+import status
+
+info = status.info
+success = status.success
+error = status.error
+warning = status.warning
 
 # Database file path
 DB_FILE = os.path.join(ROOT_DIR, "data", "moneyprinter.db")

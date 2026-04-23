@@ -100,7 +100,7 @@ def load_tokens(account_id: str = None) -> dict | None:
         return None
     # Try new oauth_credentials table first
     try:
-        from src.db import get_oauth_credentials
+        from db import get_oauth_credentials
 
         creds = get_oauth_credentials(account_name=account_id, platform="youtube")
         if creds:
@@ -117,7 +117,7 @@ def load_tokens(account_id: str = None) -> dict | None:
         pass
     # Fallback to old accounts.oauth_token column
     try:
-        from src.db import _get_connection
+        from db import _get_connection
 
         conn = _get_connection()
         cursor = conn.cursor()

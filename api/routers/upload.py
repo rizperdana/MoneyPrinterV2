@@ -49,46 +49,18 @@ async def upload_video_by_id(
             status_code=400, detail=f"Video file not found: {file_path}"
         )
 
-    # Read accounts from .mp cache files (primary source)
-    cache_file = os.path.join(_project_root, ".mp", f"{platform}.json")
-    accounts = []
-    if os.path.exists(cache_file):
-        with open(cache_file, "r") as f:
-            data = json.load(f)
-            accounts = data.get("accounts", [])
-
-    if not accounts:
-        raise HTTPException(status_code=400, detail=f"No {platform} account configured")
-
-    # Select account by name, video's account, or first available
-    # Use video's account field as default when not specified
-    target_account_id = account_name or video.get("account")
-    if target_account_id:
-        account = next(
-            (a for a in accounts if a.get("id") == target_account_id), accounts[0]
-        )
-    else:
-        account = accounts[0]
-
-    # Fallback: if profile_path is empty, try to load it from .mp cache
-    if not account.get("profile_path"):
-        cache_file = os.path.join(_project_root, ".mp", f"{platform}.json")
-        if os.path.exists(cache_file):
-            with open(cache_file) as f:
-                cache_data = json.load(f)
-                cache_accounts = cache_data.get("accounts", [])
-                for entry in cache_accounts:
-                    if entry.get("id") == account.get("id") or entry.get("username") == account.get("username"):
-                        account["profile_path"] = entry.get("profile_path") or entry.get("firefox_profile", "")
-                        break
-
-    # Get OAuth credentials
+    # For YouTube: check OAuth credentials in DB FIRST (source of truth)
     oauth_token = None
     oauth_account_for_refresh = None
-    oauth_lookup_id = account_id or target_account_id
+    target_account_id = account_name or video.get("account")
+    use_oauth = False
+
     if platform == "youtube":
         from src.db import get_linked_oauth_ids, get_oauth_credentials_by_ids, get_oauth_credentials
 
+        oauth_lookup_id = account_id or target_account_id
+
+        # Try linked OAuth credentials first
         oauth_ids = get_linked_oauth_ids(oauth_lookup_id)
         if oauth_ids:
             oauth_creds = get_oauth_credentials_by_ids(oauth_ids)
@@ -96,6 +68,7 @@ async def upload_video_by_id(
             if oauth_creds:
                 oauth_token = oauth_creds[0].get("token")
                 oauth_account_for_refresh = oauth_creds[0].get("account_name")
+                use_oauth = True
 
         # Fallback: if no linked credentials, try direct lookup by account_name
         if not oauth_token:
@@ -103,12 +76,50 @@ async def upload_video_by_id(
             if direct_creds:
                 oauth_token = direct_creds[0].get("token")
                 oauth_account_for_refresh = oauth_lookup_id
+                use_oauth = True
             else:
                 # Last resort: try 'default'
                 default_creds = get_oauth_credentials(account_name="default", platform="youtube")
                 if default_creds:
                     oauth_token = default_creds[0].get("token")
                     oauth_account_for_refresh = "default"
+                    use_oauth = True
+
+    # If no OAuth credentials, fall back to cache file (for Selenium)
+    if not use_oauth:
+        cache_file = os.path.join(_project_root, ".mp", f"{platform}.json")
+        accounts = []
+        if os.path.exists(cache_file):
+            with open(cache_file, "r") as f:
+                data = json.load(f)
+                accounts = data.get("accounts", [])
+
+        if not accounts:
+            raise HTTPException(status_code=400, detail=f"No {platform} account configured")
+
+        # Select account by name, video's account, or first available
+        target_account_id = target_account_id or video.get("account")
+        if target_account_id:
+            account = next(
+                (a for a in accounts if a.get("id") == target_account_id), accounts[0]
+            )
+        else:
+            account = accounts[0]
+
+        # Fallback: if profile_path is empty, try to load it from .mp cache
+        if not account.get("profile_path"):
+            cache_file = os.path.join(_project_root, ".mp", f"{platform}.json")
+            if os.path.exists(cache_file):
+                with open(cache_file) as f:
+                    cache_data = json.load(f)
+                    cache_accounts = cache_data.get("accounts", [])
+                    for entry in cache_accounts:
+                        if entry.get("id") == account.get("id") or entry.get("username") == account.get("username"):
+                            account["profile_path"] = entry.get("profile_path") or entry.get("firefox_profile", "")
+                            break
+    else:
+        # OAuth mode: use target_account_id or default
+        account = {"id": target_account_id or "oauth"}
 
     # Create job for WebSocket event streaming
     upload_job = job_manager.create(

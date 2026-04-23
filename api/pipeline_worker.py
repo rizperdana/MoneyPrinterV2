@@ -251,11 +251,15 @@ async def run_job(job_id: str):
                     oauth_token = get_access_token(job.account or "default")
                     # Fall back to any available YouTube OAuth token if account-specific one not found
                     if not oauth_token:
+                        logging.warning(f"No OAuth token for account '{job.account}', trying fallback...")
                         from src.db import get_oauth_credentials
                         all_oauth = get_oauth_credentials(platform="youtube")
+                        logging.warning(f"Found {len(all_oauth)} OAuth credentials")
                         if all_oauth:
                             oauth_token = all_oauth[0].get("token")
+                            logging.warning(f"Using fallback token from account: {all_oauth[0].get('account_name')}")
                     if not oauth_token:
+                        logging.error(f"ALL OAuth attempts failed for account '{job.account}'")
                         loop.call_soon_threadsafe(job.events.put_nowait, {
                             "type": "upload_error",
                             "error": "No OAuth token — please link your YouTube account in Settings",
