@@ -9,7 +9,6 @@ import zipfile
 import yagmail
 import requests
 import subprocess
-import platform
 
 from cache import get_results_cache_path
 from status import info, warning, error, success
@@ -19,7 +18,9 @@ from config import (
     get_google_maps_scraper_zip_url,
     get_outreach_message_subject,
     get_outreach_message_body_file,
+    get_scraper_binary_name,
     get_scraper_timeout,
+    get_outreach_delay_after_scrape,
     ROOT_DIR,
 )
 
@@ -97,11 +98,7 @@ class Outreach:
         Returns:
             None
         """
-        binary_name = (
-            "google-maps-scraper.exe"
-            if platform.system() == "Windows"
-            else "google-maps-scraper"
-        )
+        binary_name = get_scraper_binary_name()
         if os.path.exists(binary_name):
             print(colored("=> Scraper already built. Skipping build.", "blue"))
             return
@@ -121,7 +118,7 @@ class Outreach:
 
         os.replace(built_binary, binary_name)
 
-    def run_scraper_with_args_for_30_seconds(self, args: str, timeout=300) -> None:
+    def run_scraper_with_args_for_30_seconds(self, args: str, timeout=None) -> None:
         """
         Run the scraper with the specified arguments for 30 seconds.
 
@@ -132,12 +129,11 @@ class Outreach:
         Returns:
             None
         """
+        if timeout is None:
+            timeout = get_scraper_timeout()
+
         info(" => Running scraper...")
-        binary_name = (
-            "google-maps-scraper.exe"
-            if platform.system() == "Windows"
-            else "google-maps-scraper"
-        )
+        binary_name = get_scraper_binary_name()
         command = [os.path.join(os.getcwd(), binary_name)] + shlex.split(args)
         try:
             scraper_process = subprocess.run(command, timeout=float(timeout))
@@ -249,7 +245,7 @@ class Outreach:
         # Remove the niche file
         os.remove("niche.txt")
 
-        time.sleep(2)
+        time.sleep(get_outreach_delay_after_scrape())
 
         # Create a yagmail SMTP client outside the loop
         yag = yagmail.SMTP(

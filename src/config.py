@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import platform
 import srt_equalizer
 
 from termcolor import colored
@@ -468,3 +469,30 @@ def get_music_fade_duration_ms() -> int:
     except (TypeError, ValueError):
         val = 200
     return max(0, min(2000, val))
+
+
+# ─── Outreach Config Accessors ───────────────────────────────────────────────
+
+def get_scraper_binary_name() -> str:
+    """
+    Gets the scraper binary name based on the current platform.
+
+    Returns:
+        name (str): The scraper binary name ("google-maps-scraper" or ".exe" on Windows)
+    """
+    return "google-maps-scraper.exe" if platform.system() == "Windows" else "google-maps-scraper"
+
+
+def get_outreach_delay_after_scrape() -> float:
+    """
+    Gets the delay (in seconds) after scraping before starting email outreach.
+
+    Returns:
+        delay (float): The delay in seconds (default: 2.0)
+    """
+    val = _get_config("outreach_delay_after_scrape", 2.0)
+    try:
+        val = float(val)
+    except (TypeError, ValueError):
+        val = 2.0
+    return val
