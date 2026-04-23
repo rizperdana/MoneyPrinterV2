@@ -86,39 +86,64 @@ def generate_script_response(subject: str, language: str, sentence_length: int) 
     Returns:
         str: Raw script text.
     """
-    prompt = f"""Write a YouTube Shorts script about: {subject}
+    prompt = f"""You are generating a YouTube Shorts script with dynamic voice delivery prosody.
 
 AUDIENCE: Elementary school children (ages 6-10)
 
-CRITICAL RULES — WRITE LIKE YOU'RE TALKING TO A CURIOUS 7-YEAR-OLD:
+CRITICAL RULES:
 1. Use ONLY simple words. If a word has more than 2 syllables, find a simpler word.
 2. Every sentence should paint a picture they can see in their head.
 3. Use everyday comparisons they know: "like a playground swing", "like stacking blocks", "like your pet dog"
 4. NO big words. "Fast" not "rapid", "big" not "enormous", "begin" not "commence"
 5. Ask questions they can answer: "Have you ever wondered...?", "Did you know...?"
 
-STRUCTURE (simple, clear flow):
-1. HOOK (sentence 1): Something surprising or that makes them say "Whoa!" Example: "There's a creature that can punch so hard it makes the water BOIL!"
-2. TELL THE STORY (sentences 2-{sentence_length - 1}): One fact per sentence. Each fact = one simple idea. Use "It's like..." and "Imagine..." comparisons. Be SPECIFIC: "100 years" not "a long time", "faster than a car" not "really fast".
-3. COOL FINISH (last sentence): The most amazing fact, simple enough for a kid to remember and tell their friend.
+OUTPUT FORMAT: SSML (Speech Synthesis Markup Language).
+Wrap entire script in <speak>...</speak> tags.
+Do NOT output plain text. Output valid SSML only.
+
+SSML TAGS AVAILABLE:
+- <prosody rate="X%" pitch="±Yst" volume="±ZdB">text</prosody>
+  rate: percentage or keyword (fast=150%, medium=100%, slow=75%, very-slow=60%)
+  pitch: semitones (e.g., +5st higher, -3st lower) or keyword (high, low)
+  volume: +dB/-dB or keyword (loud, soft, medium)
+- <break time="300ms"/> or <break time="1s"/> — strategic pause
+- <emphasis level="strong"> or level="moderate">word</emphasis> — stress
+- <say-as interpret-as="whispered">text</say-as> — whisper effect
+
+PROSODY DECISION RULES — decide per script based on topic emotional tone:
+- MYSTERY/SUSPENSE: slower base rate (75-85%), lower pitch, deliberate pacing, pauses before reveals
+  Example: <prosody rate="80%" pitch="-3st">But what they found in the dark was...</prosody>
+- NEWS/URGENT: faster rate (120-150%), higher pitch, clipped sentences
+  Example: <prosody rate="fast" pitch="+5st">Breaking news! NASA just announced...</prosody>
+- MOTIVATIONAL: building energy — slower opening, faster middle, slower emphatic finish
+  Example: <prosody rate="85%">You have the power...</prosody><break time="600ms"/><prosody rate="fast">to make it happen!</prosody>
+- SCIENCE/EXPLAINER: medium rate (100%), authoritative pitch, clear diction, occasional emphasis
+  Example: <prosody rate="medium" pitch="+2st">The answer lies in...</prosody>
+- HUMOR/WITTY: faster rate with pitch variation, natural breaks at punchline timing
+  Example: <prosody rate="fast" pitch="+3st">So I tried that trick and... [pause] it worked!</prosody>
+- QUESTIONS: raised pitch on question word, pause before answer
+  Example: Did you know <prosody pitch="+5st">sharks</prosody> could detect your heartbeat?
+
+STRUCTURE:
+1. HOOK (first sentence): Grab attention with surprising fact + appropriate prosody
+2. BODY (sentences 2 to n-1): Facts, story, explanation — match prosody to topic tone
+3. FINISH (last sentence): Most impactful line — deliberate pacing, strategic pause before if ending a story
 
 CONSTRAINTS:
 - Total: {sentence_length} sentences
 - Each sentence: 8-12 words maximum (keep it SHORT for kids)
 - Total: 60-100 words
-- First sentence: GRAB their attention immediately with something surprising
-- Each sentence = ONE clear idea
-- NO technical words, NO jargon, NO fancy vocabulary
+- Each sentence wrapped in <prosody>...</prosody> or natural SSML
 - NO "welcome", NO "in this video", NO "subscribe"
-- NO markdown, NO numbers like "1. 2.", just plain sentences
+- NO markdown, NO numbering, NO bullet points
 - Write in {language}
 - Make it SOUND LIKE A PERSON TALKING, not a textbook
-- Add simple sound effects in brackets if it helps: [sound: BOOM!], [sound: splish splash]
+- Add simple sound effects as <break> tags or whispered segments
 
 Subject: {subject}
 Language: {language}
 
-Return ONLY the raw script text. No labels, no numbering."""
+Return ONLY the SSML script wrapped in <speak> tags. No labels, no commentary."""
 
     completion = generate_response(prompt, job="script")
     completion = re.sub(r"\*", "", completion)
