@@ -249,6 +249,12 @@ async def run_job(job_id: str):
                 on_progress("upload", "running")
                 try:
                     oauth_token = get_access_token(job.account or "default")
+                    # Fall back to any available YouTube OAuth token if account-specific one not found
+                    if not oauth_token:
+                        from src.db import get_oauth_credentials
+                        all_oauth = get_oauth_credentials(platform="youtube")
+                        if all_oauth:
+                            oauth_token = all_oauth[0].get("token")
                     if not oauth_token:
                         loop.call_soon_threadsafe(job.events.put_nowait, {
                             "type": "upload_error",
