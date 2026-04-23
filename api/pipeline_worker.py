@@ -246,6 +246,7 @@ async def run_job(job_id: str):
             # Auto-upload if enabled
             upload_url = None
             if job.auto_upload:
+                print(f"AUTO-UPLOAD START: account={job.account}, auto_upload={job.auto_upload}")
                 on_progress("upload", "running")
                 try:
                     oauth_token = get_access_token(job.account or "default")
@@ -290,6 +291,9 @@ async def run_job(job_id: str):
                             job.status = JobStatus.failed
                             return None
                 except Exception as e:
+                    import traceback
+                    print(f"EXCEPTION IN AUTO-UPLOAD: {e}")
+                    print(traceback.format_exc())
                     logging.error(f"Auto-upload failed: {e}")
                     loop.call_soon_threadsafe(job.events.put_nowait, {
                         "type": "upload_error",
