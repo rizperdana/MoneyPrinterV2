@@ -6,17 +6,17 @@ sys.path.insert(0, project_root)
 sys.path.insert(0, os.path.join(project_root, 'src'))
 
 @pytest.fixture(autouse=True)
-def reset_languagevoices():
-    """Reset languagevoices and tts_voice to default before each test."""
+def reset_localevoices():
+    """Reset localevoices and tts_voice to default before each test."""
     import json
     from src.config import _settings_cache
     from src.db import set_setting, reload_settings
 
-    # Reset languagevoices to default
-    set_setting("languagevoices", json.dumps({
-        "Indonesian": "id-ID-GadisNeural",
-        "Javanese": "jv-ID-DimasNeural",
-        "Sundanese": "su-ID-JajangNeural"
+    # Reset localevoices to default
+    set_setting("localevoices", json.dumps({
+        "id-ID": "id-ID-GadisNeural",
+        "jv-ID": "jv-ID-SitiNeural",
+        "su-ID": "su-ID-TutiNeural"
     }))
     # Reset default tts_voice to en-US-JennyNeural
     set_setting("tts_voice", "en-US-JennyNeural")
@@ -28,22 +28,22 @@ def reset_languagevoices():
 
 
 def test_tts_default_voice():
-    """TTS() with no language uses default English voice."""
+    """TTS() with no locale uses default English voice."""
     from src.classes.Tts import TTS
     tts = TTS()
     assert tts.voice == "en-US-JennyNeural", f"Expected en-US-JennyNeural, got {tts.voice}"
 
 def test_tts_indonesian_voice():
-    """TTS(language='Indonesian') uses id-ID-GadisNeural."""
+    """TTS(locale='id-ID') uses id-ID-GadisNeural."""
     from src.classes.Tts import TTS
-    tts = TTS(language="Indonesian")
+    tts = TTS(locale="id-ID")
     assert tts.voice == "id-ID-GadisNeural", f"Expected id-ID-GadisNeural, got {tts.voice}"
 
 def test_tts_synthesize_indonesian():
-    """TTS with Indonesian language synthesizes SSML correctly."""
+    """TTS with id-ID locale synthesizes SSML correctly."""
     from src.classes.Tts import TTS
 
-    tts = TTS(language="Indonesian")
+    tts = TTS(locale="id-ID")
     ssml = '<speak><prosody rate="90%">Terdapat fakta menakjubkan tentang laut.</prosody></speak>'
 
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:

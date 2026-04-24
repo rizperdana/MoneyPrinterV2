@@ -297,14 +297,14 @@ def get_default_tts_voice() -> str:
     return _get_config("tts_voice", "en-US-JennyNeural")
 
 
-def get_languagevoices() -> dict:
+def get_localevoices() -> dict:
     """
-    Gets the per-language TTS voice mapping.
+    Gets the per-locale TTS voice mapping (BCP-47 keys).
 
     Returns:
-        dict: {language_name: voice_shortname, ...}
+        dict: {locale: voice_shortname, ...}
     """
-    raw = _get_config("languagevoices", "{}")
+    raw = _get_config("localevoices", "{}")
     if isinstance(raw, str):
         try:
             return json.loads(raw)
@@ -313,58 +313,58 @@ def get_languagevoices() -> dict:
     return raw if isinstance(raw, dict) else {}
 
 
-def set_languagevoices(mapping: dict) -> None:
-    """Sets the per-language TTS voice mapping."""
+def set_localevoices(mapping: dict) -> None:
+    """Sets the per-locale TTS voice mapping (BCP-47 keys)."""
     from src.db import set_setting, reload_settings
     try:
-        set_setting("languagevoices", json.dumps(mapping))
-        # Clear config's cache so get_languagevoices() sees new value
+        set_setting("localevoices", json.dumps(mapping))
+        # Clear config's cache so get_localevoices() sees new value
         global _settings_cache
         _settings_cache = None
         reload_settings()  # Clear db's cache too
     except Exception as e:
         from status import error
-        error(f"Failed to save languagevoices: {e}")
+        error(f"Failed to save localevoices: {e}")
         return
 
 
-def get_tts_voice(language: Optional[str] = None) -> str:
+def get_tts_voice(locale: Optional[str] = None) -> str:
     """
-    Gets the TTS voice for a given language.
+    Gets the TTS voice for a given locale.
 
     Args:
-        language: Language name (e.g., "Indonesian", "English"). None returns default.
+        locale: BCP-47 locale code (e.g., "id-ID", "en-US"). None returns default.
 
     Returns:
-        voice (str): The TTS voice shortname for the language.
+        voice (str): The TTS voice shortname for the locale.
     """
-    if language:
-        langvoices = get_languagevoices()
+    if locale:
+        localevoices = get_localevoices()
         # Try exact match, then case-insensitive lookup via normalized dict
-        voice = langvoices.get(language)
+        voice = localevoices.get(locale)
         if not voice:
             # Build lowercase lookup (O(1) after first hit per call)
-            lower_map = {k.lower(): v for k, v in langvoices.items()}
-            voice = lower_map.get(language.lower())
+            lower_map = {k.lower(): v for k, v in localevoices.items()}
+            voice = lower_map.get(locale.lower())
         if voice:
             return voice
 
     return get_default_tts_voice()
 
 
-def set_tts_voice(voice: str, language: Optional[str] = None) -> None:
+def set_tts_voice(voice: str, locale: Optional[str] = None) -> None:
     """
-    Sets the TTS voice. If language is None, sets the default voice.
-    If language is provided, sets the voice for that language.
+    Sets the TTS voice. If locale is None, sets the default voice.
+    If locale is provided, sets the voice for that locale.
 
     Args:
         voice: TTS voice shortname (e.g., "id-ID-GadisNeural")
-        language: Language name (e.g., "Indonesian"). None = default.
+        locale: BCP-47 locale code (e.g., "id-ID"). None = default.
     """
-    if language:
-        langvoices = get_languagevoices()
-        langvoices[language] = voice
-        set_languagevoices(langvoices)
+    if locale:
+        localevoices = get_localevoices()
+        localevoices[locale] = voice
+        set_localevoices(localevoices)
     else:
         from src.db import set_setting
         try:

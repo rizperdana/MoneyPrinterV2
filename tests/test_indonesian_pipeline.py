@@ -10,17 +10,17 @@ sys.path.insert(0, os.path.join(project_root, 'src'))
 
 
 @pytest.fixture(autouse=True)
-def reset_languagevoices():
-    """Reset languagevoices and tts_voice to default before each test."""
+def reset_localevoices():
+    """Reset localevoices and tts_voice to default before each test."""
     import json
     from src.config import _settings_cache
     from src.db import set_setting, reload_settings
 
-    # Reset languagevoices to default
-    set_setting("languagevoices", json.dumps({
-        "Indonesian": "id-ID-GadisNeural",
-        "Javanese": "jv-ID-DimasNeural",
-        "Sundanese": "su-ID-JajangNeural"
+    # Reset localevoices to default
+    set_setting("localevoices", json.dumps({
+        "id-ID": "id-ID-GadisNeural",
+        "jv-ID": "jv-ID-SitiNeural",
+        "su-ID": "su-ID-TutiNeural"
     }))
     # Reset default tts_voice to en-US-JennyNeural
     set_setting("tts_voice", "en-US-JennyNeural")
@@ -33,14 +33,14 @@ def reset_languagevoices():
 
 
 def test_indonesian_tts_voice_selection():
-    """When language=Indonesian, TTS uses id-ID-GadisNeural."""
+    """When locale=id-ID, TTS uses id-ID-GadisNeural."""
     from src.classes.Tts import TTS
-    tts = TTS(language="Indonesian")
+    tts = TTS(locale="id-ID")
     assert tts.voice == "id-ID-GadisNeural", f"Expected id-ID-GadisNeural, got {tts.voice}"
 
 
 def test_indonesian_ssml_script_generation():
-    """generate_script_response with Indonesian language outputs SSML."""
+    """generate_script_response with id-ID locale outputs SSML."""
     from unittest.mock import patch
 
     mock_ssml = '''<speak>
@@ -51,7 +51,7 @@ def test_indonesian_ssml_script_generation():
 
     with patch("src.llm_generate.generate_response", return_value=mock_ssml):
         from src.llm_generate import generate_script_response
-        result = generate_script_response("fakta laut", "Indonesian", 3)
+        result = generate_script_response("fakta laut", "id-ID", 3)
 
     assert result.strip().startswith("<speak>")
     assert "rate=" in result
@@ -77,16 +77,16 @@ def test_indonesian_edge_tts_synthesis():
             os.unlink(output)
 
 
-def test_languagevoices_config_round_trip():
-    """languagevoices JSON round-trips through config."""
-    from src.config import set_languagevoices, get_languagevoices
+def test_localevoices_config_round_trip():
+    """localevoices JSON round-trips through config."""
+    from src.config import set_localevoices, get_localevoices
 
     test_mapping = {
-        "Indonesian": "id-ID-GadisNeural",
-        "Malay": "ms-MY-YasminNeural",
+        "id-ID": "id-ID-GadisNeural",
+        "ms-MY": "ms-MY-YasminNeural",
     }
-    set_languagevoices(test_mapping)
-    retrieved = get_languagevoices()
+    set_localevoices(test_mapping)
+    retrieved = get_localevoices()
 
-    assert retrieved["Indonesian"] == "id-ID-GadisNeural"
-    assert retrieved["Malay"] == "ms-MY-YasminNeural"
+    assert retrieved["id-ID"] == "id-ID-GadisNeural"
+    assert retrieved["ms-MY"] == "ms-MY-YasminNeural"

@@ -7,15 +7,15 @@ from .EdgeTts import EdgeTTS
 
 class TTS:
     """
-    Text-to-Speech wrapper with language-aware voice selection.
+    Text-to-Speech wrapper with locale-aware voice selection.
 
     Args:
-        language: Language name (e.g., "Indonesian", "English"). Uses default if None.
+        locale: BCP-47 locale code (e.g., "id-ID", "en-US"). Uses default if None.
     """
 
-    def __init__(self, language: str = None) -> None:
-        print(f"TTS: Getting voice for language: {language or 'default'}...")
-        self._voice = get_tts_voice(language)
+    def __init__(self, locale: str = None) -> None:
+        print(f"TTS: Getting voice for locale: {locale or 'default'}...")
+        self._voice = get_tts_voice(locale)
         print(f"TTS: Voice selected: {self._voice}")
         print("TTS: Initializing EdgeTTS...")
         self._model = EdgeTTS(self._voice)
