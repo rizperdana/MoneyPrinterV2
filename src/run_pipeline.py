@@ -40,7 +40,7 @@ from research import extract_facts
 
 def run_pipeline(
     niche: str,
-    language: str,
+    locale: str = "en-US",
     upload: bool = False,
     headless: bool = True,
 ) -> dict:
@@ -49,7 +49,7 @@ def run_pipeline(
 
     Args:
         niche: Video topic niche (e.g., "interesting science facts")
-        language: Content language (e.g., "English")
+        locale: BCP-47 locale code (e.g., "en-US", "id-ID")
         upload: Whether to upload to YouTube after generation
         headless: Run Firefox in headless mode
 
@@ -73,14 +73,14 @@ def run_pipeline(
             info(f"Using LLM model: {model}")
 
         # Initialize TTS
-        tts = TTS(language=language)
+        tts = TTS(locale=locale)
 
         # Initialize YouTube
         youtube = YouTube.__new__(YouTube)
         youtube._account_uuid = "auto-pipeline"
         youtube._account_nickname = "Auto Pipeline"
         youtube._niche = niche
-        youtube._language = language
+        youtube._locale = locale
         youtube.images = []
         youtube.subject = None
         youtube.script = None

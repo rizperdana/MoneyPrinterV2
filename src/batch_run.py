@@ -75,7 +75,7 @@ def upload_to_platforms(video_path: str, title: str, description: str):
         account_nickname="Batch Upload",
         fp_profile_path=fp,
         niche="science facts",
-        language="English",
+        locale="en-US",
     )
 
     youtube.video_path = video_path

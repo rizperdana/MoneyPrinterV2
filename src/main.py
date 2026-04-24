@@ -60,15 +60,15 @@ def serve(port, host, open_browser):
 @cli.command("generate")
 @click.option("--account", default="auto", help="Account nickname/UUID or 'auto'")
 @click.option("--niche", required=True, help="Video topic niche")
-@click.option("--language", default="English", help="Content language")
+@click.option("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
 @click.option("--upload", is_flag=True, default=False, help="Upload after generation")
 @click.option("--for-kids", is_flag=True, default=False, help="Content for kids")
-def generate(account, niche, language, upload, for_kids):
+def generate(account, niche, locale, upload, for_kids):
     """Generate a video from a niche prompt."""
     from src.run_pipeline import run_pipeline
 
-    click.echo(f"🎬 Generating: {niche} (language: {language})")
-    result = run_pipeline(niche=niche, language=language, upload=upload)
+    click.echo(f"🎬 Generating: {niche} (locale: {locale})")
+    result = run_pipeline(niche=niche, language=locale, upload=upload)
     if result.get("video_path"):
         click.echo(f"✅ Video: {result['video_path']}")
     else:
@@ -99,7 +99,7 @@ def upload(account, filepath):
         account_nickname=account,
         fp_profile_path=fp_profile,
         niche="",
-        language="English",
+        locale="en-US",
     )
     yt.video_path = os.path.abspath(filepath)
     try:
@@ -146,10 +146,10 @@ def upload(account, filepath):
 @cli.command("run247")
 @click.option("--account", default="auto", help="Account nickname or UUID or 'auto'")
 @click.option("--niche", required=True, help="Video topic niche")
-@click.option("--language", default="English", help="Content language")
+@click.option("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
 @click.option("--interval", default=3600, help="Seconds between runs")
 @click.option("--upload", is_flag=True, default=True, help="Upload after generation")
-def run247(account, niche, language, interval, upload):
+def run247(account, niche, locale, interval, upload):
     """Run 24/7 generation loop."""
     import time
     from src.run_pipeline import run_pipeline
@@ -157,7 +157,7 @@ def run247(account, niche, language, interval, upload):
     click.echo(f"🔄 Starting 24/7 mode. Niche: {niche}, Interval: {interval}s")
     while True:
         try:
-            result = run_pipeline(niche=niche, language=language, upload=upload)
+            result = run_pipeline(niche=niche, language=locale, upload=upload)
             if result.get("video_path"):
                 click.echo(f"✅ Generated: {result['video_path']}")
             else:
@@ -180,8 +180,8 @@ def run247(account, niche, language, interval, upload):
     help="File with niches (one per line)",
 )
 @click.option("--count", default=1, help="Videos per niche")
-@click.option("--language", default="English", help="Content language")
-def batch(account, niches_file, count, language):
+@click.option("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
+def batch(account, niches_file, count, locale):
     """Batch generate videos from a niches file."""
     from src.run_pipeline import run_pipeline
 
@@ -195,7 +195,7 @@ def batch(account, niches_file, count, language):
     for niche in niches:
         for i in range(count):
             click.echo(f"\n{'=' * 50}\n🎬 Niche: {niche} ({i + 1}/{count})")
-            result = run_pipeline(niche=niche, language=language)
+            result = run_pipeline(niche=niche, language=locale)
             if result.get("video_path"):
                 click.echo(f"✅ {result['video_path']}")
             else:

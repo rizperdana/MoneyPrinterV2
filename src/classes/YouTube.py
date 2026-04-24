@@ -96,7 +96,7 @@ class YouTube:
         account_nickname: str,
         fp_profile_path: str,
         niche: str,
-        language: str,
+        locale: str = "en-US",
     ) -> None:
         """
         Constructor for YouTube Class.
@@ -106,7 +106,7 @@ class YouTube:
             account_nickname (str): The nickname for the YouTube account.
             fp_profile_path (str): Path to the firefox profile that is logged into the specificed YouTube Account.
             niche (str): The niche of the provided YouTube Channel.
-            language (str): The language of the Automation.
+            locale (str): BCP-47 locale code (e.g., "en-US", "id-ID").
 
         Returns:
             None
@@ -115,7 +115,7 @@ class YouTube:
         self._account_nickname: str = account_nickname
         self._fp_profile_path: str = fp_profile_path
         self._niche: str = niche
-        self._language: str = language
+        self._locale: str = locale
 
         self.images = []
         self._browser_initialized: bool = False
@@ -227,14 +227,14 @@ class YouTube:
         return self._niche
 
     @property
-    def language(self) -> str:
+    def locale(self) -> str:
         """
-        Getter Method for the language to use.
+        Getter Method for the locale to use.
 
         Returns:
-            language (str): The language
+            locale (str): The BCP-47 locale code
         """
-        return self._language
+        return self._locale
 
     def generate_response(self, prompt: str, model_name: str = None) -> str:
         """
@@ -859,7 +859,7 @@ RULES:
 - NO markdown, NO formatting, NO section labels
 - NO "welcome to this video" or "in this video"
 - NO call to action, NO "like and subscribe"
-- Write in {self.language}
+- Write in {self.locale}
 - Each sentence punchy (under 15 words, fits in 4-6 seconds)
 - SPECIFIC over VAGUE: say "300 million years ago" not "a long time ago", say "as fast as a bullet" not "very fast"
 
@@ -871,7 +871,7 @@ RULES:
 # - Multiple hooks: 2-3 per short (open, midpoint, close)
 
 Subject: {self.subject}
-Language: {self.language}
+Language: {self.locale}
 
 Return ONLY the raw script text. No labels, no numbering."""
 
@@ -881,6 +881,10 @@ Return ONLY the raw script text. No labels, no numbering."""
 
         # Apply regex to remove *
         completion = re.sub(r"\*", "", completion)
+
+        # Ensure SSML includes locale via xml:lang (BCP-47 code)
+        if completion.strip().startswith("<speak>") and "xml:lang" not in completion:
+            completion = completion.replace("<speak>", f'<speak xml:lang="{self.locale}">', 1)
 
         if not completion:
             error("The generated script is empty.")
@@ -2265,7 +2269,7 @@ Output format (one per line):
 
     def generate_video(self, tts_instance: TTS) -> str:
         """
-        Generates a YouTube Short based on the provided niche and language.
+        Generates a YouTube Short based on the provided niche and locale.
 
         Args:
             tts_instance (TTS): Instance of TTS Class.

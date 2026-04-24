@@ -61,7 +61,7 @@ def upload(account, filepath):
         account_nickname=account,
         fp_profile_path=fp_profile,
         niche="",
-        language="English",
+        locale="en-US",
     )
     yt.video_path = os.path.abspath(filepath)
     try:

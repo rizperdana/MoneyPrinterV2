@@ -74,13 +74,13 @@ Example (if niche is "cool animal facts"):
     return generate_response(trend_prompt, job="topic")
 
 
-def generate_script_response(subject: str, language: str, sentence_length: int) -> str:
+def generate_script_response(subject: str, locale: str, sentence_length: int) -> str:
     """
     Generate script for subject.
 
     Args:
         subject (str): The subject for the script.
-        language (str): The language for the script.
+        locale (str): BCP-47 locale code (e.g., en-US, id-ID).
         sentence_length (int): The number of sentences in the script.
 
     Returns:
@@ -149,12 +149,12 @@ CONSTRAINTS:
 - Each sentence wrapped in <prosody>...</prosody> or natural SSML
 - NO "welcome", NO "in this video", NO "subscribe"
 - NO markdown, NO numbering, NO bullet points
-- Write in {language}
+        - Write in {locale}
 - Make it SOUND LIKE A PERSON TALKING, not a textbook
 - Add simple sound effects as <break> tags or whispered segments
 
 Subject: {subject}
-Language: {language}
+Language: {locale}
 
 Return ONLY the SSML script wrapped in <speak> tags. No labels, no commentary."""
 
