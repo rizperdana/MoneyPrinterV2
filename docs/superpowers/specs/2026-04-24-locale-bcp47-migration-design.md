@@ -289,21 +289,19 @@ def update_account(account_id: int, **fields) -> bool:
 
 
 def add_video(
-    platform: str,
-    niche: str,
     topic: str,
     title: str,
-    description: str,
-    script: str,
-    tags: list,
-    file_path: str,
-    thumbnail_path: str,
-    platform_video_id: str,
-    platform,
-    file_path,
-    locale,         # <-- renamed from language
-    for_kids: bool,
-    account_id: int,
+    script: Optional[str] = None,
+    platform: str = "youtube",
+    file_path: Optional[str] = None,
+    niche: str = "",
+    description: Optional[str] = None,
+    tags: Optional[str] = None,
+    category: Optional[str] = None,
+    account: Optional[str] = None,
+    locale: str = "en-US",  # was: language: str = "English"
+    for_kids: bool = False,
+    account_id: Optional[int] = None,
 ) -> int:
     """Insert video record."""
 ```
@@ -402,15 +400,29 @@ LOCALE_TO_COUNTRY = {
     "ro-RO": "RO", "uk-UA": "UA",
 }
 
-def research_topic(
-    topic: str,
+# Add locale param to search_tavily (line 11)
+def search_tavily(
+    query: str,
     niche: str,
-    locale: str = "en-US",   # NEW param
-    for_kids: bool = False,
+    locale: str = "en-US",
+    max_results: int = 8,
 ) -> str:
     # Map locale -> country code for Tavily
     country = LOCALE_TO_COUNTRY.get(locale, "US")
-    # tavily_search(query=..., country=country)
+    # tavily_search(query=query, niche=niche, country=country, max_results=max_results)
+
+    ...
+
+# Add locale param to search_exa (line 47)
+def search_exa(
+    query: str,
+    niche: str,
+    locale: str = "en-US",
+    num_results: int = 8,
+) -> str:
+    country = LOCALE_TO_COUNTRY.get(locale, "US")
+    # exa_search_exa(query=query, includeDomains=...)
+    ...
 ```
 
 ---
