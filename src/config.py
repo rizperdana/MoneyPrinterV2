@@ -3,11 +3,16 @@ import sys
 import json
 import platform
 import srt_equalizer
+from typing import Optional
 
 from termcolor import colored
 
 # Always use project root (parent of src folder)
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Allow imports from project root (src.db, etc.)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
 # DB-based settings cache (lazy-loaded, avoids circular import with db.py)
 _settings_cache: dict | None = None
@@ -310,18 +315,20 @@ def get_languagevoices() -> dict:
 
 def set_languagevoices(mapping: dict) -> None:
     """Sets the per-language TTS voice mapping."""
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
     from src.db import set_setting, reload_settings
-    set_setting("languagevoices", json.dumps(mapping))
-    # Clear config's cache so get_languagevoices() sees new value
-    global _settings_cache
-    _settings_cache = None
-    reload_settings()  # Clear db's cache too
+    try:
+        set_setting("languagevoices", json.dumps(mapping))
+        # Clear config's cache so get_languagevoices() sees new value
+        global _settings_cache
+        _settings_cache = None
+        reload_settings()  # Clear db's cache too
+    except Exception as e:
+        from status import error
+        error(f"Failed to save languagevoices: {e}")
+        return
 
 
-def get_tts_voice(language: str = None) -> str:
+def get_tts_voice(language: Optional[str] = None) -> str:
     """
     Gets the TTS voice for a given language.
 
@@ -333,21 +340,19 @@ def get_tts_voice(language: str = None) -> str:
     """
     if language:
         langvoices = get_languagevoices()
-        # Try exact match, then case-insensitive
+        # Try exact match, then case-insensitive lookup via normalized dict
         voice = langvoices.get(language)
         if not voice:
-            # Case-insensitive search
-            for lang, v in langvoices.items():
-                if lang.lower() == language.lower():
-                    voice = v
-                    break
+            # Build lowercase lookup (O(1) after first hit per call)
+            lower_map = {k.lower(): v for k, v in langvoices.items()}
+            voice = lower_map.get(language.lower())
         if voice:
             return voice
 
     return get_default_tts_voice()
 
 
-def set_tts_voice(voice: str, language: str = None) -> None:
+def set_tts_voice(voice: str, language: Optional[str] = None) -> None:
     """
     Sets the TTS voice. If language is None, sets the default voice.
     If language is provided, sets the voice for that language.
@@ -361,11 +366,13 @@ def set_tts_voice(voice: str, language: str = None) -> None:
         langvoices[language] = voice
         set_languagevoices(langvoices)
     else:
-        import sys
-        import os
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
         from src.db import set_setting
-        set_setting("tts_voice", voice)
+        try:
+            set_setting("tts_voice", voice)
+        except Exception as e:
+            from status import error
+            error(f"Failed to save default TTS voice: {e}")
+            return
         # Clear config cache
         global _settings_cache
         _settings_cache = None

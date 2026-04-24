@@ -5,7 +5,7 @@ from typing import Optional
 
 ROOT_DIR = str(Path(__file__).parent.parent)
 
-import status
+from . import status
 
 info = status.info
 success = status.success
@@ -202,8 +202,8 @@ def init_db() -> None:
                 "Javanese": "jv-ID-DimasNeural",
                 "Sundanese": "su-ID-JajangNeural"
             }))
-    except Exception:
-        pass
+    except (sqlite3.OperationalError, KeyError) as e:
+        error(f"Failed to pre-populate languagevoices: {e}")
 
 
 def add_topic(topic: str, niche: str, account: Optional[str] = None) -> int:
