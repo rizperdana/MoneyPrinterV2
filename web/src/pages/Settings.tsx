@@ -9,6 +9,22 @@ import { Separator } from "@/components/ui/separator"
 import { Settings as SettingsIcon, Eye, EyeOff, Save } from "lucide-react"
 import { toast } from "sonner"
 
+const BCP47_LOCALES = [
+  { value: "en-US", label: "English (en-US)" },
+  { value: "id-ID", label: "Indonesian (id-ID)" },
+  { value: "ms-MY", label: "Malay (ms-MY)" },
+  { value: "jv-ID", label: "Javanese (jv-ID)" },
+  { value: "su-ID", label: "Sundanese (su-ID)" },
+  { value: "ja-JP", label: "Japanese (ja-JP)" },
+  { value: "ko-KR", label: "Korean (ko-KR)" },
+  { value: "zh-CN", label: "Chinese (zh-CN)" },
+  { value: "hi-IN", label: "Hindi (hi-IN)" },
+  { value: "es-ES", label: "Spanish (es-ES)" },
+  { value: "fr-FR", label: "French (fr-FR)" },
+  { value: "de-DE", label: "German (de-DE)" },
+  { value: "pt-PT", label: "Portuguese (pt-PT)" },
+]
+
 function ApiKeyField({
   label,
   name,
@@ -90,7 +106,8 @@ export default function Settings() {
         "threads",
         "verbose",
         "script_sentence_length",
-        "languagevoices",
+        "localevoices",
+        "default_locale",
       ]
       // Add model selections and fallback chains
       for (const job of Object.keys(modelRouting)) {
@@ -345,26 +362,40 @@ export default function Settings() {
                   </select>
                 </div>
 
+                {/* Default Locale */}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Default Locale</span>
+                  <select
+                    value={String(config.default_locale || "en-US")}
+                    onChange={(e) => updateField("default_locale", e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                  >
+                    {BCP47_LOCALES.map((l) => (
+                      <option key={l.value} value={l.value}>{l.label}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Indonesian voices */}
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Indonesian</span>
+                  <span className="text-xs text-muted-foreground">id-ID (Indonesian)</span>
                   <select
                     value={String(
                       (() => {
                         try {
-                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
-                          return lv?.Indonesian || "id-ID-GadisNeural";
+                          const lv = typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : config.localevoices;
+                          return lv?.["id-ID"] || "id-ID-GadisNeural";
                         } catch { return "id-ID-GadisNeural"; }
                       })()
                     )}
                     onChange={(e) => {
                       const lv = (() => {
                         try {
-                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                          return typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : (config.localevoices || {});
                         } catch { return {}; }
                       })();
-                      lv["Indonesian"] = e.target.value;
-                      updateField("languagevoices", lv);
+                      lv["id-ID"] = e.target.value;
+                      updateField("localevoices", lv);
                     }}
                     className="w-full px-3 py-2 border rounded-md bg-background text-sm"
                   >
@@ -375,24 +406,24 @@ export default function Settings() {
 
                 {/* Malay voices */}
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Malay</span>
+                  <span className="text-xs text-muted-foreground">ms-MY (Malay)</span>
                   <select
                     value={String(
                       (() => {
                         try {
-                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
-                          return lv?.Malay || "ms-MY-OsmanNeural";
+                          const lv = typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : config.localevoices;
+                          return lv?.["ms-MY"] || "ms-MY-OsmanNeural";
                         } catch { return "ms-MY-OsmanNeural"; }
                       })()
                     )}
                     onChange={(e) => {
                       const lv = (() => {
                         try {
-                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                          return typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : (config.localevoices || {});
                         } catch { return {}; }
                       })();
-                      lv["Malay"] = e.target.value;
-                      updateField("languagevoices", lv);
+                      lv["ms-MY"] = e.target.value;
+                      updateField("localevoices", lv);
                     }}
                     className="w-full px-3 py-2 border rounded-md bg-background text-sm"
                   >
@@ -403,24 +434,24 @@ export default function Settings() {
 
                 {/* Javanese voices */}
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Javanese</span>
+                  <span className="text-xs text-muted-foreground">jv-ID (Javanese)</span>
                   <select
                     value={String(
                       (() => {
                         try {
-                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
-                          return lv?.Javanese || "jv-ID-DimasNeural";
+                          const lv = typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : config.localevoices;
+                          return lv?.["jv-ID"] || "jv-ID-DimasNeural";
                         } catch { return "jv-ID-DimasNeural"; }
                       })()
                     )}
                     onChange={(e) => {
                       const lv = (() => {
                         try {
-                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                          return typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : (config.localevoices || {});
                         } catch { return {}; }
                       })();
-                      lv["Javanese"] = e.target.value;
-                      updateField("languagevoices", lv);
+                      lv["jv-ID"] = e.target.value;
+                      updateField("localevoices", lv);
                     }}
                     className="w-full px-3 py-2 border rounded-md bg-background text-sm"
                   >
@@ -431,24 +462,24 @@ export default function Settings() {
 
                 {/* Sundanese voices */}
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground">Sundanese</span>
+                  <span className="text-xs text-muted-foreground">su-ID (Sundanese)</span>
                   <select
                     value={String(
                       (() => {
                         try {
-                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
-                          return lv?.Sundanese || "su-ID-JajangNeural";
+                          const lv = typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : config.localevoices;
+                          return lv?.["su-ID"] || "su-ID-JajangNeural";
                         } catch { return "su-ID-JajangNeural"; }
                       })()
                     )}
                     onChange={(e) => {
                       const lv = (() => {
                         try {
-                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                          return typeof config.localevoices === 'string' ? JSON.parse(config.localevoices) : (config.localevoices || {});
                         } catch { return {}; }
                       })();
-                      lv["Sundanese"] = e.target.value;
-                      updateField("languagevoices", lv);
+                      lv["su-ID"] = e.target.value;
+                      updateField("localevoices", lv);
                     }}
                     className="w-full px-3 py-2 border rounded-md bg-background text-sm"
                   >

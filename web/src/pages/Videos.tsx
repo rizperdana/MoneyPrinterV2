@@ -185,7 +185,7 @@ export default function Videos() {
                     <div className="flex-1">
                       <h3 className="font-medium">{video.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Niche: {video.niche || "?"} | Platform: {video.platform} | Lang: {video.language || "?"}
+                        Niche: {video.niche || "?"} | Platform: {video.platform} | Locale: {video.locale || video.language || "?"}
                       </p>
                       {video.tags && (
                         <p className="text-sm text-muted-foreground mt-1">
@@ -292,8 +292,8 @@ export default function Videos() {
                   <span>{detailVideo.platform}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Language: </span>
-                  <span>{detailVideo.language || "?"}</span>
+                  <span className="text-muted-foreground">Locale: </span>
+                  <span>{detailVideo.locale || detailVideo.language || "?"}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Created: </span>

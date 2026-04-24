@@ -17,24 +17,24 @@ import {
 } from "@/components/ui/select"
 import { Video, Square } from "lucide-react"
 
-const LANGUAGES = [
-  { value: "English", label: "English" },
-  { value: "Spanish", label: "Spanish" },
-  { value: "French", label: "French" },
-  { value: "German", label: "German" },
-  { value: "Portuguese", label: "Portuguese" },
-  { value: "Indonesian", label: "Indonesian" },
-  { value: "Japanese", label: "Japanese" },
-  { value: "Korean", label: "Korean" },
-  { value: "Chinese", label: "Chinese" },
-  { value: "Hindi", label: "Hindi" },
+const LOCALES = [
+  { value: "en-US", label: "English (en-US)" },
+  { value: "es-ES", label: "Spanish (es-ES)" },
+  { value: "fr-FR", label: "French (fr-FR)" },
+  { value: "de-DE", label: "German (de-DE)" },
+  { value: "pt-PT", label: "Portuguese (pt-PT)" },
+  { value: "id-ID", label: "Indonesian (id-ID)" },
+  { value: "ja-JP", label: "Japanese (ja-JP)" },
+  { value: "ko-KR", label: "Korean (ko-KR)" },
+  { value: "zh-CN", label: "Chinese (zh-CN)" },
+  { value: "hi-IN", label: "Hindi (hi-IN)" },
 ]
 
 export default function Generate() {
   const [accounts, setAccounts] = useState<AccountData[]>([])
   const [account, setAccount] = useState("auto")
   const [niche, setNiche] = useState("")
-  const [language, setLanguage] = useState("English")
+  const [locale, setLocale] = useState("en-US")
   const [forKids, setForKids] = useState(false)
   const [autoUpload, setAutoUpload] = useState(false)
   const [jobId, setJobId] = useState<string | null>(null)
@@ -64,7 +64,7 @@ export default function Generate() {
       const res = await api.generate({
         account,
         niche: niche.trim(),
-        language,
+        locale,
         for_kids: forKids,
         auto_upload: autoUpload,
       })
@@ -73,7 +73,7 @@ export default function Generate() {
       console.error("Generate failed:", err)
       setIsRunning(false)
     }
-  }, [account, niche, language, forKids, autoUpload])
+  }, [account, niche, locale, forKids, autoUpload])
 
   const handleStop = useCallback(async () => {
     if (jobId) {
@@ -136,17 +136,17 @@ export default function Generate() {
 
             <div className="space-y-2">
               <Label>Language</Label>
-              <Select defaultValue="English" onValueChange={setLanguage}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((l) => (
-                    <SelectItem key={l.value} value={l.value}>
-                      {l.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+              <Select defaultValue="en-US" onValueChange={setLocale}>
+              <SelectTrigger>
+              <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+              {LOCALES.map((l) => (
+              <SelectItem key={l.value} value={l.value}>
+              {l.label}
+              </SelectItem>
+              ))}
+              </SelectContent>
               </Select>
             </div>
 
