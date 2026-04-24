@@ -73,7 +73,7 @@ def run_pipeline(
             info(f"Using LLM model: {model}")
 
         # Initialize TTS
-        tts = TTS()
+        tts = TTS(language=language)
 
         # Initialize YouTube
         youtube = YouTube.__new__(YouTube)
