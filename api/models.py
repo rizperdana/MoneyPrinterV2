@@ -21,6 +21,7 @@ class AccountCreate(BaseModel):
     username: str
     nickname: str | None = None
     topic: str | None = None
+    language: str = "English"
 
 
 class AccountUpdate(BaseModel):

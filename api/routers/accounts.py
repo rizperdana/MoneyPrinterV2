@@ -81,6 +81,7 @@ async def create_account(body: AccountCreate):
         username=body.username,
         nickname=body.nickname,
         topic=body.topic,
+        language=body.language,
     )
     return {"id": account_id, "status": "created"}
 

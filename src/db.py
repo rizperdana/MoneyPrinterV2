@@ -584,6 +584,7 @@ def add_account(
     nickname: Optional[str] = None,
     topic: Optional[str] = None,
     topics: Optional[str] = None,
+    language: str = "English",
 ) -> int:
     """
     Insert an account record.
@@ -595,6 +596,7 @@ def add_account(
         profile_path: Optional path to profile
         niche: Optional niche/topic for the account
         topics: Optional JSON string of topics list
+        language: Account language (default: English)
 
     Returns:
         The row ID of the inserted account
@@ -604,8 +606,8 @@ def add_account(
 
     # Note: profile_path removed - stored in config.json or OAuth credentials instead
     cursor.execute(
-        "INSERT INTO accounts (platform, username, nickname, topic) VALUES (?, ?, ?, ?)",
-        (platform, username, nickname or "", topic or ""),
+        "INSERT INTO accounts (platform, username, nickname, topic, language) VALUES (?, ?, ?, ?, ?)",
+        (platform, username, nickname or "", topic or "", language),
     )
     conn.commit()
     account_id = cursor.lastrowid
