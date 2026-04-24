@@ -15,7 +15,7 @@ from utils import close_running_selenium_instances, build_url, choose_random_son
 from utils_audio import load_speech_windows, make_volume_func
 from cache import get_accounts, add_account, get_youtube_cache_path
 from db import add_video as db_add_video
-from .Tts import TTS
+from src.classes.Tts import TTS
 from llm_provider import generate_text, get_model_for_job
 from config import (
     ROOT_DIR,

@@ -6,7 +6,7 @@ from typing import Optional
 
 ROOT_DIR = str(Path(__file__).parent.parent)
 
-from . import status
+from src import status
 
 info = status.info
 success = status.success

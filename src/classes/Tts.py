@@ -2,7 +2,7 @@ import os
 
 from config import ROOT_DIR, get_tts_voice
 
-from .EdgeTts import EdgeTTS
+from src.classes.EdgeTts import EdgeTTS
 
 
 class TTS:
