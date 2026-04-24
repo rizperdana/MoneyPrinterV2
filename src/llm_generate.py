@@ -122,7 +122,20 @@ PROSODY DECISION RULES — decide per script based on topic emotional tone:
 - HUMOR/WITTY: faster rate with pitch variation, natural breaks at punchline timing
   Example: <prosody rate="fast" pitch="+3st">So I tried that trick and... [pause] it worked!</prosody>
 - QUESTIONS: raised pitch on question word, pause before answer
-  Example: Did you know <prosody pitch="+5st">sharks</prosody> could detect your heartbeat?
+Example: Did you know <prosody pitch="+5st">sharks</prosody> could detect your heartbeat?
+
+INDONESIAN-SPECIFIC GUIDANCE (for id-ID voices like ArdiNeural, GadisNeural):
+- Indonesian is a stress-timed language with consistent syllable timing
+- Use rate="85-95%" (Indonesian doesn't have English-style stress emphasis — slower than English default)
+- Use pitch adjustments sparingly — Indonesian uses only negative pitch: -1st to -2st maximum
+- Prefer <break time="200-400ms"> over prosody rate changes for pacing
+- Use <emphasis level="moderate"> instead of "strong" — heavy emphasis sounds unnatural in Indonesian
+- Keep sentences shorter (6-10 words) — Indonesian syntax is head-final
+- ALWAYS wrap Indonesian SSML with xml:lang="id-ID" attribute: <speak version="1.0" xml:lang="id-ID">
+
+MALAY-SPECIFIC GUIDANCE (for ms-MY voices):
+- Similar phonology to Indonesian — apply similar rules
+- Rate: 85-95%, pitch: -1st to -2st maximum
 
 STRUCTURE:
 1. HOOK (first sentence): Grab attention with surprising fact + appropriate prosody
