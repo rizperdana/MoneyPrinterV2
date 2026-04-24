@@ -187,17 +187,19 @@ def fetch_wikipedia():
     return []
 
 
-def fetch_google_trends(geo="US"):
+def fetch_google_trends(locale: str = "en-US"):
     """
     Fetch Google Trends RSS.
 
     Args:
-        geo (str): Geographic region
+        locale (str): BCP-47 locale code (e.g., "en-US", "id-ID")
 
     Returns:
         list: List of (title, content) tuples
     """
     try:
+        # Map locale to ISO 3166-1 alpha-2 country code
+        geo = LOCALE_TO_COUNTRY.get(locale, "US") if locale else "US"
         trends_url = f"https://trends.google.com/trending/rss?geo={geo}"
         resp = requests.get(
             trends_url, timeout=5, headers={"User-Agent": "Mozilla/5.0"}
@@ -338,8 +340,7 @@ def research_trending_topics(niche: str, locale: str = None) -> str:
 
     # Method 5: Google Trends RSS
     info("   🔍 Fetching Google Trends...")
-    for geo in ["US", ""]:
-        topics_found = fetch_google_trends(geo)
+    topics_found = fetch_google_trends(locale)
         if topics_found:
             context_parts.append(
                 f"Google Trends ({geo or 'Global'}):\n"

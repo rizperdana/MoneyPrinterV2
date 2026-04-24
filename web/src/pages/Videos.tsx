@@ -184,9 +184,9 @@ export default function Videos() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-medium">{video.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Niche: {video.niche || "?"} | Platform: {video.platform} | Locale: {video.locale || video.language || "?"}
-                      </p>
+                        <p className="text-sm text-muted-foreground">
+                         Niche: {video.niche || "?"} | Platform: {video.platform} | Locale: {video.locale || "?"}
+                       </p>
                       {video.tags && (
                         <p className="text-sm text-muted-foreground mt-1">
                           Tags: {video.tags}
@@ -293,7 +293,7 @@ export default function Videos() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Locale: </span>
-                  <span>{detailVideo.locale || detailVideo.language || "?"}</span>
+                  <span>{detailVideo.locale || "?"}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Created: </span>

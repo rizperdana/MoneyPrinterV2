@@ -240,6 +240,30 @@ def init_db() -> None:
             cursor.execute("ALTER TABLE accounts DROP COLUMN language")
         except sqlite3.OperationalError:
             cursor.execute("ALTER TABLE accounts ADD COLUMN locale TEXT DEFAULT 'en-US'")
+    
+    # Migration: rename language column to locale (BCP-47) in videos table
+    try:
+        cursor.execute("SELECT locale FROM videos LIMIT 1")
+        # Already has locale, try to migrate data from language if exists
+        try:
+            cursor.execute("SELECT id, language FROM videos WHERE language IS NOT NULL AND language != '' AND (locale IS NULL OR locale = '')")
+            for video_id, lang in cursor.fetchall():
+                locale_val = LANGUAGE_TO_LOCALE.get(lang, lang)
+                cursor.execute("UPDATE videos SET locale = ? WHERE id = ?", (locale_val, video_id))
+            cursor.execute("ALTER TABLE videos DROP COLUMN language")
+        except sqlite3.OperationalError:
+            pass
+    except sqlite3.OperationalError:
+        try:
+            cursor.execute("SELECT language FROM videos LIMIT 1")
+            cursor.execute("ALTER TABLE videos ADD COLUMN locale TEXT DEFAULT 'en-US'")
+            cursor.execute("SELECT id, language FROM videos WHERE language IS NOT NULL AND language != ''")
+            for video_id, lang in cursor.fetchall():
+                locale_val = LANGUAGE_TO_LOCALE.get(lang, lang)
+                cursor.execute("UPDATE videos SET locale = ? WHERE id = ?", (locale_val, video_id))
+            cursor.execute("ALTER TABLE videos DROP COLUMN language")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE videos ADD COLUMN locale TEXT DEFAULT 'en-US'")
 
     info("Database initialized successfully")
 
@@ -472,9 +496,9 @@ def add_video(
         """
         INSERT INTO videos (
             topic_id, niche, account, title, description, script, tags, category,
-            platform, file_path, language, for_kids, account_id
+            platform, file_path, locale, for_kids, account_id
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """,
+        """,
         (
             topic_id,
             niche,

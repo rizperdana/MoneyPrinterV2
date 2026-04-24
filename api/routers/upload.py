@@ -125,7 +125,7 @@ async def upload_video_by_id(
     upload_job = job_manager.create(
         account=account.get("id", "unknown"),
         niche="",
-        language="",
+        locale="",
     )
     upload_job.status = JobStatus.running
 

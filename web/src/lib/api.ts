@@ -3,7 +3,7 @@ const BASE = "/api"
 export interface GenerateRequest {
   account: string
   niche: string
-  language: string
+  locale: string
   for_kids: boolean
   auto_upload: boolean
 }

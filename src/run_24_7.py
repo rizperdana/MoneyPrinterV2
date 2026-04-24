@@ -68,7 +68,7 @@ def setup_logging(output_dir: str) -> logging.Logger:
 
 
 def run_single_video(
-    niche: str, output_dir: str, logger: logging.Logger, upload: bool = False, language: str = "English"
+    niche: str, output_dir: str, logger: logging.Logger, upload: bool = False, locale: str = "en-US"
 ) -> dict:
     """Run the pipeline for a single video."""
     from run_pipeline import run_pipeline
@@ -77,10 +77,10 @@ def run_single_video(
     video_dir = os.path.join(output_dir, timestamp)
     os.makedirs(video_dir, exist_ok=True)
 
-    logger.info(f"Starting video: {niche} (lang={language})")
+    logger.info(f"Starting video: {niche} (locale={locale})")
 
     try:
-        result = run_pipeline(niche=niche, locale=language, upload=upload)
+        result = run_pipeline(niche=niche, locale=locale, upload=upload)
 
         if result.get("video_path"):
             # Move video to output directory
@@ -204,7 +204,7 @@ def main():
     
     logger.info(f"Accounts loaded: {len(accounts)}")
     for a in accounts:
-        logger.info(f"  - {a['username']}: {a.get('topic')} (lang: {a.get('locale') or default_language})")
+        logger.info(f"  - {a['username']}: {a.get('topic')} (locale: {a.get('locale') or default_language})")
 
     # Round-robin state
     account_index = 0
@@ -221,7 +221,7 @@ def main():
             account_index += 1
             
             topic = account.get("topic")
-            language = account.get("locale") or default_language
+            locale = account.get("locale") or default_language
             account_name = account.get("username")
             
             if not topic:
@@ -232,7 +232,7 @@ def main():
             logger.info(f"Video #{video_count + 1}")
             logger.info(f"Account: {account_name}")
             logger.info(f"Topic: {topic}")
-            logger.info(f"Language: {language}")
+            logger.info(f"Locale: {locale}")
             logger.info(f"{'=' * 60}")
 
             # Check disk space before generating
@@ -245,8 +245,8 @@ def main():
 
             # Retry up to 3 times on failure
             result = None
-            for attempt in range(3):
-                result = run_single_video(topic, output_dir, logger, upload=args.upload, language=language)
+             for attempt in range(3):
+                result = run_single_video(topic, output_dir, logger, upload=args.upload, locale=locale)
                 if result.get("video_path"):
                     break
                 logger.warning(
@@ -263,7 +263,7 @@ def main():
                 vid = add_video(
                     niche=topic,
                     topic=topic,
-                    locale=language,
+                    locale=locale,
                     title=result.get("title", ""),
                     description=result.get("description", ""),
                     script=result.get("script", ""),

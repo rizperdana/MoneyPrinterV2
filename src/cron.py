@@ -102,7 +102,7 @@ def main():
                     acc["nickname"],
                     acc["firefox_profile"],
                     acc["niche"],
-                    locale=acc["locale"] if "locale" in acc else acc.get("language", "en-US"),
+                    locale=acc["locale"],
                 )
 
                 # Get recent topics for LLM dedup context

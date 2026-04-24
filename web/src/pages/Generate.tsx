@@ -135,7 +135,7 @@ export default function Generate() {
             </div>
 
             <div className="space-y-2">
-              <Label>Language</Label>
+              <Label>Locale</Label>
               <Select defaultValue="en-US" onValueChange={setLocale}>
               <SelectTrigger>
               <SelectValue />

@@ -152,7 +152,7 @@ def main():
             # Run pipeline (without upload - we'll upload separately)
             result = run_pipeline(
                 niche=niche,
-                language="English",
+                locale="en-US",
                 upload=False,  # Generate only first
             )
 
