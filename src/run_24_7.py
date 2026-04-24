@@ -68,7 +68,7 @@ def setup_logging(output_dir: str) -> logging.Logger:
 
 
 def run_single_video(
-    niche: str, output_dir: str, logger: logging.Logger, upload: bool = False
+    niche: str, output_dir: str, logger: logging.Logger, upload: bool = False, language: str = "English"
 ) -> dict:
     """Run the pipeline for a single video."""
     from run_pipeline import run_pipeline
@@ -77,10 +77,10 @@ def run_single_video(
     video_dir = os.path.join(output_dir, timestamp)
     os.makedirs(video_dir, exist_ok=True)
 
-    logger.info(f"Starting video: {niche}")
+    logger.info(f"Starting video: {niche} (lang={language})")
 
     try:
-        result = run_pipeline(niche=niche, language="English", upload=upload)
+        result = run_pipeline(niche=niche, language=language, upload=upload)
 
         if result.get("video_path"):
             # Move video to output directory
@@ -246,7 +246,7 @@ def main():
             # Retry up to 3 times on failure
             result = None
             for attempt in range(3):
-                result = run_single_video(topic, output_dir, logger, upload=args.upload)
+                result = run_single_video(topic, output_dir, logger, upload=args.upload, language=language)
                 if result.get("video_path"):
                     break
                 logger.warning(
