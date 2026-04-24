@@ -87,7 +87,7 @@ def get_next_topic(account, state):
     return topic
 
 
-def add_video(niche, language, topic, title, description, script, tags, video_path, platform="youtube", account=None):
+def add_video(niche, locale, topic, title, description, script, tags, video_path, platform="youtube", account=None):
     """Add a generated video to the DB."""
     from src.db import add_video as db_add_video
     return db_add_video(
@@ -100,7 +100,7 @@ def add_video(niche, language, topic, title, description, script, tags, video_pa
         tags=",".join(tags) if tags else "",
         platform=platform,
         file_path=video_path,
-        language=language,
+        locale=locale,
     )
 
 
@@ -119,7 +119,7 @@ def main():
     # Pick the account with fewest runs (round-robin across accounts too)
     account = min(accounts, key=lambda a: state.get("last_index", {}).get(a["id"], -1))
     topic = get_next_topic(account, state)
-    language = account.get("language", "English")
+    locale = account.get("locale", "en-US")
     account_id = account.get("id")
 
     logger.info(f"=== Run #{state['total_runs'] + 1} ===")
@@ -136,7 +136,7 @@ def main():
     try:
         result = run_pipeline(
             niche=topic,
-            language=language,
+            locale=locale,
             upload=True,  # Always upload
             headless=True,
         )
@@ -149,7 +149,7 @@ def main():
             # Persist to DB
             vid = add_video(
                 niche=topic,
-                language=language,
+                locale=locale,
                 topic=topic,
                 title=result.get("title", ""),
                 description=result.get("description", ""),

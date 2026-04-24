@@ -8,7 +8,26 @@ from llm_provider import generate_text, get_model_for_job
 from status import warning, info
 
 
-def search_tavily(query, niche, max_results=8):
+# BCP-47 locale to 2-letter country code (ISO 3166-1 alpha-2)
+LOCALE_TO_COUNTRY = {
+    "en-US": "US",
+    "en-GB": "GB",
+    "id-ID": "ID",
+    "ms-MY": "MY",
+    "jv-ID": "ID",
+    "su-ID": "ID",
+    "ja-JP": "JP",
+    "ko-KR": "KR",
+    "zh-CN": "CN",
+    "hi-IN": "IN",
+    "es-ES": "ES",
+    "fr-FR": "FR",
+    "de-DE": "DE",
+    "pt-PT": "PT",
+}
+
+
+def search_tavily(query, niche, max_results=8, locale=None):
     """
     Search Tavily for trending topics.
 
@@ -26,11 +45,15 @@ def search_tavily(query, niche, max_results=8):
         api_key = os.environ.get("TAVILY_API_KEY", "")
         if api_key:
             tavily_client = TavilyClient(api_key=api_key)
-            response = tavily_client.search(
-                query=query,
-                max_results=max_results,
-                include_answer=True,
-            )
+            # Use country code for locale if available
+            search_kwargs = {
+                "query": query,
+                "max_results": max_results,
+                "include_answer": True,
+            }
+            if locale and locale in LOCALE_TO_COUNTRY:
+                search_kwargs["country"] = LOCALE_TO_COUNTRY[locale]
+            response = tavily_client.search(**search_kwargs)
             if response.get("results"):
                 results = []
                 for r in response["results"][:max_results]:
@@ -44,7 +67,7 @@ def search_tavily(query, niche, max_results=8):
     return []
 
 
-def search_exa(query, niche, num_results=8):
+def search_exa(query, niche, num_results=8, locale=None):
     """
     Search Exa for trending topics.
 
@@ -62,11 +85,14 @@ def search_exa(query, niche, num_results=8):
         api_key = os.environ.get("EXA_API_KEY", "")
         if api_key:
             exa = Exa(api_key=api_key)
-            response = exa.search(
-                query,
-                num_results=num_results,
-                type="neural",
-            )
+            search_kwargs = {
+                "query": query,
+                "num_results": num_results,
+                "type": "neural",
+            }
+            if locale and locale in LOCALE_TO_COUNTRY:
+                search_kwargs["country"] = LOCALE_TO_COUNTRY[locale]
+            response = exa.search(**search_kwargs)
             if response.results:
                 results = []
                 for r in response.results:
@@ -228,7 +254,7 @@ def search_firecrawl(query, limit=8):
     return []
 
 
-def research_trending_topics(niche: str) -> str:
+def research_trending_topics(niche: str, locale: str = None) -> str:
     """
     Researches trending topics with dynamic, unique queries.
     Priority: Tavily -> Exa -> ddgs -> Wikipedia -> Google RSS -> Firecrawl
@@ -269,7 +295,7 @@ def research_trending_topics(niche: str) -> str:
     # Method 1: Tavily
     info("   🔍 Searching Tavily...")
     query = random.choice(dynamic_queries)
-    topics_found = search_tavily(query, niche, max_results=8)
+    topics_found = search_tavily(query, niche, max_results=8, locale=locale)
     if topics_found:
         context_parts.append(
             f"Tavily ({query[:40]}):\n"
@@ -280,7 +306,7 @@ def research_trending_topics(niche: str) -> str:
     # Method 2: Exa
     info("   🔍 Searching Exa...")
     query = random.choice(dynamic_queries)
-    topics_found = search_exa(query, niche, num_results=8)
+    topics_found = search_exa(query, niche, num_results=8, locale=locale)
     if topics_found:
         context_parts.append(
             f"Exa ({query[:40]}):\n"

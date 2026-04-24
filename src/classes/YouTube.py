@@ -252,17 +252,16 @@ class YouTube:
         print(f"[✅ LLM] Generated {len(result)} chars")
         return result
 
-    def _research_trending_topics(self) -> str:
+    def _research_trending_topics(self, locale: str = None) -> str:
         """
         Researches trending topics with dynamic, unique queries.
         Priority: Tavily -> Exa -> ddgs -> Wikipedia -> Google RSS -> Firecrawl
         Uses randomized angles to ensure unique results every time.
+        If locale is provided, bias search towards that locale's region.
         """
         import random
-        from datetime import datetime
-
-        context_parts = []
-        now = datetime.now()
+        from src.research import research_trending_topics as _research
+        return _research(niche=self._niche, locale=locale)
 
         # Generate dynamic angle modifiers for unique research
         angle_modifiers = [
@@ -550,7 +549,7 @@ class YouTube:
                 info(f" => Using extracted facts for topic: {extracted_facts.get('extraction_note', 'none')}")
         else:
             # Fallback: research now if no facts provided
-            research_context = self._research_trending_topics()
+            research_context = self._research_trending_topics(self._locale)
 
         if research_context:
             if get_verbose():
