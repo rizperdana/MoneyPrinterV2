@@ -90,6 +90,7 @@ export default function Settings() {
         "threads",
         "verbose",
         "script_sentence_length",
+        "languagevoices",
       ]
       // Add model selections and fallback chains
       for (const job of Object.keys(modelRouting)) {
@@ -321,12 +322,140 @@ export default function Settings() {
           <h2 className="text-lg font-semibold mb-4">Generation Defaults</h2>
           <Card>
             <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2">
-                <Label>TTS Voice</Label>
-                <Input
-                  value={String(config.tts_voice || "")}
-                  onChange={(e) => updateField("tts_voice", e.target.value)}
-                />
+              {/* TTS Voice Section — Per-Language */}
+              <div className="space-y-4">
+                <Label>TTS Voices by Language</Label>
+                <p className="text-xs text-muted-foreground">
+                  Configure the voice used for each language. Indonesian voices: id-ID-ArdiNeural (M), id-ID-GadisNeural (F).
+                </p>
+
+                {/* Default voice */}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Default (English)</span>
+                  <select
+                    value={String(config.tts_voice || "en-US-JennyNeural")}
+                    onChange={(e) => updateField("tts_voice", e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                  >
+                    <option value="en-US-JennyNeural">en-US-JennyNeural (Female)</option>
+                    <option value="en-US-GuyNeural">en-US-GuyNeural (Male)</option>
+                    <option value="en-US-StefanNeural">en-US-StefanNeural (Male)</option>
+                    <option value="en-GB-SoniaNeural">en-GB-SoniaNeural (Female)</option>
+                    <option value="en-GB-RyanNeural">en-GB-RyanNeural (Male)</option>
+                  </select>
+                </div>
+
+                {/* Indonesian voices */}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Indonesian</span>
+                  <select
+                    value={String(
+                      (() => {
+                        try {
+                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
+                          return lv?.Indonesian || "id-ID-ArdiNeural";
+                        } catch { return "id-ID-ArdiNeural"; }
+                      })()
+                    )}
+                    onChange={(e) => {
+                      const lv = (() => {
+                        try {
+                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                        } catch { return {}; }
+                      })();
+                      lv["Indonesian"] = e.target.value;
+                      updateField("languagevoices", lv);
+                    }}
+                    className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                  >
+                    <option value="id-ID-ArdiNeural">id-ID-ArdiNeural (Male — Friendly, Positive)</option>
+                    <option value="id-ID-GadisNeural">id-ID-GadisNeural (Female — Friendly, Positive)</option>
+                  </select>
+                </div>
+
+                {/* Malay voices */}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Malay</span>
+                  <select
+                    value={String(
+                      (() => {
+                        try {
+                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
+                          return lv?.Malay || "ms-MY-OsmanNeural";
+                        } catch { return "ms-MY-OsmanNeural"; }
+                      })()
+                    )}
+                    onChange={(e) => {
+                      const lv = (() => {
+                        try {
+                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                        } catch { return {}; }
+                      })();
+                      lv["Malay"] = e.target.value;
+                      updateField("languagevoices", lv);
+                    }}
+                    className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                  >
+                    <option value="ms-MY-OsmanNeural">ms-MY-OsmanNeural (Male)</option>
+                    <option value="ms-MY-YasminNeural">ms-MY-YasminNeural (Female)</option>
+                  </select>
+                </div>
+
+                {/* Javanese voices */}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Javanese</span>
+                  <select
+                    value={String(
+                      (() => {
+                        try {
+                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
+                          return lv?.Javanese || "jv-ID-DimasNeural";
+                        } catch { return "jv-ID-DimasNeural"; }
+                      })()
+                    )}
+                    onChange={(e) => {
+                      const lv = (() => {
+                        try {
+                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                        } catch { return {}; }
+                      })();
+                      lv["Javanese"] = e.target.value;
+                      updateField("languagevoices", lv);
+                    }}
+                    className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                  >
+                    <option value="jv-ID-DimasNeural">jv-ID-DimasNeural (Male)</option>
+                    <option value="jv-ID-SitiNeural">jv-ID-SitiNeural (Female)</option>
+                  </select>
+                </div>
+
+                {/* Sundanese voices */}
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Sundanese</span>
+                  <select
+                    value={String(
+                      (() => {
+                        try {
+                          const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
+                          return lv?.Sundanese || "su-ID-JajangNeural";
+                        } catch { return "su-ID-JajangNeural"; }
+                      })()
+                    )}
+                    onChange={(e) => {
+                      const lv = (() => {
+                        try {
+                          return typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : (config.languagevoices || {});
+                        } catch { return {}; }
+                      })();
+                      lv["Sundanese"] = e.target.value;
+                      updateField("languagevoices", lv);
+                    }}
+                    className="w-full px-3 py-2 border rounded-md bg-background text-sm"
+                  >
+                    <option value="su-ID-JajangNeural">su-ID-JajangNeural (Male)</option>
+                    <option value="su-ID-TutiNeural">su-ID-TutiNeural (Female)</option>
+                  </select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Script Sentence Length</Label>
