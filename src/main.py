@@ -68,7 +68,7 @@ def generate(account, niche, locale, upload, for_kids):
     from src.run_pipeline import run_pipeline
 
     click.echo(f"🎬 Generating: {niche} (locale: {locale})")
-    result = run_pipeline(niche=niche, language=locale, upload=upload)
+    result = run_pipeline(niche=niche, locale=locale, upload=upload)
     if result.get("video_path"):
         click.echo(f"✅ Video: {result['video_path']}")
     else:
@@ -157,7 +157,7 @@ def run247(account, niche, locale, interval, upload):
     click.echo(f"🔄 Starting 24/7 mode. Niche: {niche}, Interval: {interval}s")
     while True:
         try:
-            result = run_pipeline(niche=niche, language=locale, upload=upload)
+            result = run_pipeline(niche=niche, locale=locale, upload=upload)
             if result.get("video_path"):
                 click.echo(f"✅ Generated: {result['video_path']}")
             else:
@@ -195,7 +195,7 @@ def batch(account, niches_file, count, locale):
     for niche in niches:
         for i in range(count):
             click.echo(f"\n{'=' * 50}\n🎬 Niche: {niche} ({i + 1}/{count})")
-            result = run_pipeline(niche=niche, language=locale)
+            result = run_pipeline(niche=niche, locale=locale)
             if result.get("video_path"):
                 click.echo(f"✅ {result['video_path']}")
             else:

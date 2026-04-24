@@ -204,7 +204,7 @@ def main():
     
     logger.info(f"Accounts loaded: {len(accounts)}")
     for a in accounts:
-        logger.info(f"  - {a['username']}: {a.get('topic')} (lang: {a.get('language') or default_language})")
+        logger.info(f"  - {a['username']}: {a.get('topic')} (lang: {a.get('locale') or default_language})")
 
     # Round-robin state
     account_index = 0
@@ -221,7 +221,7 @@ def main():
             account_index += 1
             
             topic = account.get("topic")
-            language = account.get("language") or default_language
+            language = account.get("locale") or default_language
             account_name = account.get("username")
             
             if not topic:

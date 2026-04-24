@@ -3,7 +3,7 @@ MoneyPrinterV2 - Non-Interactive Pipeline Runner
 Runs the full YouTube Shorts pipeline end-to-end without user input.
 
 Usage:
-    python src/run_pipeline.py [--niche "science facts"] [--language English] [--upload]
+    python src/run_pipeline.py [--niche "science facts"] [--locale en-US] [--upload]
 
 Environment:
     CLIPROXY_API_KEY  - Required for LLM text generation
@@ -260,7 +260,7 @@ def main():
     parser.add_argument(
         "--niche", default="interesting science facts", help="Video niche/topic"
     )
-    parser.add_argument("--language", default="English", help="Content language")
+    parser.add_argument("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
     parser.add_argument(
         "--upload", action="store_true", help="Upload to YouTube after generation"
     )
@@ -275,7 +275,7 @@ def main():
 
     result = run_pipeline(
         niche=args.niche,
-        language=args.language,
+        locale=args.locale,
         upload=args.upload,
         headless=not args.no_headless,
     )

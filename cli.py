@@ -2,7 +2,7 @@
 MoneyPrinterV2 — CLI Entry Point
 
 Usage:
-    python cli.py generate --account "channel123" --niche "space mysteries" --language en
+    python cli.py generate --account "channel123" --niche "space mysteries" --locale en-US
     python cli.py serve --open
     python cli.py accounts list
 """
@@ -31,15 +31,13 @@ def cli():
 
 
 @cli.command()
-@click.option("--account", required=True, help="Account nickname or UUID")
-@click.option("--niche", required=True, help="Video topic niche")
-@click.option("--language", default="English", help="Content language")
+@click.option("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
 @click.option("--upload", is_flag=True, default=False, help="Upload after generation")
-def generate(account, niche, language, upload):
+def generate(account, niche, locale, upload):
     """Generate a video from a niche prompt."""
     from run_pipeline import run_pipeline
 
-    result = run_pipeline(niche=niche, language=language, upload=upload)
+    result = run_pipeline(niche=niche, locale=locale, upload=upload)
     if result.get("video_path"):
         click.echo(f"✅ Video: {result['video_path']}")
     else:
@@ -79,8 +77,10 @@ def upload(account, filepath):
 @cli.command()
 @click.option("--account", required=True, help="Account nickname or UUID")
 @click.option("--niche", required=True, help="Video topic niche")
+@click.option("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
 @click.option("--interval", default=3600, help="Seconds between runs")
-def run247(account, niche, interval):
+@click.option("--upload", is_flag=True, default=True, help="Upload after generation")
+def run247(account, niche, locale, interval, upload):
     """Run 24/7 generation loop."""
     import time
     from run_pipeline import run_pipeline
@@ -88,7 +88,7 @@ def run247(account, niche, interval):
     click.echo(f"🔄 Starting 24/7 mode. Niche: {niche}, Interval: {interval}s")
     while True:
         try:
-            result = run_pipeline(niche=niche, language="English", upload=True)
+            result = run_pipeline(niche=niche, locale=locale, upload=upload)
             if result.get("video_path"):
                 click.echo(f"✅ Generated: {result['video_path']}")
             else:
@@ -103,7 +103,8 @@ def run247(account, niche, interval):
 @click.option("--account", required=True, help="Account nickname or UUID")
 @click.option("--niches-file", required=True, type=click.Path(exists=True), help="File with niches (one per line)")
 @click.option("--count", default=1, help="Videos per niche")
-def batch(account, niches_file, count):
+@click.option("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
+def batch(account, niches_file, count, locale):
     """Batch generate videos from a niches file."""
     from run_pipeline import run_pipeline
 
@@ -115,7 +116,7 @@ def batch(account, niches_file, count):
     for niche in niches:
         for i in range(count):
             click.echo(f"\n{'='*50}\n🎬 Niche: {niche} ({i+1}/{count})")
-            result = run_pipeline(niche=niche, language="English")
+            result = run_pipeline(niche=niche, locale=locale)
             if result.get("video_path"):
                 click.echo(f"✅ {result['video_path']}")
             else:
