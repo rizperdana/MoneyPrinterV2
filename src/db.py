@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -11,6 +12,41 @@ info = status.info
 success = status.success
 error = status.error
 warning = status.warning
+
+# BCP-47 locale mapping from bare language names
+LANGUAGE_TO_LOCALE = {
+    "Indonesian": "id-ID",
+    "Javanese": "jv-ID",
+    "Sundanese": "su-ID",
+    "Malay": "ms-MY",
+    "Thai": "th-TH",
+    "Vietnamese": "vi-VN",
+    "Filipino": "fil-PH",
+    "Korean": "ko-KR",
+    "Japanese": "ja-JP",
+    "Chinese": "zh-CN",
+    "Arabic": "ar-SA",
+    "Hindi": "hi-IN",
+    "Spanish": "es-ES",
+    "French": "fr-FR",
+    "German": "de-DE",
+    "Italian": "it-IT",
+    "Portuguese": "pt-BR",
+    "Russian": "ru-RU",
+    "Turkish": "tr-TR",
+    "Polish": "pl-PL",
+    "Dutch": "nl-NL",
+    "Swedish": "sv-SE",
+    "Danish": "da-DK",
+    "Norwegian": "no-NO",
+    "Finnish": "fi-FI",
+    "Greek": "el-GR",
+    "Czech": "cs-CZ",
+    "Hungarian": "hu-HU",
+    "Romanian": "ro-RO",
+    "Ukrainian": "uk-UA",
+    "English": "en-US",   # default fallback
+}
 
 # Database file path
 DB_FILE = os.path.join(ROOT_DIR, "data", "moneyprinter.db")
@@ -167,17 +203,43 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE videos ADD COLUMN account_id INTEGER REFERENCES accounts(id)")
 
-    # Migration: add languagevoices column (JSON dict of lang→voice)
+    # Migration: add localevoices column (JSON dict of locale->voice)
     try:
-        cursor.execute("SELECT languagevoices FROM settings LIMIT 1")
+        cursor.execute("SELECT localevoices FROM settings LIMIT 1")
     except sqlite3.OperationalError:
-        cursor.execute("ALTER TABLE settings ADD COLUMN languagevoices TEXT DEFAULT '{}'")
+        try:
+            cursor.execute("SELECT languagevoices FROM settings LIMIT 1")
+            old_row = cursor.fetchone()
+            if old_row and old_row[0]:
+                cursor.execute("ALTER TABLE settings ADD COLUMN localevoices TEXT DEFAULT ?", (old_row[0],))
+            else:
+                cursor.execute("ALTER TABLE settings ADD COLUMN localevoices TEXT DEFAULT '{}'")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE settings ADD COLUMN localevoices TEXT DEFAULT '{}'")
 
-    # Migration: add language column to accounts
+    # Migration: rename language column to locale (BCP-47)
     try:
-        cursor.execute("SELECT language FROM accounts LIMIT 1")
+        cursor.execute("SELECT locale FROM accounts LIMIT 1")
+        try:
+            cursor.execute("SELECT language FROM accounts LIMIT 1")
+            cursor.execute("SELECT id, language FROM accounts WHERE language IS NOT NULL AND language != ''")
+            for account_id, lang in cursor.fetchall():
+                locale_val = LANGUAGE_TO_LOCALE.get(lang, lang)
+                cursor.execute("UPDATE accounts SET locale = ? WHERE id = ?", (locale_val, account_id))
+            cursor.execute("ALTER TABLE accounts DROP COLUMN language")
+        except sqlite3.OperationalError:
+            pass
     except sqlite3.OperationalError:
-        cursor.execute("ALTER TABLE accounts ADD COLUMN language TEXT DEFAULT 'English'")
+        try:
+            cursor.execute("SELECT language FROM accounts LIMIT 1")
+            cursor.execute("ALTER TABLE accounts ADD COLUMN locale TEXT DEFAULT 'en-US'")
+            cursor.execute("SELECT id, language FROM accounts WHERE language IS NOT NULL AND language != ''")
+            for account_id, lang in cursor.fetchall():
+                locale_val = LANGUAGE_TO_LOCALE.get(lang, lang)
+                cursor.execute("UPDATE accounts SET locale = ? WHERE id = ?", (locale_val, account_id))
+            cursor.execute("ALTER TABLE accounts DROP COLUMN language")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE accounts ADD COLUMN locale TEXT DEFAULT 'en-US'")
 
     info("Database initialized successfully")
 
@@ -191,19 +253,18 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         pass
 
-    # Pre-populate Indonesian voices if languagevoices is empty
+    # Pre-populate localevoices if empty
     try:
-        cursor.execute("SELECT value FROM settings WHERE key='languagevoices'")
+        cursor.execute("SELECT value FROM settings WHERE key='localevoices'")
         row = cursor.fetchone()
         if not row or not row[0] or row[0] == '{}':
-            # Set default Indonesian voices
-            set_setting("languagevoices", json.dumps({
-                "Indonesian": "id-ID-GadisNeural",
-                "Javanese": "jv-ID-DimasNeural",
-                "Sundanese": "su-ID-JajangNeural"
+            set_setting("localevoices", json.dumps({
+                "id-ID": "id-ID-GadisNeural",
+                "jv-ID": "jv-ID-SitiNeural",
+                "su-ID": "su-ID-TutiNeural"
             }))
     except (sqlite3.OperationalError, KeyError) as e:
-        error(f"Failed to pre-populate languagevoices: {e}")
+        error(f"Failed to pre-populate localevoices: {e}")
 
 
 def add_topic(topic: str, niche: str, account: Optional[str] = None) -> int:
@@ -363,7 +424,7 @@ def add_video(
     tags: Optional[str] = None,
     category: Optional[str] = None,
     account: Optional[str] = None,
-    language: str = "English",
+    locale: str = "en-US",
     for_kids: bool = False,
     account_id: Optional[int] = None,
 ) -> int:
@@ -381,7 +442,7 @@ def add_video(
         tags: SEO tags (comma-separated)
         category: Video category
         account: Account username
-        language: Video language
+        locale: Video locale (BCP-47 code, default: en-US)
         for_kids: Whether content is for kids
         account_id: Optional account ID (resolves from account if not provided)
 
@@ -425,7 +486,7 @@ def add_video(
             category,
             platform,
             file_path,
-            language,
+            locale,
             for_kids,
             account_id,
         ),
@@ -584,7 +645,7 @@ def add_account(
     nickname: Optional[str] = None,
     topic: Optional[str] = None,
     topics: Optional[str] = None,
-    language: str = "English",
+    locale: str = "en-US",
 ) -> int:
     """
     Insert an account record.
@@ -596,7 +657,7 @@ def add_account(
         profile_path: Optional path to profile
         niche: Optional niche/topic for the account
         topics: Optional JSON string of topics list
-        language: Account language (default: English)
+        locale: Account locale (default: en-US)
 
     Returns:
         The row ID of the inserted account
@@ -606,8 +667,8 @@ def add_account(
 
     # Note: profile_path removed - stored in config.json or OAuth credentials instead
     cursor.execute(
-        "INSERT INTO accounts (platform, username, nickname, topic, language) VALUES (?, ?, ?, ?, ?)",
-        (platform, username, nickname or "", topic or "", language),
+        "INSERT INTO accounts (platform, username, nickname, topic, locale) VALUES (?, ?, ?, ?, ?)",
+        (platform, username, nickname or "", topic or "", locale),
     )
     conn.commit()
     account_id = cursor.lastrowid
@@ -671,7 +732,7 @@ def update_account(account_id: int, updates: dict) -> bool:
     cursor = conn.cursor()
 
     # Build update query dynamically
-    valid_fields = {"platform", "username", "nickname", "topic", "language"}
+    valid_fields = {"platform", "username", "nickname", "topic", "locale"}
     update_fields = {}
     for k, v in updates.items():
         if k in valid_fields:
