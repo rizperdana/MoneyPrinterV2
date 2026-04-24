@@ -264,10 +264,10 @@ def test_synthesize_indonesian_ssml():
     from src.classes.EdgeTts import EdgeTTS
 
     tts = EdgeTTS(voice="id-ID-ArdiNeural")
-    ssml = '''<speak>
+    ssml = '''<speak version="1.0" xml:lang="id-ID">
         <prosody rate="90%">Terdapat creature yang boleh punch begitu keras ia membuat air mendidih!</prosody>
-        <break time="500ms"/>
-        <prosody rate="100%">Ini adalah fakta yang menakjubkan tentang laut.</prosody>
+        <break time="300ms"/>
+        <prosody rate="90%">Ini adalah fakta yang menakjubkan tentang laut.</prosody>
     </speak>'''
 
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
@@ -692,15 +692,16 @@ In the SSML prosody section, add:
 ```
 INDONESIAN-SPECIFIC GUIDANCE (for id-ID voices like ArdiNeural, GadisNeural):
 - Indonesian is a stress-timed language with consistent syllable timing
-- Use rate="95-105%" (closer to neutral — Indonesian doesn't have English-style stress emphasis)
-- Use pitch adjustments sparingly (+/- 2st max) — Indonesian doesn't use pitch prominence the way English does
+- Use rate="85-95%" (Indonesian doesn't have English-style stress emphasis — slower than English default)
+- Use pitch adjustments sparingly — Indonesian uses only negative pitch: -1st to -2st maximum
 - Prefer <break time="200-400ms"> over prosody rate changes for pacing
 - Use <emphasis level="moderate"> instead of "strong" — heavy emphasis sounds unnatural in Indonesian
 - Keep sentences shorter (6-10 words) — Indonesian syntax is head-final
+- ALWAYS wrap Indonesian SSML with xml:lang="id-ID" attribute: <speak version="1.0" xml:lang="id-ID">
 
 MALAY-SPECIFIC GUIDANCE (for ms-MY voices):
 - Similar phonology to Indonesian — apply similar rules
-- Rate: 95-105%, pitch: +/- 2st maximum
+- Rate: 85-95%, pitch: -1st to -2st maximum
 
 ENGLISH GUIDANCE (existing rules apply):
 - rate: 60-150% depending on emotional tone
@@ -722,10 +723,10 @@ def test_generate_indonesian_script_returns_ssml():
     """generate_script_response for Indonesian should return SSML."""
     from unittest.mock import patch
 
-    mock_ssml = '''<speak>
-        <prosody rate="100%" pitch="+1st">Terdapat fakta menakjubkan yang kamu perlu tahu tentang lautan.</prosody>
+    mock_ssml = '''<speak version="1.0" xml:lang="id-ID">
+        <prosody rate="90%" pitch="-1st">Terdapat fakta menakjubkan yang kamu perlu tahu tentang lautan.</prosody>
         <break time="300ms"/>
-        <prosody rate="100%">Kehidupan marin yang不可思议 ini boleh hidup di tempat yang sangat dalam.</prosody>
+        <prosody rate="90%">Kehidupan marin yang menakjubkan ini boleh hidup di tempat yang sangat dalam.</prosody>
     </speak>'''
 
     with patch("src.llm_generate.generate_response", return_value=mock_ssml):
@@ -1025,7 +1026,7 @@ def test_indonesian_edge_tts_synthesis():
     from src.classes.EdgeTts import EdgeTTS
 
     tts = EdgeTTS(voice="id-ID-ArdiNeural")
-    indonesian_ssml = '<speak><prosody rate="100%">Lautan menyimpan banyak misteri yang menakjubkan.</prosody></speak>'
+    indonesian_ssml = '<speak version="1.0" xml:lang="id-ID"><prosody rate="90%">Lautan menyimpan banyak misteri yang menakjubkan.</prosody></speak>'
 
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
         output = f.name
