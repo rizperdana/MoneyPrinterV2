@@ -118,9 +118,27 @@ Change `language: str = "English"` to `locale: str = "en-US"`. Update INSERT to 
 
 Change `"language"` to `"locale"`.
 
-- [ ] **Step 6: Update add_video() call (line ~414)**
+- [ ] **Step 6: Update add_video() signature (line 355-366)**
 
-Change `language=args.language,` to `locale=args.locale,`.
+Change `language: str = "English"` to `locale: str = "en-US"` in the function signature (line 366). This updates the **signature**, not just the call.
+
+```python
+def add_video(
+    topic: str,
+    title: str,
+    script: Optional[str] = None,
+    platform: str = "youtube",
+    file_path: Optional[str] = None,
+    niche: str = "",
+    description: Optional[str] = None,
+    tags: Optional[str] = None,
+    category: Optional[str] = None,
+    account: Optional[str] = None,
+    locale: str = "en-US",  # was: language: str = "English"
+    for_kids: bool = False,
+    account_id: Optional[int] = None,
+) -> int:
+```
 
 - [ ] **Step 7: Update default localevoices seed (lines ~194-206)**
 
@@ -364,7 +382,20 @@ LOCALE_TO_COUNTRY = {
 
 - [ ] **Step 2: Add locale param to research functions**
 
-Add `locale: str = "en-US"` param to `research_topic()` and similar functions. Map to country code: `country = LOCALE_TO_COUNTRY.get(locale, "US")`. Pass to Tavily.
+Add `locale: str = "en-US"` param to actual research functions:
+1. `search_tavily()` (line 11): add `locale` param, map to country via `LOCALE_TO_COUNTRY`, pass to `tavily_search()`
+2. `search_exa()` (line 47): add `locale` param, map to country, use in query context
+
+Change from:
+```python
+def search_tavily(query, niche, max_results=8):
+```
+To:
+```python
+def search_tavily(query, niche, locale: str = "en-US", max_results=8):
+    country = LOCALE_TO_COUNTRY.get(locale, "US")
+    ...
+```
 
 Commit: `git add src/research.py && git commit -m "feat(research): add locale param, map to country code for Tavily"`
 
@@ -424,6 +455,45 @@ print(get_localevoices())           # -> {'id-ID': 'id-ID-GadisNeural', ...}
 ```
 
 Commit any remaining changes: `git add -A && git commit -m "test: smoke test for BCP-47 locale system"`
+
+---
+
+## Task 12: Additional Missing Files (from review)
+
+**Files:** Modify: `api/pipeline_worker.py`, `scripts/run_24h.py`
+
+- [ ] **Step 1: pipeline_worker.py updates**
+
+Lines 81, 241, 312 — update `youtube._language` → `youtube._locale`:
+```python
+# Line 81:
+youtube._locale = job.locale  # was: youtube._language = job.language
+
+# Line 241:
+locale=youtube._locale,  # was: language=youtube._language
+
+# Line 312:
+"locale": youtube._locale,  # was: "language": youtube._language
+```
+
+- [ ] **Step 2: run_24h.py updates**
+
+Lines 90, 103, 122, 139, 152 — update all `language` refs to `locale`:
+```python
+# Line 90: def add_video signature
+def add_video(niche, locale, topic, ...):  # was: language
+
+# Line 103: call inside add_video
+locale=locale,  # was: language=language
+
+# Line 122:
+locale = account.get("locale", "en-US")  # was: account.get("language", "English")
+
+# Line 139, 152: calls inside batch loop
+locale=locale,
+```
+
+Commit: `git add api/pipeline_worker.py scripts/run_24h.py && git commit -m "fix: update language->locale in pipeline_worker and run_24h"`
 
 ---
 
