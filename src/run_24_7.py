@@ -80,7 +80,7 @@ def run_single_video(
     logger.info(f"Starting video: {niche} (lang={language})")
 
     try:
-        result = run_pipeline(niche=niche, language=language, upload=upload)
+        result = run_pipeline(niche=niche, locale=language, upload=upload)
 
         if result.get("video_path"):
             # Move video to output directory
@@ -263,7 +263,7 @@ def main():
                 vid = add_video(
                     niche=topic,
                     topic=topic,
-                    language=language,
+                    locale=language,
                     title=result.get("title", ""),
                     description=result.get("description", ""),
                     script=result.get("script", ""),
