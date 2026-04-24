@@ -6,10 +6,16 @@ import re
 import edge_tts
 import soundfile as sf
 
-from config import ROOT_DIR
+from src.config import ROOT_DIR
 
 
 class EdgeTTS:
+    """
+    Edge TTS synthesis with SSML passthrough and language-aware prosody calibration.
+
+    Args:
+        voice: Edge TTS voice shortname (e.g., "en-US-JennyNeural", "id-ID-ArdiNeural")
+    """
     def __init__(self, voice: str = "en-US-JennyNeural") -> None:
         self._voice = voice
 
