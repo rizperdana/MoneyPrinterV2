@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class GenerateRequest(BaseModel):
     account: str
     niche: str
-    language: str = "English"
+    locale: str = "en-US"
     for_kids: bool = False
     auto_upload: bool = False
 
@@ -21,7 +21,7 @@ class AccountCreate(BaseModel):
     username: str
     nickname: str | None = None
     topic: str | None = None
-    language: str = "English"
+    locale: str = "en-US"
 
 
 class AccountUpdate(BaseModel):
@@ -29,7 +29,7 @@ class AccountUpdate(BaseModel):
     username: str | None = None
     nickname: str | None = None
     topic: str | None = None
-    language: str | None = None
+    locale: str | None = None
 
 
 class SettingsUpdate(BaseModel):

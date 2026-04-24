@@ -21,7 +21,7 @@ class Job:
     status: JobStatus = JobStatus.queued
     account: str = ""
     niche: str = ""
-    language: str = "English"
+    locale: str = "en-US"
     for_kids: bool = False
     current_step: str = ""
     step_index: int = 0
@@ -43,11 +43,11 @@ class JobManager:
         self,
         account: str,
         niche: str,
-        language: str = "English",
+        locale: str = "en-US",
         for_kids: bool = False,
         auto_upload: bool = False,
     ) -> Job:
-        job = Job(account=account, niche=niche, language=language, for_kids=for_kids, auto_upload=auto_upload)
+        job = Job(account=account, niche=niche, locale=locale, for_kids=for_kids, auto_upload=auto_upload)
         self._jobs[job.id] = job
         return job
 

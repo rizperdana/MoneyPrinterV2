@@ -42,7 +42,7 @@ async def start_generation(req: GenerateRequest, bg: BackgroundTasks):
     job = job_manager.create(
         account=req.account,
         niche=req.niche,
-        language=req.language,
+        locale=req.locale,
         for_kids=req.for_kids,
         auto_upload=req.auto_upload,
     )

@@ -78,7 +78,7 @@ async def run_job(job_id: str):
             fp_profile if fp_profile and os.path.isdir(fp_profile) else ""
         )
         youtube._niche = job.niche
-        youtube._language = job.language
+        youtube._locale = job.locale
         youtube.images = []
         youtube.subject = None
         youtube.script = None
@@ -238,7 +238,7 @@ async def run_job(job_id: str):
                 if metadata and metadata.get("category")
                 else None,
                 account=job.account,
-                language=youtube._language,
+                locale=youtube._locale,
                 for_kids=job.for_kids,
             )
 
@@ -309,7 +309,7 @@ async def run_job(job_id: str):
                 "script": youtube.script,
                 "metadata": metadata,
                 "niche": youtube._niche,
-                "language": youtube._language,
+                "locale": youtube._locale,
                 "hook_frame_path": None,
                 "video_id": video_id,
                 "upload_url": upload_url,
