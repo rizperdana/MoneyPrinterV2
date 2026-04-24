@@ -98,7 +98,7 @@ CRITICAL RULES:
 5. Ask questions they can answer: "Have you ever wondered...?", "Did you know...?"
 
 OUTPUT FORMAT: SSML (Speech Synthesis Markup Language).
-Wrap entire script in <speak>...</speak> tags.
+Wrap entire script in <speak version='1.0' xml:lang='{locale}'>...</speak> tags.
 Do NOT output plain text. Output valid SSML only.
 
 SSML TAGS AVAILABLE:
@@ -131,7 +131,7 @@ INDONESIAN-SPECIFIC GUIDANCE (for id-ID voices like ArdiNeural, GadisNeural):
 - Prefer <break time="200-400ms"> over prosody rate changes for pacing
 - Use <emphasis level="moderate"> instead of "strong" — heavy emphasis sounds unnatural in Indonesian
 - Keep sentences shorter (6-10 words) — Indonesian syntax is head-final
-- ALWAYS wrap Indonesian SSML with xml:lang="id-ID" attribute: <speak version="1.0" xml:lang="id-ID">
+    - ALWAYS wrap SSML with xml:lang attribute using the locale value: <speak version="1.0" xml:lang="{locale}">
 
 MALAY-SPECIFIC GUIDANCE (for ms-MY voices):
 - Similar phonology to Indonesian — apply similar rules
@@ -154,7 +154,7 @@ CONSTRAINTS:
 - Add simple sound effects as <break> tags or whispered segments
 
 Subject: {subject}
-Language: {locale}
+Locale: {locale}
 
 Return ONLY the SSML script wrapped in <speak> tags. No labels, no commentary."""
 
