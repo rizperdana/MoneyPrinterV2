@@ -286,14 +286,89 @@ def get_outreach_message_body_file() -> str:
     return _get_config("outreach_message_body_file", "outreach_message.html")
 
 
-def get_tts_voice() -> str:
+
+def get_default_tts_voice() -> str:
+    """Returns the default TTS voice (English fallback)."""
+    return _get_config("tts_voice", "en-US-JennyNeural")
+
+
+def get_languagevoices() -> dict:
     """
-    Gets the TTS voice from settings.
+    Gets the per-language TTS voice mapping.
 
     Returns:
-        voice (str): The TTS voice
+        dict: {language_name: voice_shortname, ...}
     """
-    return _get_config("tts_voice", "en-US-JennyNeural")
+    raw = _get_config("languagevoices", "{}")
+    if isinstance(raw, str):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+    return raw if isinstance(raw, dict) else {}
+
+
+def set_languagevoices(mapping: dict) -> None:
+    """Sets the per-language TTS voice mapping."""
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    from src.db import set_setting, reload_settings
+    set_setting("languagevoices", json.dumps(mapping))
+    # Clear config's cache so get_languagevoices() sees new value
+    global _settings_cache
+    _settings_cache = None
+    reload_settings()  # Clear db's cache too
+
+
+def get_tts_voice(language: str = None) -> str:
+    """
+    Gets the TTS voice for a given language.
+
+    Args:
+        language: Language name (e.g., "Indonesian", "English"). None returns default.
+
+    Returns:
+        voice (str): The TTS voice shortname for the language.
+    """
+    if language:
+        langvoices = get_languagevoices()
+        # Try exact match, then case-insensitive
+        voice = langvoices.get(language)
+        if not voice:
+            # Case-insensitive search
+            for lang, v in langvoices.items():
+                if lang.lower() == language.lower():
+                    voice = v
+                    break
+        if voice:
+            return voice
+
+    return get_default_tts_voice()
+
+
+def set_tts_voice(voice: str, language: str = None) -> None:
+    """
+    Sets the TTS voice. If language is None, sets the default voice.
+    If language is provided, sets the voice for that language.
+
+    Args:
+        voice: TTS voice shortname (e.g., "id-ID-ArdiNeural")
+        language: Language name (e.g., "Indonesian"). None = default.
+    """
+    if language:
+        langvoices = get_languagevoices()
+        langvoices[language] = voice
+        set_languagevoices(langvoices)
+    else:
+        import sys
+        import os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+        from src.db import set_setting
+        set_setting("tts_voice", voice)
+        # Clear config cache
+        global _settings_cache
+        _settings_cache = None
 
 
 def get_assemblyai_api_key() -> str:

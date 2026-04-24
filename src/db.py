@@ -167,6 +167,18 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE videos ADD COLUMN account_id INTEGER REFERENCES accounts(id)")
 
+    # Migration: add languagevoices column (JSON dict of lang→voice)
+    try:
+        cursor.execute("SELECT languagevoices FROM settings LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE settings ADD COLUMN languagevoices TEXT DEFAULT '{}'")
+
+    # Migration: add language column to accounts
+    try:
+        cursor.execute("SELECT language FROM accounts LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN language TEXT DEFAULT 'English'")
+
     info("Database initialized successfully")
 
     # Auto-import config into DB if settings table is empty
@@ -177,6 +189,20 @@ def init_db() -> None:
             import_config_to_db()
             reload_settings()  # Refresh in-memory cache after import
     except sqlite3.OperationalError:
+        pass
+
+    # Pre-populate Indonesian voices if languagevoices is empty
+    try:
+        cursor.execute("SELECT value FROM settings WHERE key='languagevoices'")
+        row = cursor.fetchone()
+        if not row or not row[0] or row[0] == '{}':
+            # Set default Indonesian voices
+            set_setting("languagevoices", json.dumps({
+                "Indonesian": "id-ID-ArdiNeural",
+                "Javanese": "jv-ID-DimasNeural",
+                "Sundanese": "su-ID-JajangNeural"
+            }))
+    except Exception:
         pass
 
 
