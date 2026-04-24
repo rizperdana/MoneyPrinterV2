@@ -10,7 +10,7 @@ def reset_languagevoices():
     from src.config import _settings_cache
     # Reset languagevoices to default
     set_setting("languagevoices", json.dumps({
-        "Indonesian": "id-ID-ArdiNeural",
+        "Indonesian": "id-ID-GadisNeural",
         "Javanese": "jv-ID-DimasNeural",
         "Sundanese": "su-ID-JajangNeural"
     }))
@@ -29,10 +29,10 @@ def test_get_tts_voice_returns_default():
     assert voice == "en-US-JennyNeural", f"Expected en-US-JennyNeural, got {voice}"
 
 def test_get_tts_voice_returns_indonesian_voice():
-    """get_tts_voice('Indonesian') returns id-ID-ArdiNeural."""
+    """get_tts_voice('Indonesian') returns id-ID-GadisNeural."""
     from src.config import get_tts_voice
     voice = get_tts_voice("Indonesian")
-    assert voice == "id-ID-ArdiNeural", f"Expected id-ID-ArdiNeural, got {voice}"
+    assert voice == "id-ID-GadisNeural", f"Expected id-ID-GadisNeural, got {voice}"
 
 def test_set_and_get_language_voice():
     """set_tts_voice('id-ID-GadisNeural', 'Indonesian') persists."""
@@ -53,7 +53,7 @@ def test_get_languagevoices_returns_dict():
     langvoices = get_languagevoices()
     assert isinstance(langvoices, dict), "Should return dict"
     assert "Indonesian" in langvoices, "Indonesian should be in mapping"
-    assert langvoices["Indonesian"] == "id-ID-ArdiNeural", f"Indonesian voice mismatch"
+    assert langvoices["Indonesian"] == "id-ID-GadisNeural", f"Indonesian voice mismatch"
 
 def test_set_tts_voice_default_no_language():
     """set_tts_voice(voice) with no language sets the default TTS voice."""

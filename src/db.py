@@ -198,7 +198,7 @@ def init_db() -> None:
         if not row or not row[0] or row[0] == '{}':
             # Set default Indonesian voices
             set_setting("languagevoices", json.dumps({
-                "Indonesian": "id-ID-ArdiNeural",
+                "Indonesian": "id-ID-GadisNeural",
                 "Javanese": "jv-ID-DimasNeural",
                 "Sundanese": "su-ID-JajangNeural"
             }))

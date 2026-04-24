@@ -18,7 +18,7 @@ def reset_languagevoices():
 
     # Reset languagevoices to default
     set_setting("languagevoices", json.dumps({
-        "Indonesian": "id-ID-ArdiNeural",
+        "Indonesian": "id-ID-GadisNeural",
         "Javanese": "jv-ID-DimasNeural",
         "Sundanese": "su-ID-JajangNeural"
     }))
@@ -33,10 +33,10 @@ def reset_languagevoices():
 
 
 def test_indonesian_tts_voice_selection():
-    """When language=Indonesian, TTS uses id-ID-ArdiNeural."""
+    """When language=Indonesian, TTS uses id-ID-GadisNeural."""
     from src.classes.Tts import TTS
     tts = TTS(language="Indonesian")
-    assert tts.voice == "id-ID-ArdiNeural", f"Expected id-ID-ArdiNeural, got {tts.voice}"
+    assert tts.voice == "id-ID-GadisNeural", f"Expected id-ID-GadisNeural, got {tts.voice}"
 
 
 def test_indonesian_ssml_script_generation():
@@ -59,10 +59,10 @@ def test_indonesian_ssml_script_generation():
 
 
 def test_indonesian_edge_tts_synthesis():
-    """EdgeTTS with id-ID-ArdiNeural synthesizes Indonesian text."""
+    """EdgeTTS with id-ID-GadisNeural synthesizes Indonesian text."""
     from src.classes.EdgeTts import EdgeTTS
 
-    tts = EdgeTTS(voice="id-ID-ArdiNeural")
+    tts = EdgeTTS(voice="id-ID-GadisNeural")
     indonesian_ssml = '<speak version="1.0" xml:lang="id-ID"><prosody rate="90%">Lautan menyimpan banyak misteri yang menakjubkan.</prosody></speak>'
 
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:

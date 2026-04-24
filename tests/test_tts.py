@@ -14,7 +14,7 @@ def reset_languagevoices():
 
     # Reset languagevoices to default
     set_setting("languagevoices", json.dumps({
-        "Indonesian": "id-ID-ArdiNeural",
+        "Indonesian": "id-ID-GadisNeural",
         "Javanese": "jv-ID-DimasNeural",
         "Sundanese": "su-ID-JajangNeural"
     }))
@@ -34,10 +34,10 @@ def test_tts_default_voice():
     assert tts.voice == "en-US-JennyNeural", f"Expected en-US-JennyNeural, got {tts.voice}"
 
 def test_tts_indonesian_voice():
-    """TTS(language='Indonesian') uses id-ID-ArdiNeural."""
+    """TTS(language='Indonesian') uses id-ID-GadisNeural."""
     from src.classes.Tts import TTS
     tts = TTS(language="Indonesian")
-    assert tts.voice == "id-ID-ArdiNeural", f"Expected id-ID-ArdiNeural, got {tts.voice}"
+    assert tts.voice == "id-ID-GadisNeural", f"Expected id-ID-GadisNeural, got {tts.voice}"
 
 def test_tts_synthesize_indonesian():
     """TTS with Indonesian language synthesizes SSML correctly."""

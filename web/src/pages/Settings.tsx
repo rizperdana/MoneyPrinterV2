@@ -326,7 +326,7 @@ export default function Settings() {
               <div className="space-y-4">
                 <Label>TTS Voices by Language</Label>
                 <p className="text-xs text-muted-foreground">
-                  Configure the voice used for each language. Indonesian voices: id-ID-ArdiNeural (M), id-ID-GadisNeural (F).
+                  Configure the voice used for each language. Indonesian voices: id-ID-GadisNeural (F), id-ID-ArdiNeural (M).
                 </p>
 
                 {/* Default voice */}
@@ -353,8 +353,8 @@ export default function Settings() {
                       (() => {
                         try {
                           const lv = typeof config.languagevoices === 'string' ? JSON.parse(config.languagevoices) : config.languagevoices;
-                          return lv?.Indonesian || "id-ID-ArdiNeural";
-                        } catch { return "id-ID-ArdiNeural"; }
+                          return lv?.Indonesian || "id-ID-GadisNeural";
+                        } catch { return "id-ID-GadisNeural"; }
                       })()
                     )}
                     onChange={(e) => {
@@ -368,8 +368,8 @@ export default function Settings() {
                     }}
                     className="w-full px-3 py-2 border rounded-md bg-background text-sm"
                   >
-                    <option value="id-ID-ArdiNeural">id-ID-ArdiNeural (Male — Friendly, Positive)</option>
                     <option value="id-ID-GadisNeural">id-ID-GadisNeural (Female — Friendly, Positive)</option>
+                    <option value="id-ID-ArdiNeural">id-ID-ArdiNeural (Male — Friendly, Positive)</option>
                   </select>
                 </div>
 

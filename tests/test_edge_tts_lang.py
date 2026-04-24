@@ -2,10 +2,10 @@ import pytest, sys, os, tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 def test_synthesize_indonesian_ssml():
-    """Indonesian SSML with id-ID-ArdiNeural should produce audio."""
+    """Indonesian SSML with id-ID-GadisNeural should produce audio."""
     from src.classes.EdgeTts import EdgeTTS
 
-    tts = EdgeTTS(voice="id-ID-ArdiNeural")
+    tts = EdgeTTS(voice="id-ID-GadisNeural")
     ssml = '''<speak version="1.0" xml:lang="id-ID">
         <prosody rate="90%">Terdapat creature yang boleh punch begitu keras ia membuat air mendidih!</prosody>
         <break time="300ms"/>
@@ -27,7 +27,7 @@ def test_fallback_on_malformed_ssml():
     """Malformed SSML falls back to stripped plain text."""
     from src.classes.EdgeTts import EdgeTTS
 
-    tts = EdgeTTS(voice="id-ID-ArdiNeural")
+    tts = EdgeTTS(voice="id-ID-GadisNeural")
     malformed = "<speak><prosody rate=broken>Text with bad attr</prosody></speak>"
 
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
@@ -44,7 +44,7 @@ def test_plain_indonesian_text():
     """Plain Indonesian text (no SSML) should synthesize correctly."""
     from src.classes.EdgeTts import EdgeTTS
 
-    tts = EdgeTTS(voice="id-ID-ArdiNeural")
+    tts = EdgeTTS(voice="id-ID-GadisNeural")
     plain = "Ini adalah ujian untuk suara Indonesia."
 
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:

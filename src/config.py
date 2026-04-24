@@ -358,7 +358,7 @@ def set_tts_voice(voice: str, language: Optional[str] = None) -> None:
     If language is provided, sets the voice for that language.
 
     Args:
-        voice: TTS voice shortname (e.g., "id-ID-ArdiNeural")
+        voice: TTS voice shortname (e.g., "id-ID-GadisNeural")
         language: Language name (e.g., "Indonesian"). None = default.
     """
     if language:
