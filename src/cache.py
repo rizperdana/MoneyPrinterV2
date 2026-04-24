@@ -2,7 +2,7 @@ import os
 import json
 
 from typing import List
-from config import ROOT_DIR
+from src.config import ROOT_DIR
 
 def get_cache_path() -> str:
     """

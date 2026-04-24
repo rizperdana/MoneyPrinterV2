@@ -1,6 +1,6 @@
 import os
 
-from config import ROOT_DIR, get_tts_voice
+from src.config import ROOT_DIR, get_tts_voice
 
 from src.classes.EdgeTts import EdgeTTS
 

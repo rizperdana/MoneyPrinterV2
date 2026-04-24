@@ -4,8 +4,8 @@ import zipfile
 import requests
 import platform
 
-from status import error, success, info, warning
-from config import get_verbose, get_zip_url, ROOT_DIR
+from src.status import error, success, info, warning
+from src.config import get_verbose, get_zip_url, ROOT_DIR
 
 DEFAULT_SONG_ARCHIVE_URLS = []
 

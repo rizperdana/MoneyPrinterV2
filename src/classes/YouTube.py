@@ -11,13 +11,13 @@ import requests
 import assemblyai as aai
 from PIL import Image
 
-from utils import close_running_selenium_instances, build_url, choose_random_song
-from utils_audio import load_speech_windows, make_volume_func
-from cache import get_accounts, add_account, get_youtube_cache_path
-from db import add_video as db_add_video
+from src.utils import close_running_selenium_instances, build_url, choose_random_song
+from src.utils_audio import load_speech_windows, make_volume_func
+from src.cache import get_accounts, add_account, get_youtube_cache_path
+from src.db import add_video as db_add_video
 from src.classes.Tts import TTS
-from llm_provider import generate_text, get_model_for_job
-from config import (
+from src.llm_provider import generate_text, get_model_for_job
+from src.config import (
     ROOT_DIR,
     get_headless,
     get_verbose,
@@ -36,9 +36,9 @@ from config import (
     get_music_volume_silence,
     get_music_fade_duration_ms,
 )
-from status import error, success, info, warning
+from src.status import error, success, info, warning
 from uuid import uuid4
-from constants import (
+from src.constants import (
     YOUTUBE_TEXTBOX_ID,
     YOUTUBE_MADE_FOR_KIDS_NAME,
     YOUTUBE_NOT_MADE_FOR_KIDS_NAME,

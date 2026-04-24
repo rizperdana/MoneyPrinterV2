@@ -3,7 +3,7 @@ import json
 import httpx
 import sys
 
-from config import get_verbose
+from src.config import get_verbose
 
 print(
     f"[llm_provider] Importing with CLIPROXY_API_KEY = {os.environ.get('CLIPROXY_API_KEY', 'NOT SET')}"
