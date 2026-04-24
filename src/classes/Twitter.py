@@ -6,10 +6,10 @@ import json
 import shutil
 import tempfile
 
-from cache import get_accounts, add_account, remove_account
-from config import get_firefox_profile_path, get_headless, ROOT_DIR
-from status import error, success, info, warning
-from llm_provider import generate_text
+from src.cache import get_accounts, add_account, remove_account
+from src.config import get_firefox_profile_path, get_headless, ROOT_DIR
+from src.status import error, success, info, warning
+from src.llm_provider import generate_text
 from typing import List, Optional
 from datetime import datetime
 from termcolor import colored

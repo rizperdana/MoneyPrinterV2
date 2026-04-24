@@ -10,9 +10,9 @@ import yagmail
 import requests
 import subprocess
 
-from cache import get_results_cache_path
-from status import info, warning, error, success
-from config import (
+from src.cache import get_results_cache_path
+from src.status import info, warning, error, success
+from src.config import (
     get_google_maps_scraper_niche,
     get_email_credentials,
     get_google_maps_scraper_zip_url,

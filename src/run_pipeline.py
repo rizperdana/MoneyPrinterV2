@@ -29,13 +29,13 @@ load_dotenv(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 )
 
-from config import ROOT_DIR, get_default_model
-from status import error, success, info, warning
-from llm_provider import select_model
-from classes.YouTube import YouTube
-from classes.Tts import TTS
-from db import get_existing_videos_for_niche
-from research import extract_facts
+from src.config import ROOT_DIR, get_default_model
+from src.status import error, success, info, warning
+from src.llm_provider import select_model
+from src.classes.YouTube import YouTube
+from src.classes.Tts import TTS
+from src.db import get_existing_videos_for_niche
+from src.research import extract_facts
 
 
 def run_pipeline(

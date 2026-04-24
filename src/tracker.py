@@ -8,7 +8,7 @@ import json
 import os
 from datetime import datetime
 from typing import Optional, List
-from config import ROOT_DIR
+from src.config import ROOT_DIR
 
 
 def _get_tracker_path() -> str:

@@ -10,10 +10,10 @@ from datetime import datetime
 from termcolor import colored
 from uuid import uuid4
 
-from cache import get_accounts, add_account
-from config import get_firefox_profile_path
-from status import error, success, info, warning
-from llm_provider import generate_text
+from src.cache import get_accounts, add_account
+from src.config import get_firefox_profile_path
+from src.status import error, success, info, warning
+from src.llm_provider import generate_text
 
 
 class Reddit:

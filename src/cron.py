@@ -8,15 +8,15 @@ from dotenv import load_dotenv
 # Load .env so CLIPROXY_API_KEY and other vars are available in subprocess
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-from status import error, success, info, warning
-from cache import get_accounts
-from config import get_verbose
-from classes.Twitter import Twitter
-from classes.YouTube import YouTube
+from src.status import error, success, info, warning
+from src.cache import get_accounts
+from src.config import get_verbose
+from src.classes.Twitter import Twitter
+from src.classes.YouTube import YouTube
 from src.youtube_oauth import get_access_token
 from src.youtube_api import youtubeApiUpload
-from llm_provider import select_model
-from tracker import (
+from src.llm_provider import select_model
+from src.tracker import (
     record_attempt,
     record_uploading,
     record_success,
@@ -26,7 +26,7 @@ from tracker import (
 )
 
 try:
-    from classes.Tts import TTS
+    from src.classes.Tts import TTS
 
     TTS_AVAILABLE = True
 except ImportError:

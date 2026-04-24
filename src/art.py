@@ -1,4 +1,4 @@
-from config import ROOT_DIR
+from src.config import ROOT_DIR
 from termcolor import colored
 
 def print_banner() -> None:

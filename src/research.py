@@ -4,8 +4,8 @@ import os
 import random
 import requests
 from datetime import datetime
-from llm_provider import generate_text, get_model_for_job
-from status import warning, info
+from src.llm_provider import generate_text, get_model_for_job
+from src.status import warning, info
 
 
 # BCP-47 locale to 2-letter country code (ISO 3166-1 alpha-2)

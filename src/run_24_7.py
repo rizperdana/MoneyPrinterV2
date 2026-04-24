@@ -32,8 +32,8 @@ load_dotenv(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 )
 
-from config import ROOT_DIR, get_verbose
-from status import info, success, warning, error
+from src.config import ROOT_DIR, get_verbose
+from src.status import info, success, warning, error
 
 
 def setup_logging(output_dir: str) -> logging.Logger:

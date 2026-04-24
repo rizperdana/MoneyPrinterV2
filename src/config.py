@@ -323,7 +323,7 @@ def set_localevoices(mapping: dict) -> None:
         _settings_cache = None
         reload_settings()  # Clear db's cache too
     except Exception as e:
-        from status import error
+        from src.status import error
         error(f"Failed to save localevoices: {e}")
         return
 
@@ -370,7 +370,7 @@ def set_tts_voice(voice: str, locale: Optional[str] = None) -> None:
         try:
             set_setting("tts_voice", voice)
         except Exception as e:
-            from status import error
+            from src.status import error
             error(f"Failed to save default TTS voice: {e}")
             return
         # Clear config cache
