@@ -2638,7 +2638,7 @@ Output format (one per line):
         # OAuth failed — log warning and fall back to browser
         import logging
         logging.warning(f"OAuth upload failed ({oauth_result[1]}), falling back to browser automation")
-        from status import warning
+        from src.status import warning
         warning(f"OAuth upload failed, using browser fallback: {oauth_result[1]}")
 
         self._ensure_browser()

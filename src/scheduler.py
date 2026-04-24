@@ -256,7 +256,7 @@ def run_reddit_twitter_job(account_id: str, model: str, logger: logging.Logger) 
 
 def get_active_model() -> str:
     """Get the primary model from config."""
-    from config import get_default_model
+    from src.config import get_default_model
     model = get_default_model()
     return model if model else "xiaomi/mimo-v2-pro:free"
 
@@ -267,7 +267,7 @@ def main_loop(logger: logging.Logger):
     model = get_active_model()
 
     # Auto-discover accounts from cache
-    from cache import get_accounts
+    from src.cache import get_accounts
 
     yt_accounts = get_accounts("youtube")
     tw_accounts = get_accounts("twitter")

@@ -1,4 +1,4 @@
-from llm_provider import generate_text, get_model_for_job
+from src.llm_provider import generate_text, get_model_for_job
 import re, json
 
 

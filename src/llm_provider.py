@@ -15,7 +15,7 @@ _API_KEY = os.environ.get("CLIPROXY_API_KEY", "")
 def _get_llm_base_url() -> str:
     """Get LLM base URL from config with hardcoded fallback."""
     try:
-        from config import get_llm_base_url
+        from src.config import get_llm_base_url
         return get_llm_base_url()
     except Exception:
         return "http://localhost:8317/v1"
@@ -243,7 +243,7 @@ def get_model_for_job(job: str) -> str | None:
     """Get the configured model for a job from config, falling back to default routing."""
     # Try config.py first (reads from DB)
     try:
-        from config import _get_config
+        from src.config import _get_config
         selected = _get_config(f"model_{job}")
         if selected:
             return selected
@@ -263,7 +263,7 @@ def get_fallback_chain(job: str) -> list[str]:
     
     # Try config.py first (reads from DB)
     try:
-        from config import _get_config
+        from src.config import _get_config
         chain_key = f"model_{job}_fallback"
         stored = _get_config(chain_key)
         if stored:

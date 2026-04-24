@@ -23,9 +23,9 @@ load_dotenv(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 )
 
-from config import get_firefox_profile_path
-from run_pipeline import run_pipeline
-from classes.YouTube import YouTube
+from src.config import get_firefox_profile_path
+from src.run_pipeline import run_pipeline
+from src.classes.YouTube import YouTube
 from src.youtube_oauth import get_access_token
 from src.youtube_api import youtubeApiUpload
 

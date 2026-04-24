@@ -71,7 +71,7 @@ def run_single_video(
     niche: str, output_dir: str, logger: logging.Logger, upload: bool = False, locale: str = "en-US"
 ) -> dict:
     """Run the pipeline for a single video."""
-    from run_pipeline import run_pipeline
+    from src.run_pipeline import run_pipeline
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     video_dir = os.path.join(output_dir, timestamp)
@@ -183,7 +183,7 @@ def main():
     logger.info(f"Max videos: {args.max_videos or 'unlimited'}")
 
     # Load settings from DB
-    from db import get_settings, get_accounts, init_db, add_video, update_video_youtube_url
+    from src.db import get_settings, get_accounts, init_db, add_video, update_video_youtube_url
     init_db()
     settings = get_settings()
     
