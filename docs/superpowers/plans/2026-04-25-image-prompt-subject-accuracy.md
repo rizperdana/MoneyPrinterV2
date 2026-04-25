@@ -127,7 +127,7 @@ git commit -m "fix(image): remove character injection from Pollinations flux enh
 ## Task 3: Fix Stage 2 Enhancement in generate_image_cloudflare()
 
 **Files:**
-- Modify: `src/classes/YouTube.py` (exact line TBD via grep)
+- Modify: `src/classes/YouTube.py` (exact line TBD verified with grep)
 
 > **⚠️ CRITICAL FIX (from review):** The line number in the original plan was approximate (1547-1560). The actual line is ~1562 and may include a `, high quality, detailed` suffix. Always verify with grep before editing.
 
@@ -335,7 +335,7 @@ git commit -m "fix(image): strengthen generate_prompts() with subject extraction
 ## Task 6: Fix Fallback in generate_image_prompts_response() in llm_generate.py
 
 **Files:**
-- Modify: `src/llm_generate.py:1372-1396` (fallback section)
+- Modify: `src/llm_generate.py:192-222` (fallback section)
 
 - [ ] **Step 1: Show current fallback code**
 ```bash
