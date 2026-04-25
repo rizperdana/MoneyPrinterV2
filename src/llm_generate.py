@@ -194,9 +194,9 @@ def generate_image_prompts_response(subject: str, script: str) -> list:
         for sentence in sentences[:n_scenes]:
             visual = (
                 f"A cinematic scene depicting {sentence.strip()[:100]} "
-                f"in a wide establishing shot with dramatic lighting and atmospheric depth. "
-                f"Photorealistic 8K quality with sharp focus, crisp textures, and professional color grading. "
-                f"No text, no gibberish, no watermarks, clean composition. "
+                f"in Studio Ghibli style with soft earthy watercolor lighting and warm inviting palette. "
+                f"Subject clearly visible with defining characteristics, wide establishing shot, "
+                f"no text, no random characters, no watermarks, no logos, sharp focus throughout. "
                 f"Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9"
             )
             image_prompts.append(visual)
@@ -212,8 +212,8 @@ def generate_image_prompts_response(subject: str, script: str) -> list:
             )
             visual = (
                 f"{variant} depicting {sentences[idx].strip()[:80]} "
-                f"with dramatic lighting and cinematic atmosphere. "
-                f"8K photorealistic with sharp focus, no artifacts. "
+                f"in Pixar 3D animation in Studio Ghibli style with soft earthy watercolor lighting. "
+                f"Warm inviting palette, no text, no random characters, no watermarks, sharp focus. "
                 f"Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9"
             )
             image_prompts.append(visual)
