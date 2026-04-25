@@ -1503,7 +1503,7 @@ Output format (one per line):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, rounded organic characters, magical realism elements, warm inviting palette, ultra-detailed expressive faces, family-friendly adventure scene."
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
         print(f"Generating AI image via Pollinations flux: {prompt[:80]}...")
 
         try:
@@ -1559,7 +1559,7 @@ Output format (one per line):
                 )
             return None
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, rounded organic characters, magical realism elements, warm inviting palette, ultra-detailed expressive faces, family-friendly adventure scene., high quality, detailed"
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
 
         # Model fallback chain: Leonardo Phoenix > Flux Schnell > Flux Klein > Flux Dev > SDXL
         models = [
