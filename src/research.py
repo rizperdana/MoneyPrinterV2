@@ -341,13 +341,12 @@ def research_trending_topics(niche: str, locale: str = None) -> str:
     # Method 5: Google Trends RSS
     info("   🔍 Fetching Google Trends...")
     topics_found = fetch_google_trends(locale)
-        if topics_found:
-            context_parts.append(
-                f"Google Trends ({geo or 'Global'}):\n"
-                + "\n".join(f"- {t}: {c}" for t, c in topics_found[:15])
-            )
-            info(f"   ✅ Google Trends: {len(topics_found)} topics")
-            break
+    if topics_found:
+        context_parts.append(
+            f"Google Trends ({locale or 'Global'}):\n"
+            + "\n".join(f"- {t}: {c}" for t, c in topics_found[:15])
+        )
+        info(f"   ✅ Google Trends: {len(topics_found)} topics")
 
     # Method 6: Firecrawl (last fallback)
     info("   🔍 Searching Firecrawl...")

@@ -1,4 +1,5 @@
 from src.llm_provider import generate_text, get_model_for_job
+from src.llm_prompts import get_prompt
 import re, json
 
 
@@ -32,46 +33,11 @@ def generate_topic_response(niche: str, research_context: str = None) -> str:
         str: Raw LLM response with topics.
     """
     if research_context:
-        trend_prompt = f"""You are a YouTube content strategist. Your ONLY job is to generate topics STRICTLY about: {niche}
-
-=== RESEARCH DATA (for inspiration only) ===
-{research_context}
-=== END RESEARCH DATA ===
-
-⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY about "{niche}". Do NOT pick general news, history, or unrelated trending topics. If the research data doesn't contain niche-relevant content, IGNORE it and generate topics from your own knowledge about "{niche}".
-
-Generate 3 specific, engaging video topic ideas that:
-1. Are STRICTLY and EXCLUSIVELY about: {niche}
-2. Would perform well as YouTube Shorts (curiosity-driven, visual, surprising)
-3. Are specific enough to make a 45-60 second video about
-
-Each topic should be one sentence, specific, and curiosity-driven.
-
-Output format: Just list 3 topics, one per line, numbered 1-3.
-Example (if niche is "cool animal facts"):
-1. The mantis shrimp can punch so fast it boils the water around it
-2. Tardigrades can survive in the vacuum of outer space
-3. Octopuses have three hearts and blue blood"""
+        prompt = get_prompt("topic_with_research", niche=niche, research_context=research_context)
     else:
-        trend_prompt = f"""You are a YouTube content strategist. Your ONLY job is to generate topics STRICTLY about: {niche}
+        prompt = get_prompt("topic_no_research", niche=niche)
 
-⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY and EXCLUSIVELY about "{niche}". Do NOT drift into general knowledge, history, or unrelated subjects.
-
-Consider:
-1. What surprising or little-known facts exist about {niche}?
-2. What recent discoveries or viral moments relate to {niche}?
-3. What would make someone stop scrolling and watch about {niche}?
-
-Generate 3 specific, engaging video topic ideas that would perform well as YouTube Shorts.
-Each topic should be one sentence, specific, and curiosity-driven.
-
-Output format: Just list 3 topics, one per line, numbered 1-3.
-Example (if niche is "cool animal facts"):
-1. The mantis shrimp can punch so fast it boils the water around it
-2. Tardigrades can survive in the vacuum of outer space
-3. Octopuses have three hearts and blue blood"""
-
-    return generate_response(trend_prompt, job="topic")
+    return generate_response(prompt, job="topic")
 
 
 def generate_script_response(subject: str, locale: str, sentence_length: int) -> str:
@@ -86,77 +52,15 @@ def generate_script_response(subject: str, locale: str, sentence_length: int) ->
     Returns:
         str: Raw script text.
     """
-    prompt = f"""You are generating a YouTube Shorts script with dynamic voice delivery prosody.
-
-AUDIENCE: Elementary school children (ages 6-10)
-
-CRITICAL RULES:
-1. Use ONLY simple words. If a word has more than 2 syllables, find a simpler word.
-2. Every sentence should paint a picture they can see in their head.
-3. Use everyday comparisons they know: "like a playground swing", "like stacking blocks", "like your pet dog"
-4. NO big words. "Fast" not "rapid", "big" not "enormous", "begin" not "commence"
-5. Ask questions they can answer: "Have you ever wondered...?", "Did you know...?"
-
-OUTPUT FORMAT: SSML (Speech Synthesis Markup Language).
-Wrap entire script in <speak version='1.0' xml:lang='{locale}'>...</speak> tags.
-Do NOT output plain text. Output valid SSML only.
-
-SSML TAGS AVAILABLE:
-- <prosody rate="X%" pitch="±Yst" volume="±ZdB">text</prosody>
-  rate: percentage or keyword (fast=150%, medium=100%, slow=75%, very-slow=60%)
-  pitch: semitones (e.g., +5st higher, -3st lower) or keyword (high, low)
-  volume: +dB/-dB or keyword (loud, soft, medium)
-- <break time="300ms"/> or <break time="1s"/> — strategic pause
-- <emphasis level="strong"> or level="moderate">word</emphasis> — stress
-- <say-as interpret-as="whispered">text</say-as> — whisper effect
-
-PROSODY DECISION RULES — decide per script based on topic emotional tone:
-- MYSTERY/SUSPENSE: slower base rate (75-85%), lower pitch, deliberate pacing, pauses before reveals
-  Example: <prosody rate="80%" pitch="-3st">But what they found in the dark was...</prosody>
-- NEWS/URGENT: faster rate (120-150%), higher pitch, clipped sentences
-  Example: <prosody rate="fast" pitch="+5st">Breaking news! NASA just announced...</prosody>
-- MOTIVATIONAL: building energy — slower opening, faster middle, slower emphatic finish
-  Example: <prosody rate="85%">You have the power...</prosody><break time="600ms"/><prosody rate="fast">to make it happen!</prosody>
-- SCIENCE/EXPLAINER: medium rate (100%), authoritative pitch, clear diction, occasional emphasis
-  Example: <prosody rate="medium" pitch="+2st">The answer lies in...</prosody>
-- HUMOR/WITTY: faster rate with pitch variation, natural breaks at punchline timing
-  Example: <prosody rate="fast" pitch="+3st">So I tried that trick and... [pause] it worked!</prosody>
-- QUESTIONS: raised pitch on question word, pause before answer
-Example: Did you know <prosody pitch="+5st">sharks</prosody> could detect your heartbeat?
-
-INDONESIAN-SPECIFIC GUIDANCE (for id-ID voices like ArdiNeural, GadisNeural):
-- Indonesian is a stress-timed language with consistent syllable timing
-- Use rate="85-95%" (Indonesian doesn't have English-style stress emphasis — slower than English default)
-- Use pitch adjustments sparingly — Indonesian uses only negative pitch: -1st to -2st maximum
-- Prefer <break time="200-400ms"> over prosody rate changes for pacing
-- Use <emphasis level="moderate"> instead of "strong" — heavy emphasis sounds unnatural in Indonesian
-- Keep sentences shorter (6-10 words) — Indonesian syntax is head-final
-    - ALWAYS wrap SSML with xml:lang attribute using the locale value: <speak version="1.0" xml:lang="{locale}">
-
-MALAY-SPECIFIC GUIDANCE (for ms-MY voices):
-- Similar phonology to Indonesian — apply similar rules
-- Rate: 85-95%, pitch: -1st to -2st maximum
-
-STRUCTURE:
-1. HOOK (first sentence): Grab attention with surprising fact + appropriate prosody
-2. BODY (sentences 2 to n-1): Facts, story, explanation — match prosody to topic tone
-3. FINISH (last sentence): Most impactful line — deliberate pacing, strategic pause before if ending a story
-
-CONSTRAINTS:
-- Total: {sentence_length} sentences
-- Each sentence: 8-12 words maximum (keep it SHORT for kids)
-- Total: 60-100 words
-- Each sentence wrapped in <prosody>...</prosody> or natural SSML
-- NO "welcome", NO "in this video", NO "subscribe"
-- NO markdown, NO numbering, NO bullet points
-        - Write in {locale}
-- Make it SOUND LIKE A PERSON TALKING, not a textbook
-- Add simple sound effects as <break> tags or whispered segments
-
-Subject: {subject}
-Locale: {locale}
-
-Return ONLY the SSML script wrapped in <speak> tags. No labels, no commentary."""
+    prompt = get_prompt(
+        "script",
+        subject=subject,
+        language=locale,
+        locale=locale,
+        sentence_length=sentence_length,
+        max_words_per_sentence=12,
+        max_total_words=100
+    )
 
     completion = generate_response(prompt, job="script")
     completion = re.sub(r"\*", "", completion)
@@ -173,15 +77,14 @@ def generate_title_response(subject: str) -> str:
     Returns:
         str: The title (validated 3-8 words).
     """
-    prompt = f"Generate a YouTube Shorts title for: {subject}. Rules: Under 50 characters. MUST be 3-8 words. Front-load the most important keywords. No hashtags in the title. Return ONLY the title, nothing else."
+    prompt = get_prompt("title_retry", subject=subject)
     title = generate_response(prompt, job="title_desc")
 
     # Validate word count (3-8 words per FIX_STORYTELLING.md)
     word_count = len(title.split())
     if word_count < 3 or word_count > 8:
         # Retry once with explicit instruction
-        retry_prompt = f"Generate a YouTube Shorts title for: {subject}. Rules: Under 50 characters. MUST be EXACTLY 3-8 words (no more, no less). Front-load the most important keywords. No hashtags. Return ONLY the title, nothing else."
-        title = generate_response(retry_prompt, job="title_desc")
+        title = generate_response(get_prompt("title_retry", subject=subject), job="title_desc")
         word_count = len(title.split())
         # If still invalid after retry, truncate to fit
         if word_count > 8:
@@ -206,7 +109,7 @@ def generate_description_response(script: str) -> str:
     Returns:
         str: The description with hashtags.
     """
-    prompt = f"Generate a YouTube Shorts description for the following script: {script}. Rules: Include 3-5 relevant hashtags. Add a brief, keyword-rich summary of the video content to index properly in YouTube Search. Return ONLY the description, nothing else."
+    prompt = get_prompt("description", script=script)
     return generate_response(prompt, job="title_desc")
 
 
@@ -220,10 +123,8 @@ def generate_tags_response(subject: str) -> list:
     Returns:
         list: List of tags.
     """
-    tags_raw = generate_response(
-        f'Generate a JSON array of 10-15 YouTube SEO tags (single words or short phrases) for a video about: {subject}. Return ONLY a JSON array of strings, e.g. ["tag1", "tag2"]. No other text.',
-        job="seo_tags",
-    )
+    prompt = get_prompt("seo_tags", subject=subject)
+    tags_raw = generate_response(prompt, job="seo_tags")
     try:
         cleaned = str(tags_raw).replace("```json", "").replace("```", "").strip()
         tags = json.loads(cleaned)
@@ -251,36 +152,16 @@ def generate_image_prompts_response(subject: str, script: str) -> list:
     # Z-Image Turbo optimized prompt template
     # Structure: subject+action, environment, lighting, composition, style, quality, inline constraints
     # Target: 80-250 words per prompt (supports full detail richness)
-    prompt = f"""You are a visual director crafting ultra-detailed scene prompts for Z-Image Turbo (pollinations.ai zimage model).
-
-Subject: {subject}
-Script sentences (in order):
-{chr(10).join(str(i + 1) + ". " + s for i, s in enumerate(sentences[:n_scenes]))}
-
-For EACH sentence above, write ONE comprehensive visual scene prompt optimized for Z-Image Turbo.
-
-PROMPT STRUCTURE (follow for every scene):
-1. MAIN SUBJECT + ACTION: Detailed description of the primary subject including specific attributes (age if human/creature, materials, pose, clothing, expression).
-2. ENVIRONMENT/SETTING: Precise location, time of day, weather conditions, atmosphere.
-3. LIGHTING/MOOD: Specific light quality (golden hour, overcast soft, dramatic rim light, cinematic shadows), emotional tone (serene, mysterious, energetic).
-4. COMPOSITION/FRAMING: Shot type (wide establishing, medium, close-up), camera angle, rule of thirds placement.
-5. STYLE/TECHNICAL: "shot on RED/ARRI/cinematic", "photorealistic", "8K ultra-detailed", lens style (85mm portrait, wide-angle landscape).
-6. QUALITY BOOSTERS: "sharp focus throughout", "crisp textures", "no artifacts", "no blur/distortion", "professional color grading".
-7. INLINE CONSTRAINTS: Embed "no text/gibberish/watermarks", "clean composition", "no blurry elements" directly in prompt.
-
-TECHNICAL PARAMS (append to each prompt):
-"Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9"
-
-OUTPUT FORMAT: Numbered 1 to {n_scenes}. Each prompt on its own line.
-- Target length: 80-250 words per prompt
-- Use complete natural sentences (NOT tags/lists)
-- NO JSON, NO quotes, NO bullet points
-- Scenes must flow as a visual narrative (beginning → middle → end)
-- Cinematic style consistent across ALL scenes
-
-Example output:
-1. A weathered prospector in a torn flannel shirt and dusty denim crouches beside a rushing mountain stream, panning for gold with calloused hands and a look of desperate hope etched on his weathered face. The scene unfolds in a secluded Sierra Nevada canyon during late autumn golden hour, the air crisp with pine and possibility. Soft directional sunlight streams through towering Douglas firs casting long dramatic shadows across the riverbed while volumetric fog clings to the distant ridgeline. Shot in anamorphic wide-angle cinematic style with the subject placed using rule of thirds, evoking a sense of rugged solitude and perseverance. Ultra-sharp 8K resolution with crisp fabric textures and meticulous detail on weathered skin. Professional color grading with warm amber highlights and cool shadow tones. No text, no gibberish, no watermarks, no artifacts. Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9
-2. An extreme aerial drone shot soaring over the canyon rim at sunrise, revealing the vast scale of the Sierra Nevada wilderness bathed in pink and orange alpenglow..."""
+    formatted_sentences = "\n".join(f"{i+1}. {s}" for i, s in enumerate(sentences[:n_scenes]))
+    prompt = get_prompt(
+        "image_prompt",
+        subject=subject,
+        sentences=formatted_sentences,
+        n_scenes=n_scenes,
+        num_inference_steps=12,
+        acceleration="high",
+        image_size="landscape_16_9"
+    )
 
     completion = generate_response(prompt, job="image_prompts")
 

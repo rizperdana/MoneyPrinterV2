@@ -24,15 +24,14 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Add src to path before local imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add project root to path so 'from src.*' imports work
+ROOT_DIR = Path(__file__).parent.parent.resolve()
+sys.path.insert(0, str(ROOT_DIR))
+os.chdir(ROOT_DIR)
 
-# Load .env before other imports
-load_dotenv(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-)
+load_dotenv(ROOT_DIR / ".env")
 
-from src.config import ROOT_DIR, get_verbose
+from src.config import get_verbose
 from src.status import info, success, warning, error
 
 
@@ -245,7 +244,7 @@ def main():
 
             # Retry up to 3 times on failure
             result = None
-             for attempt in range(3):
+            for attempt in range(3):
                 result = run_single_video(topic, output_dir, logger, upload=args.upload, locale=locale)
                 if result.get("video_path"):
                     break

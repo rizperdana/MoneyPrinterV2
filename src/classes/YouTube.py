@@ -572,19 +572,13 @@ class YouTube:
 
 ⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY about "{self.niche}". Do NOT pick general news, history, or unrelated trending topics. If the research data doesn't contain niche-relevant content, IGNORE it and generate topics from your own knowledge about "{self.niche}".
 
-⚠️ MYSTERY TONE ENFORCED (Section 13):
-Every video must feel: "I found something strange, I do not fully understand it, and I want to know what it means."
-- SEEK: mysteries, anomalies, unexplained phenomena, contradictions, strange facts
-- AVOID: happy, positive, resolved, complete, known topics
-- PRIORITIZE: strange, impossible, unexplained, contradiction, puzzle, hidden
-
 ⚠️ WHEN EXTRACTED FACTS ARE PROVIDED: You MUST incorporate at least one specific fact into your topic. Instead of "A judge stored strange things" use "Judge John Smith stored 3000 hearts". Ground your topic in the extracted facts.
 
 Generate 3 specific, engaging video topic ideas that:
 1. Are STRICTLY and EXCLUSIVELY about: {self.niche}
 2. Would perform well as YouTube Shorts (curiosity-driven, visual, surprising)
 3. Are specific enough to make a 45-60 second video about
-4. FEEL like a mystery - strange, unexplained, or puzzling
+4. FEEL curiosity-driven — surprising, thought-provoking, intriguing
 5. Include specific names/locations from extracted facts when available
 
 Each topic should be one sentence, specific, and curiosity-driven.
@@ -604,21 +598,15 @@ Example (if niche is "cool animal facts"):
 
 ⚠️ CRITICAL RULE: Every topic MUST be DIRECTLY and EXCLUSIVELY about "{self.niche}". Do NOT drift into general knowledge, history, or unrelated subjects.
 
-⚠️ MYSTERY TONE ENFORCED (Section 13):
-Every video must feel: "I found something strange, I do not fully understand it, and I want to know what it means."
-- SEEK: mysteries, anomalies, unexplained phenomena, contradictions, strange facts
-- AVOID: happy, positive, resolved, complete, known topics
-- PRIORITIZE: strange, impossible, unexplained, contradiction, puzzle, hidden
-
 Consider:
 1. What surprising or little-known facts exist about {self.niche}?
 2. What recent discoveries or viral moments relate to {self.niche}?
 3. What would make someone stop scrolling and watch about {self.niche}?
-4. What mystery, anomaly, or unexplained phenomenon relates to {self.niche}?
+4. What surprising or counterintuitive angle exists for {self.niche}?
 
 Generate 3 specific, engaging video topic ideas that would perform well as YouTube Shorts.
 Each topic should be one sentence, specific, and curiosity-driven.
-MUST feel like a mystery - strange, unexplained, or puzzling.
+MUST feel curiosity-driven — surprising, thought-provoking, intriguing.
 
 Output format: Just list 3 topics, one per line, numbered 1-3.
 Example (if niche is "cool animal facts"):
@@ -814,17 +802,10 @@ FACTS FROM RESEARCH (you MUST use these in the script):
 - 6-8 sentences total (one sentence per visual scene)
 - Each sentence must fit in 4-6 seconds of speech
 
-⚠️ MYSTERY TONE ENFORCED (FIX_STORYTELLING Section 13):
-The entire video must feel: "I found something strange, I do not fully understand it, and I want to know what it means."
-- Use eerie, mysterious, wonder tone
-- END ON QUESTION, NOT ANSWER
-- Leave imagination space for viewer
-- NEVER fully resolve the mystery
-- One mystery per video, leave it open
 
 VOICE DELIVERY (STRICT):
 - calm, low-pressure, clear
-- slightly mysterious, not exaggerated
+- engaging tone, not exaggerated
 - speak slower than normal conversation
 - pause before important words
 - lower energy on hook, increase intensity near twist
@@ -842,16 +823,16 @@ CRITICAL RULE — EXPLAIN LIKE THE VIEWER IS 5 YEARS OLD:
 STORY STRUCTURE (6 phases, strict):
 1. HOOK (sentence 1): Strange claim or impossible visual that stops scrolling. Example: "This shrimp punches so fast the water catches fire."
 2. CONTEXT (sentences 2-3): Where, who, or what is unusual. Set the scene briefly.
-3. ESCALATION (sentences 4-5): Details that deepen the mystery. Each sentence adds one new layer.
+3. ESCALATION (sentences 4-5): Details that deepen the curiosity. Each sentence adds one new layer.
 4. TWIST (sentence 5): Reveal contradiction — something that doesn't add up.
 5. PARTIAL EXPLANATION (sentence 6): Possible answer, but NOT fully resolved.
 6. OPEN ENDING (sentence 7-8): Leave question unresolved. Grammatically connects back to the hook for seamless loop.
-⚠️ CRITICAL: Never resolve the mystery fully. End with a question mark or "..." to leave viewer wondering.
+⚠️ CRITICAL: End with an open question or ellipsis to maintain curiosity and rewatchability.
 
 RULES:
 - Total: 6-8 sentences maximum
 - 70-120 words total (short, punchy, no rambling)
-- One mystery per video — never fully resolve
+- Maintain curiosity — leave the core question open
 - Leave imagination space for the viewer
 - First sentence is a HOOK STATEMENT, NOT a title or label
 - Each sentence describes a visual scene (what we SEE on screen)
@@ -865,7 +846,6 @@ RULES:
 # HOOK TECHNQUES (deploy at your discretion — these are proven patterns):
 # - 3-second window: grab attention immediately
 # - Pattern interrupt: unexpected element breaks expectation
-# - Curiosity gap: start with mystery, withhold key info
 # - Bold statement/stats: lead with shocking number or claim
 # - Multiple hooks: 2-3 per short (open, midpoint, close)
 
@@ -1115,9 +1095,11 @@ TITLE SUFFIX (OPTIONAL, only if confidence is 'high'):
                 f"Generate a YouTube Shorts title for: {self.subject}. "
                 f"{title_facts_context}"
                 f"⚠️ STRICT: Title must be EXACTLY 60-125 characters (count the letters). "
-                f"Title formula: [Strange fact] + [mystery] + [implied consequence]. "
+                f"TITLE CLARITY: Title must accurately describe the video content, be readable, and make sense. "
+                f"Avoid vague phrases like 'fires our solar system fast'. "
+                f"Title formula: [Strange fact] + [curiosity] + [implied consequence]. "
                 f"Start with: This, Why, How, What, Scientists Found, Hidden. "
-                f"Make it curious, create questions in viewer's mind. Leave questions unanswered for mystery tone. "
+                f"Make it curious, create questions in viewer's mind. "
                 f"Front-load keywords. No hashtags. Avoid generic phrases. "
                 f"Return ONLY the title, nothing else.",
                 model_name=get_model_for_job("title_desc"),
@@ -1322,7 +1304,7 @@ PHASES:
 1. HOOK - Most shocking/unusual visual. Grab attention immediately.
 2. CONTEXT - Where/when it exists. Ground the story.
 3. DETAIL - Close-up of strange feature. Build curiosity.
-4. TWIST - Something that contradicts or deepens mystery.
+4. TWIST - Something that contradicts or deepens tension.
 5. ENDING - Unresolved, memorable frame. Loops with opening.
 
 (Add more phases as needed for {n_scenes} scenes)
@@ -2355,7 +2337,7 @@ Output format (one per line):
         - Title: curiosity-driven
         - SEO: one main + one emotional keyword
         - Description: short context + question
-        - Image: cinematic mystery frame
+        - Image: cinematic engaging frame
         - Animation: slow motion with tension rise
         - Story: hook → context → twist → partial → open loop
         - Voice: calm, slow, clear, eerie
@@ -2440,7 +2422,7 @@ Output format (one per line):
         if not ends_with_question:
             issues.append("Description does not end with question (Section 12)")
 
-        # 4. Image: cinematic mystery frame (Section 12) - 4-5 images
+        # 4. Image: cinematic engaging frame (Section 12) - 4-5 images
         num_images = len(self.images) if hasattr(self, "images") and self.images else 0
         if not (4 <= num_images <= 5):
             issues.append(f"Image count {num_images} not in 4-5 range (Section 12)")
@@ -2526,32 +2508,6 @@ Output format (one per line):
         if not has_open_ending:
             issues.append("Ending not unresolved/replayable (Section 12)")
 
-        # 11. Mystery Tone: Section 13 enforcement
-        # Every video should feel: "I found something strange, I do not fully understand it, and I want to know what it means."
-        mystery_indicators = [
-            "mystery",
-            "unknown",
-            "unexplained",
-            "strange",
-            "impossible",
-            "contradiction",
-            "puzzle",
-            "hidden",
-            "secret",
-            "nobody knows",
-            "can't explain",
-            "scientists don't know",
-            "Researchers are puzzled",
-            "No one can explain",
-            "remains a",
-            "raises questions",
-            "but nobody knows",
-        ]
-        has_mystery = any(word in script_lower for word in mystery_indicators)
-        if not has_mystery:
-            issues.append(
-                "Script missing mystery tone (Section 13) - should feel: 'I found something strange, I do not fully understand it'"
-            )
 
         # 9. Duration: 20-30 seconds
         duration = 0.0

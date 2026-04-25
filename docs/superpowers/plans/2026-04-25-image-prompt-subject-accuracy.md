@@ -127,7 +127,7 @@ git commit -m "fix(image): remove character injection from Pollinations flux enh
 ## Task 3: Fix Stage 2 Enhancement in generate_image_cloudflare()
 
 **Files:**
-- Modify: `src/classes/YouTube.py` (exact line TBD verified with grep)
+- Modify: `src/classes/YouTube.py` (exact line verified with grep)
 
 > **⚠️ CRITICAL FIX (from review):** The line number in the original plan was approximate (1547-1560). The actual line is ~1562 and may include a `, high quality, detailed` suffix. Always verify with grep before editing.
 
