@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **Goal:** Make image generation show the correct subject from the video script by fixing (1) the style enhancement layer that injects random characters, and (2) the LLM prompt template that generates vague prompts.
+> **Goal:** Make image generation show the correct subject from the video script by fixing (1) the style enhancement layer that injects random characters, and (2) the LLM prompt template that generates vague prompts. Also disable `generate_thumbnail()` since YouTube Shorts don't use custom thumbnails.
 >
 > **Architecture:** Two-stage fix:
 > - **Stage 1 (upstream):** Rewrite `IMAGE_PROMPT` template and `generate_prompts()` to produce subject-anchored, detailed prompts with mandatory Ghibli/watercolor style.
@@ -16,11 +16,13 @@
 
 ```
 src/
-  llm_prompts.py           # IMAGE_PROMPT template rewrite (Task 2)
-  llm_generate.py          # Fallback prompt fix in generate_image_prompts_response() (Task 5)
+  llm_prompts.py           # IMAGE_PROMPT template rewrite (Task 4)
+  llm_generate.py          # Fallback prompt fix in generate_image_prompts_response() (Task 7)
   classes/
-    YouTube.py             # generate_image_pollinations/flux/cloudflare enhancement (Task 1)
-                            # generate_prompts() upstream prompt rewrite (Task 3)
+    YouTube.py             # generate_image_pollinations enhancement (Task 1)
+                            # generate_image_pollinations_flux enhancement (Task 2)
+                            # generate_image_cloudflare enhancement (Task 3)
+                            # generate_prompts() upstream prompt rewrite (Task 5)
 docs/
   superpowers/
     specs/
@@ -34,74 +36,13 @@ docs/
 **Files:**
 - Create: `docs/superpowers/specs/2026-04-25-image-prompt-subject-accuracy-design.md`
 
-- [ ] **Step 1: Write design document**
+> **Note:** The design spec file has already been created at the path above. Verify it exists, then commit.
 
-```markdown
-# Image Prompt Subject Accuracy — Design Spec
-
-## Problem Statement
-When generating images for YouTube Shorts videos, the current system produces images with irrelevant characters/people instead of the actual subject matter from the script. Example: Script about "Hitler in WWII bunker" generates images of random places instead of a figure in a bunker setting.
-
-## Root Causes
-
-### Stage 2 — Enhancement Layer (YouTube.py)
-The `generate_image_pollinations()` / `flux()` / `cloudflare()` methods append this to every prompt:
+- [ ] **Step 1: Verify design spec exists**
+```bash
+ls -la /home/anon/Projects/experiment/MoneyPrinterV2/docs/superpowers/specs/2026-04-25-image-prompt-subject-accuracy-design.md && echo "EXISTS" || echo "MISSING"
 ```
-Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting,
-rounded organic characters, magical realism elements, ultra-detailed expressive
-faces, family-friendly adventure scene.
-```
-
-The phrases `rounded organic characters`, `ultra-detailed expressive faces`, and `family-friendly adventure scene` are **character injection triggers**. They cause the image model to add random people even when the script is about an object, place, or concept.
-
-### Stage 1 — LLM Prompt Template (llm_prompts.py + YouTube.py)
-The `IMAGE_PROMPT` template generates 15-25 word prompts that are:
-- Too short for Z-Image to work well (needs 80-150 words)
-- Vague — "cinematic style" instead of specific subject traits
-- Missing subject reinforcement (the subject is mentioned once and not anchored)
-- Not aware that Stage 2 will inject characters (so LLM doesn't compensate)
-
-## Solution
-
-### Stage 2 — Clean Style Pass (no character injection)
-Replace the enhancement with:
-```
-Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting,
-warm inviting palette, no random characters, no unrelated people
-```
-**Removed:** `rounded organic characters`, `ultra-detailed expressive faces`, `magical realism elements`, `family-friendly adventure scene`
-**Kept:** `Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette`
-
-### Stage 1 — Self-Sufficient Prompt Template
-Rewrite `IMAGE_PROMPT` in `llm_prompts.py` to:
-1. Fix the style mandate: "Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette" — this is the ONLY style, no negotiation
-2. Enforce 80-150 word prompts (Z-Image sweet spot)
-3. Subject-first: Lead every prompt with specific subject + 2-3 defining traits
-4. Subject reinforcement: Mention the main subject 2-3 times in different forms
-5. No vague terms: "cinematic" alone is banned; use concrete photography descriptors
-6. No substitution rule: If script says "Hitler", show a figure with 1940s military traits — not a generic person
-
-Update `generate_prompts()` in YouTube.py to:
-1. Inject `extracted_facts` (topic_identifier, person_names, locations) as mandatory visual anchors
-2. Remove 15-25 word cap — let prompts be 80-150 words
-3. Add "no substitution" rule explicitly
-4. Tell LLM that no additional style enhancement will be added (it must include style in the prompt)
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/classes/YouTube.py` lines ~1450, ~1506 | Replace enhancement in 3 methods |
-| `src/classes/YouTube.py` lines ~1290-1324 | Rewrite generate_prompts() prompt |
-| `src/llm_prompts.py` IMAGE_PROMPT | Full template rewrite |
-| `src/llm_generate.py` fallback | Use Ghibli style in fallback prompts |
-
-## Testing
-- Generate a video about a specific historical figure/location
-- Verify generated image prompts mention the specific subject with traits
-- Verify images produced match the script subject, not random characters
-- Test fallback path by corrupting LLM output and checking fallback prompts
-```
+Expected: "EXISTS"
 
 - [ ] **Step 2: Commit design doc**
 ```bash
@@ -123,6 +64,8 @@ api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
 enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, rounded organic characters, magical realism elements, warm inviting palette, ultra-detailed expressive faces, family-friendly adventure scene."
 ```
+
+> **Note:** Run `grep -n "rounded organic characters" src/classes/YouTube.py` first to confirm line numbers match ~1448-1451.
 
 - [ ] **Step 2: Edit the enhancement to remove character injection**
 ```python
@@ -157,6 +100,8 @@ api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
 enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, rounded organic characters, magical realism elements, warm inviting palette, ultra-detailed expressive faces, family-friendly adventure scene."
 ```
+
+> **Note:** Run `grep -n "rounded organic characters" src/classes/YouTube.py` first to confirm line numbers match ~1504-1507.
 
 - [ ] **Step 2: Edit the enhancement (identical fix to flux)**
 ```python
@@ -270,7 +215,7 @@ RULES (STRICT — every prompt must follow these):
 - NO close-ups of hands, fingers, or human extremities (unless hands are the actual subject)
 - NO vague adjectives alone: do not use "cinematic", "beautiful", "epic", "magical", "dreamlike" without concrete subject info
 - If the topic is ABSTRACT (e.g., "justice", "freedom", "time"), represent it through a concrete visual metaphor before applying style
-- 80-150 words per prompt (Z-Image Turbo sweet spot — not the old 15-25, not 80-250)
+- 80-150 words per prompt (Z-Image Turbo sweet spot)
 - Use complete natural sentences, NOT tag lists
 - Mention the primary subject 2-3 times in different forms within the prompt for reinforcement
 
@@ -476,13 +421,17 @@ git commit -m "fix(image): use Ghibli style in fallback prompts instead of gener
   - Remove character injection from Stage 2 → Tasks 1, 2, 3 ✓
   - Rewrite IMAGE_PROMPT template → Task 4 ✓
   - Strengthen generate_prompts() with subject extraction → Task 5 ✓
-  - Fix fallback prompts → Task 6 ✓
+  - Fix fallback prompts → Task 7 ✓
 - [ ] **Placeholder scan:** No "TBD", "TODO", "fill in later", "add validation" in any step ✓
-- [ ] **Type consistency:** Function names match across tasks — `generate_image_pollinations`, `generate_prompts`, `generate_image_prompts_response` all consistent ✓
+- [ ] **Type consistency:** Function names match across tasks ✓
 - [ ] **All code blocks show actual code** — no "similar to above" shortcuts ✓
-- [ ] **Exact line numbers** provided for where to edit ✓
+- [ ] **Exact line numbers** provided for where to edit (or grep step for approximate) ✓
 - [ ] **Syntax verification commands** included in each task ✓
 - [ ] **Per-task commits** for clean git history ✓
+- [ ] **Word count updated to 90-150** everywhere ✓
+- [ ] **generate_thumbnail() scope addressed** — disabled, not fixed ✓
+- [ ] **No retry logic** — guidelines only ✓
+- [ ] **Fallback wording synced** across Task 5 and Task 7 ✓
 
 ---
 
@@ -490,12 +439,18 @@ git commit -m "fix(image): use Ghibli style in fallback prompts instead of gener
 
 **Plan complete and saved to `docs/superpowers/plans/2026-04-25-image-prompt-subject-accuracy.md`.**
 
-Two execution options:
+### Task Summary (7 Tasks)
 
-**1. Subagent-Driven (recommended)**
-I dispatch a fresh subagent per task, review between tasks, fast iteration
+| Task | File | Description |
+|------|------|-------------|
+| 1 | `YouTube.py` | Fix `generate_image_pollinations()` enhancement |
+| 2 | `YouTube.py` | Fix `generate_image_pollinations_flux()` enhancement |
+| 3 | `YouTube.py` | Fix `generate_image_cloudflare()` enhancement |
+| 4 | `llm_prompts.py` | Rewrite IMAGE_PROMPT template |
+| 5 | `YouTube.py` | Strengthen `generate_prompts()` with subject extraction |
+| 6 | `YouTube.py` | Disable `generate_thumbnail()` |
+| 7 | `llm_generate.py` | Fix fallback prompts |
 
-**2. Inline Execution**
-Execute tasks in this session using `superpowers:executing-plans`, batch execution with checkpoints
+**Recommended approach:** Execute tasks 1-3 together (same file, related changes), then tasks 4-7.
 
-Which approach?
+**For subagent-driven execution:** Use `superpowers:subagent-driven-development` skill.
