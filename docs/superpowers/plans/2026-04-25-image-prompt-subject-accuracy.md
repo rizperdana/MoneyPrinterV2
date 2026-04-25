@@ -215,7 +215,7 @@ RULES (STRICT — every prompt must follow these):
 - NO close-ups of hands, fingers, or human extremities (unless hands are the actual subject)
 - NO vague adjectives alone: do not use "cinematic", "beautiful", "epic", "magical", "dreamlike" without concrete subject info
 - If the topic is ABSTRACT (e.g., "justice", "freedom", "time"), represent it through a concrete visual metaphor before applying style
-- 80-150 words per prompt (Z-Image Turbo sweet spot)
+- 90-150 words per prompt (Z-Image Turbo sweet spot)
 - Use complete natural sentences, NOT tag lists
 - Mention the primary subject 2-3 times in different forms within the prompt for reinforcement
 
@@ -224,7 +224,7 @@ TECHNICAL PARAMS (append to each prompt):
 
 OUTPUT FORMAT:
 Numbered 1 to {n_scenes}. Each prompt on its own line.
-- Target length: 80-150 words per prompt
+- Target length: 90-150 words per prompt
 - Use complete natural sentences (NOT tags/lists)
 - NO JSON, NO quotes, NO bullet points
 - Scenes must flow as a visual narrative (beginning → middle → end)
@@ -289,7 +289,7 @@ VISUAL RULES:
 4. SHOT VARIETY: Use WIDE for establishing scenes, CLOSE-UP for detail shots, AERIAL for scale.
 5. NO text/letters/words/numbers/signs/logos/writing in any frame.
 6. NO close-ups of hands/fingers (unless hands ARE the subject).
-7. 80-150 words per prompt (NOT 15-25 — Z-Image needs more detail).
+7. 90-150 words per prompt (NOT 15-25 — Z-Image needs more detail).
 8. Consistent Ghibli/watercolor style across ALL frames.
 
 PHASES (one prompt per phase):
@@ -302,11 +302,11 @@ PHASES (one prompt per phase):
 (Add more phases as needed for {n_scenes} scenes)
 
 Output format (one per line, numbered):
-1. HOOK: [prompt — 80-150 words, include subject, Ghibli style]
-2. CONTEXT: [prompt — 80-150 words, include location, Ghibli style]
-3. DETAIL: [prompt — 80-150 words, include key feature, Ghibli style]
-4. TWIST: [prompt — 80-150 words, Ghibli style]
-5. ENDING: [prompt — 80-150 words, Ghibli style]"""
+1. HOOK: [prompt — 90-150 words, include subject, Ghibli style]
+2. CONTEXT: [prompt — 90-150 words, include location, Ghibli style]
+3. DETAIL: [prompt — 90-150 words, include key feature, Ghibli style]
+4. TWIST: [prompt — 90-150 words, Ghibli style]
+5. ENDING: [prompt — 90-150 words, Ghibli style]"""
 ```
 
 - [ ] **Step 3: Also update the fallback prompt (around line 1381)**
@@ -421,7 +421,7 @@ git commit -m "fix(image): use Ghibli style in fallback prompts instead of gener
   - Remove character injection from Stage 2 → Tasks 1, 2, 3 ✓
   - Rewrite IMAGE_PROMPT template → Task 4 ✓
   - Strengthen generate_prompts() with subject extraction → Task 5 ✓
-  - Fix fallback prompts → Task 7 ✓
+  - Fix fallback prompts → Task 6 ✓
 - [ ] **Placeholder scan:** No "TBD", "TODO", "fill in later", "add validation" in any step ✓
 - [ ] **Type consistency:** Function names match across tasks ✓
 - [ ] **All code blocks show actual code** — no "similar to above" shortcuts ✓
@@ -429,9 +429,9 @@ git commit -m "fix(image): use Ghibli style in fallback prompts instead of gener
 - [ ] **Syntax verification commands** included in each task ✓
 - [ ] **Per-task commits** for clean git history ✓
 - [ ] **Word count updated to 90-150** everywhere ✓
-- [ ] **generate_thumbnail() scope addressed** — disabled, not fixed ✓
+- [ ] **generate_thumbnail()** — never called in pipeline ✓ (no task needed)
 - [ ] **No retry logic** — guidelines only ✓
-- [ ] **Fallback wording synced** across Task 5 and Task 7 ✓
+- [ ] **Fallback wording synced** across Task 5 and Task 6 ✓
 
 ---
 
@@ -439,7 +439,7 @@ git commit -m "fix(image): use Ghibli style in fallback prompts instead of gener
 
 **Plan complete and saved to `docs/superpowers/plans/2026-04-25-image-prompt-subject-accuracy.md`.**
 
-### Task Summary (7 Tasks)
+### Task Summary (6 Tasks — all that are needed)
 
 | Task | File | Description |
 |------|------|-------------|
@@ -448,9 +448,8 @@ git commit -m "fix(image): use Ghibli style in fallback prompts instead of gener
 | 3 | `YouTube.py` | Fix `generate_image_cloudflare()` enhancement |
 | 4 | `llm_prompts.py` | Rewrite IMAGE_PROMPT template |
 | 5 | `YouTube.py` | Strengthen `generate_prompts()` with subject extraction |
-| 6 | `YouTube.py` | Disable `generate_thumbnail()` |
-| 7 | `llm_generate.py` | Fix fallback prompts |
+| 6 | `llm_generate.py` | Fix fallback prompts (Ghibli style) |
 
-**Recommended approach:** Execute tasks 1-3 together (same file, related changes), then tasks 4-7.
+**Thumbnail:** Never called in pipeline — no task needed.
 
 **For subagent-driven execution:** Use `superpowers:subagent-driven-development` skill.
