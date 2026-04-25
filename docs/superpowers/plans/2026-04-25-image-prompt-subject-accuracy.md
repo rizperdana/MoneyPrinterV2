@@ -17,7 +17,7 @@
 ```
 src/
   llm_prompts.py           # IMAGE_PROMPT template rewrite (Task 4)
-  llm_generate.py          # Fallback prompt fix in generate_image_prompts_response() (Task 7)
+  llm_generate.py          # Fallback prompt fix in generate_image_prompts_response() (Task 6)
   classes/
     YouTube.py             # generate_image_pollinations enhancement (Task 1)
                             # generate_image_pollinations_flux enhancement (Task 2)
