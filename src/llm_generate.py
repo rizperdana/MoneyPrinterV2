@@ -254,9 +254,7 @@ def generate_script_response(subject: str, locale: str, sentence_length: int) ->
         subject=subject,
         language=locale,
         locale=locale,
-        sentence_length=sentence_length,
-        max_words_per_sentence=12,
-        max_total_words=100
+        sentence_length=sentence_length
     )
 
     completion = generate_response(prompt, job="script")
