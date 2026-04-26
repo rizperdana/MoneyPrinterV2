@@ -1,3 +1,137 @@
+COMPLEXITY_WEIGHTS = {
+    "entities": 0.25,
+    "temporal": 0.20,
+    "causal": 0.20,
+    "abstract": 0.20,
+    "technical": 0.15,
+}
+
+COMPLEXITY_TIERS = {
+    "SIMPLE": (0, 0.15),
+    "MODERATE": (0.15, 0.35),
+    "COMPLEX": (0.35, 1.0),
+}
+
+DURATION_RANGES = {
+    "SIMPLE": {"sweet": (50, 70), "range": (40, 90)},
+    "MODERATE": {"sweet": (90, 120), "range": (60, 180)},
+    "COMPLEX": {"sweet": (120, 180), "range": (90, 240)},
+}
+
+SCENE_SECONDS_PER_TIER = {
+    "SIMPLE": (25, 30),
+    "MODERATE": (20, 25),
+    "COMPLEX": (15, 20),
+}
+
+
+def analyze_complexity(subject: str) -> str:
+    """Analyze subject complexity and return tier."""
+    if not subject or not subject.strip():
+        return "SIMPLE"
+    text = subject.strip()
+    words = text.split()
+    word_count = len(words)
+    
+    # VERY short simple subjects are SIMPLE
+    if word_count <= 2:
+        has_complex = any([
+            re.search(r'\b(quantum|algorithm|physics|philosophy|theory|concept)\b', text, re.I),
+            re.search(r'\b(how|why|what if)\b', text, re.I)
+        ])
+        if not has_complex:
+            return "SIMPLE"
+    
+    # Known complex topic patterns -> COMPLEX
+    complex_patterns = [
+        r'\bquantum\s+entanglement\b',
+        r'\bgeneral\s+relativity\b',
+        r'\bspecial\s+relativity\b',
+        r'\bblack\s+hole\b',
+        r'\bneural\s+network\b',
+        r'\bdeep\s+learning\b',
+        r'\bmachine\s+learning\b',
+        r'\bhistory\s+of\s+ancient\b',
+        r'\bancient\s+civilization\b',
+        r'\bworld\s+war\s+\d+\b',
+    ]
+    for pat in complex_patterns:
+        if re.search(pat, text, re.I):
+            return "COMPLEX"
+    
+    indicators = {
+        "entities": min(word_count, 3) / 3.0,
+        "temporal": len(re.findall(r'\b(now|then|past|future|century|year|day|age|ancient|modern|history|era)\b', text, re.I)) / max(word_count, 1),
+        "causal": len(re.findall(r'\bbecause|therefore|so|thus|reason|result|effect\b', text, re.I)) / max(word_count, 1),
+        "abstract": len(re.findall(r'\btheory|concept|belief|feeling|justice|meaning|truth|wisdom|love\b', text, re.I)) / max(word_count, 1),
+        "technical": len(re.findall(r'\balgorithm|system|process|method|quantum|physics|technology\b', text, re.I)) / max(word_count, 1),
+    }
+    score = sum(indicators[k] * COMPLEXITY_WEIGHTS[k] for k in COMPLEXITY_WEIGHTS)
+    for tier, (lo, hi) in COMPLEXITY_TIERS.items():
+        if lo <= score < hi:
+            return tier
+    return "COMPLEX"
+
+
+def get_duration_for_tier(tier: str) -> dict:
+    return DURATION_RANGES.get(tier, DURATION_RANGES["MODERATE"])
+
+
+def get_scenes_for_tier(tier: str, duration_seconds: int) -> int:
+    min_sec, max_sec = SCENE_SECONDS_PER_TIER.get(tier, (20, 25))
+    return max(1, min(duration_seconds // min_sec, 16))
+
+
+def validate_duration(duration_seconds: int, tier: str = "MODERATE") -> dict:
+    tier_range = DURATION_RANGES.get(tier, DURATION_RANGES["MODERATE"])
+    sweet_min, sweet_max = tier_range["sweet"]
+    range_min, range_max = tier_range["range"]
+    in_sweet = sweet_min <= duration_seconds <= sweet_max
+    in_range = range_min <= duration_seconds <= range_max
+    if in_sweet:
+        return {"valid": True, "in_range": True, "sweet": True, "message": "Duration in sweet spot"}
+    elif in_range:
+        return {"valid": True, "in_range": True, "sweet": False, "message": "Acceptable range"}
+    return {"valid": False, "in_range": False, "sweet": False, "message": f"Duration {duration_seconds}s outside {tier} range ({range_min}-{range_max}s)"}
+
+
+def estimate_duration_from_word_count(word_count: int, wpm: int = 150) -> int:
+    return int((word_count / wpm) * 60)
+
+
+RESOLUTION_PATTERNS = [
+    r"\bthat's\s+why", r"\bin\s+conclusion", r"\bthe\s+answer\s+is", r"\bso\s+remember", 
+    r"\bthat's\s+how", r"\bfinally", r"\bin\s+the\s+end", r"\bnow\s+you\s+know",
+    r"\bbut\s+then\b", r"\beverything\s+changed", r"\bhappily\s+ever\s+after",
+    r"\blived\s+happily", r"\bthey\s+lived", r"\bto\s+sum up",
+]
+ARC_MARKERS = {
+    "STASIS": [r"\boriginally\b", r"\btraditionally\b", r"\bfor\s+centuries\b"],
+    "DISRUPTION": [r"\bbut\s+then\b", r"\bhowever\b", r"\beverything\s+changed\b", r"\bsuddenly\b"],
+    "ATTEMPT": [r"\bthey\s+tried\b", r"\bpeople\s+tried\b"],
+    "RESOLUTION": [r"\bsuccess\b", r"\bfinally\b", r"\bin\s+the\s+end\b", r"\btoday\b", r"\bnow\s+you\s+know\b"],
+}
+
+
+def validate_completion(script: str) -> dict:
+    if not script or not script.strip():
+        return {"complete": False, "has_resolution": False, "arc_stages": [], "retry": True, "message": "Empty script"}
+    text = script.strip()
+    has_resolution = any(re.search(p, text, re.I) for p in RESOLUTION_PATTERNS)
+    found_stages = [stage for stage, patterns in ARC_MARKERS.items() if any(re.search(p, text, re.I) for p in patterns)]
+    arc_complete = "DISRUPTION" in found_stages or "RESOLUTION" in found_stages
+    if has_resolution and arc_complete:
+        return {"complete": True, "has_resolution": True, "arc_stages": found_stages, "retry": False, "message": "Complete"}
+    elif has_resolution:
+        return {"complete": True, "has_resolution": True, "arc_stages": found_stages, "retry": False, "message": "Complete (resolution only)"}
+    return {"complete": False, "has_resolution": False, "arc_stages": found_stages, "retry": True, "message": "Incomplete - missing resolution"}
+
+
+def check_and_complete_script(script: str) -> tuple[str, bool]:
+    result = validate_completion(script)
+    return (script, result["retry"]) if result["retry"] else (script, False)
+
+
 from src.llm_provider import generate_text, get_model_for_job
 from src.llm_prompts import get_prompt
 import re, json
