@@ -193,7 +193,7 @@ def generate_image_prompts_response(subject: str, script: str) -> list:
     if not image_prompts:
         for sentence in sentences[:n_scenes]:
             visual = (
-                f"Scene showing {sentence.strip()[:100]} in Pixar 3D animation "
+                f"A cinematic scene depicting {sentence.strip()[:100]} "
                 f"in Studio Ghibli style with soft earthy watercolor lighting and warm inviting palette. "
                 f"Subject clearly visible with defining characteristics, wide establishing shot, "
                 f"no text, no random characters, no watermarks, no logos, sharp focus throughout. "

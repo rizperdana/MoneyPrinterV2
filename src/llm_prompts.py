@@ -147,36 +147,62 @@ SEO_TAGS = 'Generate a JSON array of 10-15 YouTube SEO tags (single words or sho
 # Image prompt template (from llm_generate.py)
 # ---------------------------------------------------------------------------
 
-IMAGE_PROMPT = """You are a visual director crafting ultra-detailed scene prompts for Z-Image Turbo (pollinations.ai zimage model).
+IMAGE_PROMPT = """
+You are a text-to-image prompt engineer writing for Z-Image Turbo (pollinations.ai zimage model).
 
-Subject: {subject}
-Script sentences (in order):
+STYLE (MANDATORY — use this exact style for every prompt, do not omit or modify):
+Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette.
+
+TASK:
+For each script sentence below, write ONE complete visual scene prompt for Z-Image Turbo.
+The prompt must tell the image model EXACTLY what to show — subject, environment, shot type, lighting, and nuance.
+Write prompts that work WITHOUT any additional enhancement or post-processing.
+
+SUBJECT FROM VIDEO: {subject}
+
+SCRIPT SENTENCES (write one prompt per sentence, in order):
 {sentences}
 
-For EACH sentence above, write ONE comprehensive visual scene prompt optimized for Z-Image Turbo.
+FOR EACH SENTENCE, CREATE A PROMPT WITH THESE ELEMENTS:
+1. SUBJECT — Who or what is the primary focus? Give 2-3 specific defining traits.
+   If the script mentions a person (e.g., "Hitler"), describe the figure specifically:
+   "a figure in a 1940s German military uniform with Iron Cross medal, not a generic soldier"
+   If the script mentions an object (e.g., "the mantis shrimp's claw"), be specific:
+   "the raptorial claw of a mantis shrimp, extended and ready to strike"
+   If the script mentions a place (e.g., "the Brandenburg Gate"), show recognizable features:
+   "the Brandenburg Gate in Berlin with its quadriga statue, sandstone columns"
+2. ACTION/STATE — What is the subject doing or how does it appear in this moment?
+3. ENVIRONMENT — Where is it? Include only setting details that directly support subject identification.
+4. SHOT TYPE — Wide establishing / medium / close-up / aerial? Choose what best shows the subject clearly.
+5. LIGHTING — Type and direction: golden hour sunlight, soft overcast, dramatic rim light, etc.
+6. NUANCE — Any specific visual details that further clarify the subject (materials, textures, colors)?
 
-PROMPT STRUCTURE (follow for every scene):
-1. MAIN SUBJECT + ACTION: Detailed description of the primary subject including specific attributes (age if human/creature, materials, pose, clothing, expression).
-2. ENVIRONMENT/SETTING: Precise location, time of day, weather conditions, atmosphere.
-3. LIGHTING/MOOD: Specific light quality (golden hour, overcast soft, dramatic rim light, cinematic shadows), emotional tone (serene, mysterious, energetic).
-4. COMPOSITION/FRAMING: Shot type (wide establishing, medium, close-up), camera angle, rule of thirds placement.
-5. STYLE/TECHNICAL: "shot on RED/ARRI/cinematic", "photorealistic", "8K ultra-detailed", lens style (85mm portrait, wide-angle landscape).
-6. QUALITY BOOSTERS: "sharp focus throughout", "crisp textures", "no artifacts", "no blur/distortion", "professional color grading".
-7. INLINE CONSTRAINTS: Embed "no text/gibberish/watermarks", "clean composition", "no blurry elements" directly in prompt.
+RULES (STRICT — every prompt must follow these):
+- SUBJECT MUST appear and be clearly identifiable in every prompt
+- If script is about a PERSON, show that specific person with distinguishing traits — NOT a generic human figure
+- If script is about an OBJECT, show that object clearly with defining characteristics — NOT a generic item
+- If script is about a PLACE, show recognizable features of that place — NOT a generic looking location
+- DO NOT substitute generic alternatives for the specific subject in the script
+- MANDATORY STYLE: Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette
+- NO text, no letters, no numbers, no signs, no logos, no writing of any kind
+- NO close-ups of hands, fingers, or human extremities (unless hands are the actual subject)
+- NO vague adjectives alone: do not use "cinematic", "beautiful", "epic", "magical", "dreamlike" without concrete subject info
+- If the topic is ABSTRACT (e.g., "justice", "freedom", "time"), represent it through a concrete visual metaphor before applying style
+- 90-150 words per prompt (Z-Image Turbo sweet spot)
+- Use complete natural sentences, NOT tag lists
+- Mention the primary subject 2-3 times in different forms within the prompt for reinforcement
 
 TECHNICAL PARAMS (append to each prompt):
 "Params: num_inference_steps={num_inference_steps}, acceleration={acceleration}, image_size={image_size}"
 
-OUTPUT FORMAT: Numbered 1 to {n_scenes}. Each prompt on its own line.
-- Target length: 80-250 words per prompt
+OUTPUT FORMAT:
+Numbered 1 to {n_scenes}. Each prompt on its own line.
+- Target length: 90-150 words per prompt
 - Use complete natural sentences (NOT tags/lists)
 - NO JSON, NO quotes, NO bullet points
 - Scenes must flow as a visual narrative (beginning → middle → end)
-- Cinematic style consistent across ALL scenes
-
-Example output:
-1. A weathered prospector in a torn flannel shirt and dusty denim crouches beside a rushing mountain stream, panning for gold with calloused hands and a look of desperate hope etched on his weathered face. The scene unfolds in a secluded Sierra Nevada canyon during late autumn golden hour, the air crisp with pine and possibility. Soft directional sunlight streams through towering Douglas firs casting long dramatic shadows across the riverbed while volumetric fog clings to the distant ridgeline. Shot in anamorphic wide-angle cinematic style with the subject placed using rule of thirds, evoking a sense of rugged solitude and perseverance. Ultra-sharp 8K resolution with crisp fabric textures and meticulous detail on weathered skin. Professional color grading with warm amber highlights and cool shadow tones. No text, no gibberish, no watermarks, no artifacts. Params: num_inference_steps=12, acceleration=high, image_size=landscape_16_9
-2. An extreme aerial drone shot soaring over the canyon rim at sunrise, revealing the vast scale of the Sierra Nevada wilderness bathed in pink and orange alpenglow.."""
+- Same Ghibli/watercolor style across ALL scenes
+"""
 
 # Default image generation parameters (kept in spec)
 IMAGE_MAX_PROMPTS = 12  # Cap at 12 images max

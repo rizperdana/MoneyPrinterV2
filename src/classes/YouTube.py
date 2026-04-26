@@ -1292,36 +1292,41 @@ VISUAL GROUNDING (facts from research — these MUST appear in the visuals):
 SCRIPT: {self.script[:500]}...
 {visual_grounding}
 
-CRITICAL VISUAL RULE:
-- Each prompt MUST include the primary location (if found) OR the topic_identifier in the visual description
-- Good: "Ohio courthouse cellar with rows of preserved medical specimens" (grounded)
-- Bad: "a dark underground room" (generic, no facts)
-- Visual style can be creative, but subject/location grounding is mandatory
+MANDATORY STYLE (apply to every frame):
+Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette.
 
-Create exactly {n_scenes} visual scene prompts, one per phase:
+EXTRACTED SUBJECT FACTS (each MUST appear in the visuals — not generic substitutes):
+- Topic: {topic_id if topic_id else self.subject}
+- Location: {primary_loc if primary_loc else 'unknown'}
+- Key visual element: {primary_kf if primary_kf else 'mysterious setting'}
+{f'- Specific persons: {", ".join(self.extracted_facts.get("person_names", []))}' if self.extracted_facts and isinstance(self.extracted_facts.get("person_names"), list) else ''}
 
-PHASES:
-1. HOOK - Most shocking/unusual visual. Grab attention immediately.
-2. CONTEXT - Where/when it exists. Ground the story.
-3. DETAIL - Close-up of strange feature. Build curiosity.
+VISUAL RULES:
+1. SUBJECT ACCURACY: Each frame MUST show the specific topic/location/person from the extracted facts — NOT generic alternatives.
+2. NO SUBSTITUTION: Do NOT generate a generic person/place/object when the script names something specific. Be exact.
+3. ABSTRACT TOPICS: If the topic is abstract (justice, freedom, time), use a concrete visual metaphor.
+4. SUBJECT REINFORCEMENT: Mention the primary subject 2-3 times in different forms within each prompt.
+5. SHOT VARIETY: Use WIDE for establishing scenes, CLOSE-UP for detail shots, AERIAL for scale.
+6. NO text/letters/words/numbers/signs/logos/writing in any frame.
+7. NO close-ups of hands/fingers (unless hands ARE the subject).
+8. 90-150 words per prompt (NOT 15-25).
+9. Consistent Ghibli/watercolor style across ALL frames.
+
+PHASES (one prompt per phase):
+1. HOOK - Most shocking/unusual visual. Grab attention immediately with the actual subject.
+2. CONTEXT - Where/when it exists. Ground the story with accurate location/setting.
+3. DETAIL - Close-up of strange feature. Build curiosity with the specific subject.
 4. TWIST - Something that contradicts or deepens tension.
 5. ENDING - Unresolved, memorable frame. Loops with opening.
 
 (Add more phases as needed for {n_scenes} scenes)
 
-CRITICAL RULES:
-- NO text, letters, words, numbers, signs, logos, or writing of ANY kind in any frame
-- NO close-ups of hands, fingers, or human extremities
-- Use WIDE shots, landscapes, aerial views
-- Each prompt: 15-25 words describing what we SEE
-- Consistent cinematic style across ALL frames
-
-Output format (one per line):
-1. HOOK: [prompt]
-2. CONTEXT: [prompt]
-3. DETAIL: [prompt]
-4. TWIST: [prompt]
-5. ENDING: [prompt]"""
+Output format (one per line, numbered):
+1. HOOK: [prompt — 90-150 words, include subject, Ghibli style]
+2. CONTEXT: [prompt — 90-150 words, include location, Ghibli style]
+3. DETAIL: [prompt — 90-150 words, include key feature, Ghibli style]
+4. TWIST: [prompt — 90-150 words, Ghibli style]
+5. ENDING: [prompt — 90-150 words, Ghibli style]"""
 
         completion = str(
             self.generate_response(
@@ -1378,7 +1383,7 @@ Output format (one per line):
             phases = ["HOOK", "CONTEXT", "DETAIL", "TWIST", "ENDING"]
             for i, sentence in enumerate(sentences[:n_scenes]):
                 phase = phases[i] if i < len(phases) else f"SCENE_{i + 1}"
-                visual = f"{phase.lower()} visual: {sentence.strip()[:60]}, wide cinematic shot, photorealistic, dramatic lighting, no text"
+                visual = f"{phase.lower()} visual: {sentence.strip()[:60]}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, wide shot, no text, no random characters, sharp focus"
                 image_prompts.append(visual)
 
         # Ensure minimum of config images
@@ -1447,7 +1452,7 @@ Output format (one per line):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, rounded organic characters, magical realism elements, warm inviting palette, ultra-detailed expressive faces, family-friendly adventure scene."
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
         print(f"Generating AI image via Pollinations zimage: {prompt[:80]}...")
 
         try:
@@ -1503,7 +1508,7 @@ Output format (one per line):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, rounded organic characters, magical realism elements, warm inviting palette, ultra-detailed expressive faces, family-friendly adventure scene."
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
         print(f"Generating AI image via Pollinations flux: {prompt[:80]}...")
 
         try:
@@ -1559,7 +1564,7 @@ Output format (one per line):
                 )
             return None
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, rounded organic characters, magical realism elements, warm inviting palette, ultra-detailed expressive faces, family-friendly adventure scene., high quality, detailed"
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
 
         # Model fallback chain: Leonardo Phoenix > Flux Schnell > Flux Klein > Flux Dev > SDXL
         models = [
