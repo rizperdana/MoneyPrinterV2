@@ -237,14 +237,13 @@ def generate_topic_response(niche: str, research_context: str = None) -> str:
     return generate_response(prompt, job="topic")
 
 
-def generate_script_response(subject: str, locale: str, sentence_length: int) -> str:
+def generate_script_response(subject: str, locale: str) -> str:
     """
     Generate script for subject.
 
     Args:
         subject (str): The subject for the script.
         locale (str): BCP-47 locale code (e.g., en-US, id-ID).
-        sentence_length (int): The number of sentences in the script.
 
     Returns:
         str: Raw script text.
@@ -254,7 +253,6 @@ def generate_script_response(subject: str, locale: str, sentence_length: int) ->
         subject=subject,
         language=locale,
         locale=locale,
-        sentence_length=sentence_length
     )
 
     completion = generate_response(prompt, job="script")
