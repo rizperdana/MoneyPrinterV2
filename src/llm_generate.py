@@ -113,6 +113,88 @@ def validate_duration(duration_seconds: int, tier: str = "MODERATE") -> dict:
                 "message": f"Duration {duration_seconds}s outside {tier} range ({range_min}-{range_max}s)"}
 
 
+# ---------------------------------------------------------------------------
+# Story Completion Validation
+# ---------------------------------------------------------------------------
+
+# Resolution phrase patterns
+RESOLUTION_PATTERNS = [
+    r"\bthat's why\b",
+    r"\bin conclusion\b",
+    r"\bthe answer is\b",
+    r"\bso remember\b",
+    r"\bthat's how\b",
+    r"\bfinally\b",
+    r"\bin the end\b",
+    r"\bnow you know\b",
+    r"\bas you can see\b",
+    r"\bto summarize\b",
+]
+
+# Arc stage markers
+ARC_MARKERS = {
+    "STASIS": [r"^originally\b", r"^traditionally\b", r"^for centuries\b", r"^long ago\b", r"^once\b"],
+    "DISRUPTION": [r"\bbut then\b", r"\bhowever\b", r"\beverything changed\b", r"\bsuddenly\b", r"\b挑战\b"],
+    "ATTEMPT": [r"\bthey tried\b", r"\bpeople tried\b", r"\bscientists tried\b", r"\bresearchers tried\b", r"\bhowever\b"],
+    "RESOLUTION": [r"\bsuccess\b", r"\bfinally\b", r"\bin the end\b", r"\btoday\b", r"\bnow\b"],
+}
+
+
+def validate_completion(script: str) -> dict:
+    """
+    Validate script has story completion.
+    
+    Args:
+        script (str): Generated script text.
+        
+    Returns:
+        dict: {"complete": bool, "has_resolution": bool, "arc_stages": list, "retry": bool, "message": str}
+    """
+    if not script or not script.strip():
+        return {"complete": False, "has_resolution": False, "arc_stages": [], "retry": True, 
+                "message": "Empty script"}
+    
+    text = script.strip()
+    
+    # Check resolution phrases
+    has_resolution = any(re.search(p, text, re.IGNORECASE) for p in RESOLUTION_PATTERNS)
+    
+    # Check arc stages
+    found_stages = []
+    for stage, patterns in ARC_MARKERS.items():
+        if any(re.search(p, text, re.IGNORECASE) for p in patterns):
+            found_stages.append(stage)
+    
+    # Require STASIS->DISRUPTION->RESOLUTION or attempt->resolution
+    arc_complete = "DISRUPTION" in found_stages or "RESOLUTION" in found_stages
+    
+    if has_resolution and arc_complete:
+        return {"complete": True, "has_resolution": True, "arc_stages": found_stages, 
+                "retry": False, "message": "Complete"}
+    elif has_resolution:
+        return {"complete": True, "has_resolution": True, "arc_stages": found_stages, 
+                "retry": False, "message": "Complete (resolution only)"}
+    else:
+        return {"complete": False, "has_resolution": False, "arc_stages": found_stages, 
+                "retry": True, "message": "Incomplete - missing resolution"}
+
+
+def check_and_complete_script(script: str) -> tuple[str, bool]:
+    """
+    Check script completion and return (script, needs_retry).
+    
+    Args:
+        script (str): Script to check.
+        
+    Returns:
+        tuple: (checked_script, needs_retry_flag)
+    """
+    result = validate_completion(script)
+    if result["retry"]:
+        return script, True
+    return script, False
+
+
 def estimate_duration_from_word_count(word_count: int, wpm: int = 150) -> int:
     """Estimate TTS duration from word count."""
     return int((word_count / wpm) * 60)
