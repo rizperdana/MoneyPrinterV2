@@ -25,10 +25,10 @@ SCENE_SECONDS_PER_TIER = {
 }
 
 
-def analyze_complexity(subject: str) -> str:
+def analyze_complexity(subject: str, audience: str = "general") -> dict:
     """Analyze subject complexity and return tier."""
     if not subject or not subject.strip():
-        return "SIMPLE"
+        return {"tier": "SIMPLE", "audience": audience}
     text = subject.strip()
     words = text.split()
     word_count = len(words)
@@ -40,7 +40,7 @@ def analyze_complexity(subject: str) -> str:
             re.search(r'\b(how|why|what if)\b', text, re.I)
         ])
         if not has_complex:
-            return "SIMPLE"
+            return {"tier": "SIMPLE", "audience": audience}
     
     # Known complex topic patterns -> COMPLEX
     complex_patterns = [
@@ -57,7 +57,7 @@ def analyze_complexity(subject: str) -> str:
     ]
     for pat in complex_patterns:
         if re.search(pat, text, re.I):
-            return "COMPLEX"
+            return {"tier": "COMPLEX", "audience": audience}
     
     indicators = {
         "entities": min(word_count, 3) / 3.0,
@@ -69,8 +69,8 @@ def analyze_complexity(subject: str) -> str:
     score = sum(indicators[k] * COMPLEXITY_WEIGHTS[k] for k in COMPLEXITY_WEIGHTS)
     for tier, (lo, hi) in COMPLEXITY_TIERS.items():
         if lo <= score < hi:
-            return tier
-    return "COMPLEX"
+            return {"tier": tier, "audience": audience}
+    return {"tier": "COMPLEX", "audience": audience}
 
 
 def get_duration_for_tier(tier: str) -> dict:
@@ -155,13 +155,14 @@ def generate_response(prompt: str, job: str = None) -> str:
     return result
 
 
-def generate_topic_response(niche: str, research_context: str = None) -> str:
+def generate_topic_response(niche: str, research_context: str = None, audience: str = "general") -> str:
     """
     Generate topic ideas about niche, optionally using research context.
 
     Args:
         niche (str): The niche for topic generation.
         research_context (str, optional): Additional research context.
+        audience (str): Target audience level (default: "general").
 
     Returns:
         str: Raw LLM response with topics.
@@ -171,10 +172,13 @@ def generate_topic_response(niche: str, research_context: str = None) -> str:
     else:
         prompt = get_prompt("topic_no_research", niche=niche)
 
+    # Add audience context to prompt
+    prompt += f"\n\nAudience level: {audience}"
+
     return generate_response(prompt, job="topic")
 
 
-def generate_script_response(subject: str, locale: str, sentence_length: int) -> str:
+def generate_script_response(subject: str, locale: str, sentence_length: int, audience: str = "general") -> str:
     """
     Generate script for subject.
 
@@ -182,6 +186,7 @@ def generate_script_response(subject: str, locale: str, sentence_length: int) ->
         subject (str): The subject for the script.
         locale (str): BCP-47 locale code (e.g., en-US, id-ID).
         sentence_length (int): The number of sentences in the script.
+        audience (str): Target audience level (default: "general").
 
     Returns:
         str: Raw script text.
@@ -196,29 +201,39 @@ def generate_script_response(subject: str, locale: str, sentence_length: int) ->
         max_total_words=100
     )
 
+    # Add audience context to prompt
+    prompt += f"\n\nAudience level: {audience}"
+
     completion = generate_response(prompt, job="script")
     completion = re.sub(r"\*", "", completion)
     return completion
 
 
-def generate_title_response(subject: str) -> str:
+def generate_title_response(subject: str, audience: str = "general") -> str:
     """
     Generate YouTube title for subject.
 
     Args:
         subject (str): The subject for the title.
+        audience (str): Target audience level (default: "general").
 
     Returns:
         str: The title (validated 3-8 words).
     """
     prompt = get_prompt("title_retry", subject=subject)
+
+    # Add audience context to prompt
+    prompt += f"\n\nAudience level: {audience}"
+
     title = generate_response(prompt, job="title_desc")
 
     # Validate word count (3-8 words per FIX_STORYTELLING.md)
     word_count = len(title.split())
     if word_count < 3 or word_count > 8:
         # Retry once with explicit instruction
-        title = generate_response(get_prompt("title_retry", subject=subject), job="title_desc")
+        retry_prompt = get_prompt("title_retry", subject=subject)
+        retry_prompt += f"\n\nAudience level: {audience}"
+        title = generate_response(retry_prompt, job="title_desc")
         word_count = len(title.split())
         # If still invalid after retry, truncate to fit
         if word_count > 8:
@@ -233,31 +248,41 @@ def generate_title_response(subject: str) -> str:
     return title
 
 
-def generate_description_response(script: str) -> str:
+def generate_description_response(script: str, audience: str = "general") -> str:
     """
     Generate description from script.
 
     Args:
         script (str): The script text.
+        audience (str): Target audience level (default: "general").
 
     Returns:
         str: The description with hashtags.
     """
     prompt = get_prompt("description", script=script)
+
+    # Add audience context to prompt
+    prompt += f"\n\nAudience level: {audience}"
+
     return generate_response(prompt, job="title_desc")
 
 
-def generate_tags_response(subject: str) -> list:
+def generate_tags_response(subject: str, audience: str = "general") -> list:
     """
     Generate SEO tags as JSON list.
 
     Args:
         subject (str): The subject for tags.
+        audience (str): Target audience level (default: "general").
 
     Returns:
         list: List of tags.
     """
     prompt = get_prompt("seo_tags", subject=subject)
+
+    # Add audience context to prompt
+    prompt += f"\n\nAudience level: {audience}"
+
     tags_raw = generate_response(prompt, job="seo_tags")
     try:
         cleaned = str(tags_raw).replace("```json", "").replace("```", "").strip()
@@ -269,13 +294,14 @@ def generate_tags_response(subject: str) -> list:
     return tags
 
 
-def generate_image_prompts_response(subject: str, script: str) -> list:
+def generate_image_prompts_response(subject: str, script: str, audience: str = "general") -> list:
     """
     Generate image prompts from script.
 
     Args:
         subject (str): The subject.
         script (str): The script text.
+        audience (str): Target audience level (default: "general").
 
     Returns:
         list: List of image prompts.
@@ -296,6 +322,9 @@ def generate_image_prompts_response(subject: str, script: str) -> list:
         acceleration="high",
         image_size="landscape_16_9"
     )
+
+    # Add audience context to prompt
+    prompt += f"\n\nAudience level: {audience}"
 
     completion = generate_response(prompt, job="image_prompts")
 

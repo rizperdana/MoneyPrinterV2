@@ -21,7 +21,9 @@ class AccountCreate(BaseModel):
     username: str
     nickname: str | None = None
     topic: str | None = None
+    topics: str | None = None
     locale: str = "en-US"
+    audience: str = "general"  # ADD THIS
 
 
 class AccountUpdate(BaseModel):
@@ -29,7 +31,9 @@ class AccountUpdate(BaseModel):
     username: str | None = None
     nickname: str | None = None
     topic: str | None = None
+    topics: str | None = None
     locale: str | None = None
+    audience: str | None = None  # ADD THIS
 
 
 class SettingsUpdate(BaseModel):

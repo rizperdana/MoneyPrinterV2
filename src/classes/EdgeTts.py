@@ -47,16 +47,42 @@ class EdgeTTS:
     async def _generate_mp3(
         self, text: str, output_path: str, metadata_path: str | None = None
     ) -> None:
-        try:
-            communicate = edge_tts.Communicate(text, self._voice)
-            await communicate.save(output_path, metadata_path)
-        except Exception as e:
-            # If SSML was passed but rejected, strip tags and retry once
-            clean_text = re.sub(r"<[^>]+>", "", text)
-            clean_text = re.sub(r'\b(rate|pitch|volume)="[^"]+"', "", clean_text)
-            clean_text = clean_text.strip()
-            if clean_text:
-                communicate = edge_tts.Communicate(clean_text, self._voice)
+        # Check if text contains SSML tags
+        is_ssml = bool(
+            re.search(r"<[^>]+>.*</[^>]+>", text)
+        ) and (
+            "<speak>" in text or "<prosody>" in text or "<voice>" in text
+        )
+
+        if is_ssml:
+            # Try SSML pass-through (edge-tts may reject)
+            try:
+                communicate = edge_tts.Communicate(text, self._voice)
                 await communicate.save(output_path, metadata_path)
-            else:
-                raise ValueError("Empty text after SSML cleanup") from e
+            except Exception:
+                # Fallback 1: Strip SSML tags and retry
+                clean_text = re.sub(r"<[^>]+>", "", text)
+                clean_text = re.sub(r'\b(rate|pitch|volume)="[^"]+"', "", clean_text)
+                clean_text = clean_text.strip()
+                try:
+                    communicate = edge_tts.Communicate(clean_text, self._voice)
+                    await communicate.save(output_path, metadata_path)
+                except Exception:
+                    # Fallback 2: Pass through as-is, let it fail gracefully
+                    communicate = edge_tts.Communicate(text, self._voice)
+                    await communicate.save(output_path, metadata_path)
+        else:
+            # Normal text processing
+            try:
+                communicate = edge_tts.Communicate(text, self._voice)
+                await communicate.save(output_path, metadata_path)
+            except Exception:
+                # Fallback: Strip any remaining tags
+                clean_text = re.sub(r"<[^>]+>", "", text)
+                clean_text = re.sub(r'\b(rate|pitch|volume)="[^"]+"', "", clean_text)
+                clean_text = clean_text.strip()
+                if clean_text:
+                    communicate = edge_tts.Communicate(clean_text, self._voice)
+                    await communicate.save(output_path, metadata_path)
+                else:
+                    raise ValueError("Empty text after cleanup")

@@ -68,6 +68,31 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
 
+AUDIENCE_GUIDANCE = {
+    "beginner": """CRITICAL RULE — EXPLAIN LIKE THE VIEWER IS A COMPLETE BEGINNER:
+- Use ONLY words a 5-year-old knows. No jargon.
+- Every concept must be compared to something from daily life.
+- If the topic is technical, translate EVERY concept into a physical, visual comparison.
+- Each sentence must paint a CLEAR picture in the viewer's mind.""",
+
+    "general": """CRITICAL RULE — EXPLAIN FOR A GENERAL AUDIENCE:
+- Use accessible language that any adult can understand.
+- Avoid jargon without explanation.
+- Use analogies for complex technical topics.
+- Keep explanations clear and straightforward.""",
+
+    "intermediate": """CRITICAL RULE — EXPLAIN FOR AN INTERMEDIATE AUDIENCE:
+- You may use technical terms with brief explanations.
+- Assume basic familiarity with the topic.
+- Focus on practical applications and real-world examples.""",
+
+    "expert": """CRITICAL RULE — EXPLAIN FOR AN EXPERT AUDIENCE:
+- Use technical terminology freely.
+- Focus on nuanced insights, edge cases, and deeper mechanisms.
+- Assume deep domain knowledge."""
+}
+
+
 def _suppress_stderr():
     """Context manager to suppress stderr."""
     import contextlib, io
@@ -97,6 +122,7 @@ class YouTube:
         fp_profile_path: str,
         niche: str,
         locale: str = "en-US",
+        audience: str = "general",
     ) -> None:
         """
         Constructor for YouTube Class.
@@ -116,6 +142,7 @@ class YouTube:
         self._fp_profile_path: str = fp_profile_path
         self._niche: str = niche
         self._locale: str = locale
+        self._audience: str = audience
 
         self.images = []
         self._browser_initialized: bool = False
@@ -812,13 +839,8 @@ VOICE DELIVERY (STRICT):
 - end with controlled uncertainty, eerie tone
 - Use: Hook=quiet/direct, Context=steady/informative, Twist=lower/sharper, Ending=unfinished/thoughtful/eerie
 
-CRITICAL RULE — EXPLAIN LIKE THE VIEWER IS 5 YEARS OLD:
-- Use ONLY words a 5-year-old knows. No jargon. No technical terms unless you immediately explain them with a simple analogy.
-- Every concept must be compared to something from daily life: "It's like when you blow up a balloon and it pops" or "Imagine stacking LEGO blocks really fast"
-- If the topic is technical (software, engineering, science), translate EVERY concept into a physical, visual, everyday comparison.
-- BAD: "The load balancer distributes traffic across servers" → GOOD: "Imagine a pizza shop with one door. A thousand people try to enter at once. So they open ten doors and split the crowd evenly"
-- BAD: "The infrastructure handles millions of concurrent connections" → GOOD: "Picture a million people all talking on the phone at the same time — somehow nobody gets disconnected"
-- Each sentence must paint a CLEAR picture in the viewer's mind. If a kid can't visualize it, rewrite it.
+CRITICAL RULE — EXPLAIN LIKE THE VIEWER IS A COMPLETE BEGINNER (replace with AUDIENCE_GUIDANCE dynamically):
+{AUDIENCE_GUIDANCE["beginner"]}
 
 STORY STRUCTURE (6 phases, strict):
 1. HOOK (sentence 1): Strange claim or impossible visual that stops scrolling. Example: "This shrimp punches so fast the water catches fire."

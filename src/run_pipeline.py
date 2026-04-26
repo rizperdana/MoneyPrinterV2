@@ -43,6 +43,7 @@ def run_pipeline(
     locale: str = "en-US",
     upload: bool = False,
     headless: bool = True,
+    audience: str = "general",
 ) -> dict:
     """
     Run the full video generation pipeline non-interactively.
@@ -52,6 +53,7 @@ def run_pipeline(
         locale: BCP-47 locale code (e.g., "en-US", "id-ID")
         upload: Whether to upload to YouTube after generation
         headless: Run Firefox in headless mode
+        audience: Target audience level (beginner, general, intermediate, expert)
 
     Returns:
         dict with keys: topic, title, description, video_path, uploaded, error
@@ -81,6 +83,7 @@ def run_pipeline(
         youtube._account_nickname = "Auto Pipeline"
         youtube._niche = niche
         youtube._locale = locale
+        youtube._audience = audience
         youtube.images = []
         youtube.subject = None
         youtube.script = None

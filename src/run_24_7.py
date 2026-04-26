@@ -67,7 +67,12 @@ def setup_logging(output_dir: str) -> logging.Logger:
 
 
 def run_single_video(
-    niche: str, output_dir: str, logger: logging.Logger, upload: bool = False, locale: str = "en-US"
+    niche: str,
+    output_dir: str,
+    logger: logging.Logger,
+    upload: bool = False,
+    locale: str = "en-US",
+    audience: str = "general",
 ) -> dict:
     """Run the pipeline for a single video."""
     from src.run_pipeline import run_pipeline
@@ -79,7 +84,9 @@ def run_single_video(
     logger.info(f"Starting video: {niche} (locale={locale})")
 
     try:
-        result = run_pipeline(niche=niche, locale=locale, upload=upload)
+        result = run_pipeline(
+            niche=niche, locale=locale, upload=upload, audience=audience
+        )
 
         if result.get("video_path"):
             # Move video to output directory

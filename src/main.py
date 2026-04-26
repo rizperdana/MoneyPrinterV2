@@ -61,14 +61,24 @@ def serve(port, host, open_browser):
 @click.option("--account", default="auto", help="Account nickname/UUID or 'auto'")
 @click.option("--niche", required=True, help="Video topic niche")
 @click.option("--locale", default="en-US", help="BCP-47 locale code (e.g., en-US, id-ID)")
+@click.option(
+    "--audience",
+    type=click.Choice(["beginner", "general", "intermediate", "expert"]),
+    default="general",
+    help="Target audience level",
+)
 @click.option("--upload", is_flag=True, default=False, help="Upload after generation")
-@click.option("--for-kids", is_flag=True, default=False, help="Content for kids")
-def generate(account, niche, locale, upload, for_kids):
+@click.option("--for-kids", is_flag=True, default=False, help="Content for kids (deprecated, use --audience=beginner)")
+def generate(account, niche, locale, audience, upload, for_kids):
     """Generate a video from a niche prompt."""
     from src.run_pipeline import run_pipeline
 
-    click.echo(f"🎬 Generating: {niche} (locale: {locale})")
-    result = run_pipeline(niche=niche, locale=locale, upload=upload)
+    # Map deprecated --for-kids to audience="beginner"
+    if for_kids:
+        audience = "beginner"
+
+    click.echo(f"🎬 Generating: {niche} (locale: {locale}, audience: {audience})")
+    result = run_pipeline(niche=niche, locale=locale, upload=upload, audience=audience)
     if result.get("video_path"):
         click.echo(f"✅ Video: {result['video_path']}")
     else:

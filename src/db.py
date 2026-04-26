@@ -191,6 +191,12 @@ def init_db() -> None:
     except sqlite3.OperationalError:
         cursor.execute("ALTER TABLE accounts ADD COLUMN topic TEXT DEFAULT ''")
 
+    # Migration: add audience column to accounts (target demographic)
+    try:
+        cursor.execute("SELECT audience FROM accounts LIMIT 1")
+    except sqlite3.OperationalError:
+        cursor.execute("ALTER TABLE accounts ADD COLUMN audience TEXT DEFAULT 'general'")
+
     # Migration: add youtube_url column to videos
     try:
         cursor.execute("SELECT youtube_url FROM videos LIMIT 1")
@@ -670,6 +676,7 @@ def add_account(
     topic: Optional[str] = None,
     topics: Optional[str] = None,
     locale: str = "en-US",
+    audience: str = "general",
 ) -> int:
     """
     Insert an account record.
@@ -691,8 +698,8 @@ def add_account(
 
     # Note: profile_path removed - stored in config.json or OAuth credentials instead
     cursor.execute(
-        "INSERT INTO accounts (platform, username, nickname, topic, locale) VALUES (?, ?, ?, ?, ?)",
-        (platform, username, nickname or "", topic or "", locale),
+        "INSERT INTO accounts (platform, username, nickname, topic, topics, locale, audience) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (platform, username, nickname or "", topic or "", topics or "", locale, audience),
     )
     conn.commit()
     account_id = cursor.lastrowid
@@ -756,7 +763,7 @@ def update_account(account_id: int, updates: dict) -> bool:
     cursor = conn.cursor()
 
     # Build update query dynamically
-    valid_fields = {"platform", "username", "nickname", "topic", "locale"}
+    valid_fields = {"platform", "username", "nickname", "topic", "locale", "audience"}
     update_fields = {}
     for k, v in updates.items():
         if k in valid_fields:
