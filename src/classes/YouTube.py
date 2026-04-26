@@ -1044,19 +1044,16 @@ Return ONLY the raw script text. No labels, no numbering."""
             word_count = len(script.split())
             estimated_duration = word_count / 2.5
 
-        # Validate sentence count (target 6-8)
-        if sentence_count > 8:
-            warning(f"Too many sentences: {sentence_count} (target 6-8). Truncating...")
-            sentences = sentences[:8]
-            script = ". ".join(sentences)
-            if script and not script[-1] in ".!?":
-                script += "."
+        # Story completion check: enforce minimum sentences (4), no hard max truncation
+        # Let the story complete naturally - validation handles quality
+        if sentence_count < 4:
+            warning(f"Too few sentences: {sentence_count} (minimum 4 for story arc)")
 
-        # Warn if duration exceeds target
-        if estimated_duration > 30:
-            warning(
-                f"Script estimated duration: {estimated_duration:.0f}s (target 20-30s)"
-            )
+        # Use tier-appropriate validation (MODERATE default for Shorts)
+        if estimated_duration < 60:
+            warning(f"Script estimated: {estimated_duration:.0f}s (target 60s+)")
+        elif estimated_duration > 180:
+            warning(f"Script estimated: {estimated_duration:.0f}s (target <180s)")
 
         if get_verbose():
             info(
