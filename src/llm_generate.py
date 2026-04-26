@@ -3,6 +3,121 @@ from src.llm_prompts import get_prompt
 import re, json
 
 
+# ---------------------------------------------------------------------------
+# Complexity Scoring (Reviewer Gap #1)
+# ---------------------------------------------------------------------------
+
+COMPLEXITY_WEIGHTS = {
+    "entities": 0.25,
+    "temporal": 0.20,
+    "causal": 0.20,
+    "abstract": 0.20,
+    "technical": 0.15,
+}
+
+COMPLEXITY_TIERS = {
+    "SIMPLE": (0, 0.35),
+    "MODERATE": (0.35, 0.60),
+    "COMPLEX": (0.60, 1.0),
+}
+
+DURATION_RANGES = {
+    "SIMPLE": {"sweet": (50, 70), "range": (40, 90)},
+    "MODERATE": {"sweet": (90, 120), "range": (60, 180)},
+    "COMPLEX": {"sweet": (120, 180), "range": (90, 240)},
+}
+
+SCENE_SECONDS_PER_TIER = {
+    "SIMPLE": (25, 30),
+    "MODERATE": (20, 25),
+    "COMPLEX": (15, 20),
+}
+
+
+def _count_pattern(text: str, pattern: str) -> int:
+    """Count regex pattern matches in text."""
+    import re
+    return len(re.findall(pattern, text, re.IGNORECASE))
+
+
+def analyze_complexity(subject: str) -> str:
+    """
+    Analyze subject complexity and return tier.
+    
+    Args:
+        subject (str): The topic/subject to analyze.
+        
+    Returns:
+        str: "SIMPLE", "MODERATE", or "COMPLEX"
+    """
+    if not subject or not subject.strip():
+        return "SIMPLE"
+    
+    text = subject.strip()
+    if len(text.split()) == 1:
+        return "MODERATE"
+    
+    indicators = {
+        "entities": _count_pattern(text, r'\b(\w+\s+){0,2}\w+(?:\s+\w+){0,2}(?:\s+and\s+|\s*,\s*)') / max(len(text.split()), 1),
+        "temporal": _count_pattern(text, r'\b(now|then|past|future|century|year|day|age|ancient|modern|before|after|history|era|decade|1950|1960|1970|1980|1990|2000|1800|1900|1700|1600|1500)\b') / max(len(text.split()), 1),
+        "causal": _count_pattern(text, r'\bbecause|therefore|so|thus|hence|reason|result|effect|impact|changed|led to|due to|caused|made|created|built|invented|discovered|proved\b') / max(len(text.split()), 1),
+        "abstract": _count_pattern(text, r'\btheory|concept|belief|feeling|justice|meaning|truth|wisdom|love|hate|fear|hope|dream|idea|philosophy|spirit|soul|energy|force|mind|thought|emotion|principle|law|nature|reality|existence|purpose|destiny|karma|enlightenment\b') / max(len(text.split()), 1),
+        "technical": _count_pattern(text, r'\balgorithm|system|process|method|formula|protocol|engine|formula|mechanism|function|structure|architecture|platform|network|database|API|quantum|relativity|physics|chemistry|biology|medicine|engineering|technology|software|hardware|circuit|neuron|synapse|gene|protein|cell|molecule|atom|scale|dimension|time|space|gravity|force|energy|mass|velocity|acceleration|thermal|electromagnetic|suclear\b') / max(len(text.split()), 1),
+    }
+    
+    score = sum(indicators[key] * COMPLEXITY_WEIGHTS[key] for key in COMPLEXITY_WEIGHTS)
+    score = min(max(score, 0), 1.0)
+    
+    for tier, (low, high) in COMPLEXITY_TIERS.items():
+        if low <= score < high:
+            return tier
+    
+    return "COMPLEX"
+
+
+def get_duration_for_tier(tier: str) -> dict:
+    """Get duration range for complexity tier."""
+    return DURATION_RANGES.get(tier, DURATION_RANGES["MODERATE"])
+
+
+def get_scenes_for_tier(tier: str, duration_seconds: int) -> int:
+    """Calculate optimal scene count for tier and duration."""
+    min_sec, max_sec = SCENE_SECONDS_PER_TIER.get(tier, (20, 25))
+    return max(1, min(duration_seconds // min_sec, 16))
+
+
+def validate_duration(duration_seconds: int, tier: str = "MODERATE") -> dict:
+    """
+    Validate duration against tier-appropriate range.
+    
+    Args:
+        duration_seconds (int): Estimated duration in seconds.
+        tier (str): Complexity tier (SIMPLE|MODERATE|COMPLEX).
+        
+    Returns:
+        dict: {"valid": bool, "in_range": bool, "sweet": bool, "message": str}
+    """
+    tier_range = DURATION_RANGES.get(tier, DURATION_RANGES["MODERATE"])
+    sweet_min, sweet_max = tier_range["sweet"]
+    range_min, range_max = tier_range["range"]
+    
+    in_sweet = sweet_min <= duration_seconds <= sweet_max
+    in_range = range_min <= duration_seconds <= range_max
+    
+    if in_sweet:
+        return {"valid": True, "in_range": True, "sweet": True, "message": "Duration in sweet spot"}
+    elif in_range:
+        return {"valid": True, "in_range": True, "sweet": False, "message": "Acceptable range"}
+    else:
+        return {"valid": False, "in_range": False, "sweet": False, 
+                "message": f"Duration {duration_seconds}s outside {tier} range ({range_min}-{range_max}s)"}
+
+
+def estimate_duration_from_word_count(word_count: int, wpm: int = 150) -> int:
+    """Estimate TTS duration from word count."""
+    return int((word_count / wpm) * 60)
+
+
 def generate_response(prompt: str, job: str = None) -> str:
     """
     Generates an LLM Response based on a prompt and optional job type.
