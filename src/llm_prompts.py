@@ -59,65 +59,37 @@ Example (if niche is "cool animal facts"):
 # Script generation prompt (from llm_generate.py)
 # ---------------------------------------------------------------------------
 
-SCRIPT = """You are generating a YouTube Shorts script with dynamic voice delivery prosody.
+SCRIPT = """You are generating a YouTube Shorts script with a clear, 4-step structure.
 
-AUDIENCE: Elementary school children (ages 6-10)
+AUDIENCE: General audience (ages 12+)
 
-CRITICAL RULES:
-1. Use ONLY simple words. If a word has more than 2 syllables, find a simpler word.
-2. Every sentence should paint a picture they can see in their head.
-3. Use everyday comparisons they know: "like a playground swing", "like stacking blocks", "like your pet dog"
-4. NO big words. "Fast" not "rapid", "big" not "enormous", "begin" not "commence"
-5. Ask questions they can answer: "Have you ever wondered...?", "Did you know...?"
+4-STEP STRUCTURE:
 
-OUTPUT FORMAT: SSML (Speech Synthesis Markup Language).
-Wrap entire script in <speak>...</speak> tags.
-Do NOT output plain text. Output valid SSML only.
+STEP 1 - SETUP (1 sentence):
+Hook with ONE surprising fact about the topic. Grab attention. Stay on ONE point.
 
-SSML TAGS AVAILABLE:
-- <prosody rate="X%" pitch="±Yst" volume="±ZdB">text</prosody>
-  rate: percentage or keyword (fast=150%, medium=100%, slow=75%, very-slow=60%)
-  pitch: semitones (e.g., +5st higher, -3st lower) or keyword (high, low)
-  volume: +dB/-dB or keyword (loud, soft, medium)
-- <break time="300ms"/> or <break time="1s"/> — strategic pause
-- <emphasis level="strong"> or level="moderate">word</emphasis> — stress
-- <say-as interpret-as="whispered">text</say-as> — whisper effect
+STEP 2 - DISCOVERY (2-3 sentences):
+What happened / What is it / The facts. Be specific. No jumping between topics.
 
-    PROSODY DECISION RULES — decide per script based on topic emotional tone:
-    - NEWS/URGENT: faster rate (120-150%), higher pitch, clipped sentences
-  Example: <prosody rate="fast" pitch="+5st">Breaking news! NASA just announced...</prosody>
-- MOTIVATIONAL: building energy — slower opening, faster middle, slower emphatic finish
-  Example: <prosody rate="85%">You have the power...</prosody><break time="600ms"/><prosody rate="fast">to make it happen!</prosody>
-- SCIENCE/EXPLAINER: medium rate (100%), authoritative pitch, clear diction, occasional emphasis
-  Example: <prosody rate="medium" pitch="+2st">The answer lies in...</prosody>
-- HUMOR/WITTY: faster rate with pitch variation, natural breaks at punchline timing
-  Example: <prosody rate="fast" pitch="+3st">So I tried that trick and... [pause] it worked!</prosody>
-- QUESTIONS: raised pitch on question word, pause before answer
-  Example: Did you know <prosody pitch="+5st">sharks</prosody> could detect your heartbeat?
+STEP 3 - EXPLANATION (2-3 sentences):
+WHY this matters / WHY it works. Use simple analogy like "like [something everyone knows]". Skip jargon or explain in 3 words max.
 
-STRUCTURE:
-1. HOOK (first sentence): Grab attention with surprising fact + appropriate prosody
-2. BODY (sentences 2 to n-1): Facts, story, explanation — match prosody to topic tone
-3. FINISH (last sentence): Most impactful line — deliberate pacing, strategic pause before if ending a story
+STEP 4 - TAKEAWAY (1-2 sentences):
+MUST answer "so what?" or "why should I care?" Use "That's why..." or "...and here's what this means". Viewer leaves SMARTER.
 
-CONSTRAINTS:
-- Write naturally in {language}
-- End when story is COMPLETE, not when sentence limit hit
-- Minimum 4 sentences (story arc needs stasis → resolution)
-- NO "welcome", NO "in this video", NO "subscribe"
-- NO markdown, NO numbering, NO bullet points
+RULES:
+1. ONE topic only — if you catch yourself saying "but also..." STOP
+2. NEW info every sentence — no filler, no repeat
+3. Simple words — explain or replace any jargon
+4. MUST end with TAKEAWAY that answers "so what?"
+5. Always reinforce the subject throughout the script
 
-EXPLANATION REQUIREMENT:
-- By the end of the script, the central question MUST be answered
-- Use accurate terminology (nuclear fusion, not "fireball")
-- The goal is understanding, not suspense
-- Avoid endings that just warn or deflect without explaining
-- Script should leave viewer smarter, not just cautious
+OUTPUT FORMAT: Plain text wrapped in <speak> tags. No SSML prosody tags. No labels, no commentary.
 
 Subject: {subject}
 Language: {language}
 
-Return ONLY the SSML script wrapped in <speak> tags. No labels, no commentary."""
+Return ONLY the script wrapped in <speak> tags. No labels, no commentary."""
 
 SCRIPT_COMPLETE = """Complete this story by adding the resolution.
 The story starts well but ends incompletely. Your task:
