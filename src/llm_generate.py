@@ -330,19 +330,29 @@ def generate_tags_response(subject: str) -> list:
     return tags
 
 
-def generate_image_prompts_response(subject: str, script: str) -> list:
+def generate_image_prompts_response(subject: str, script: str, tier: str = "MODERATE") -> list:
     """
     Generate image prompts from script.
 
     Args:
         subject (str): The subject.
         script (str): The script text.
+        tier (str): Quality tier - SIMPLE, MODERATE, or COMPLEX.
 
     Returns:
         list: List of image prompts.
     """
     sentences = [s.strip() for s in re.split(r"[.!?]+", script) if len(s.strip()) > 10]
-    n_scenes = min(max(len(sentences), 3), 5)
+
+    # Dynamic scene count per tier (Reviewer Gap #3)
+    # Simple: 4-6 scenes, Moderate: 6-8 scenes, Complex: 8-12 scenes
+    tier_scene_ranges = {
+        "SIMPLE": (4, 6),
+        "MODERATE": (6, 8),
+        "COMPLEX": (8, 12),
+    }
+    min_scenes, max_scenes = tier_scene_ranges.get(tier, (6, 8))
+    n_scenes = min(max(len(sentences), min_scenes), max_scenes)
 
     # Z-Image Turbo optimized prompt template
     # Structure: subject+action, environment, lighting, composition, style, quality, inline constraints
