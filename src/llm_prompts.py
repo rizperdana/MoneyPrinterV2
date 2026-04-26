@@ -119,6 +119,17 @@ Language: {language}
 
 Return ONLY the SSML script wrapped in <speak> tags. No labels, no commentary."""
 
+SCRIPT_COMPLETE = """Complete this story by adding the resolution.
+The story starts well but ends incompletely. Your task:
+1. Read the existing script
+2. Add 1-3 sentences that resolve the story arc
+3. End with a clear resolution, answer, or payoff
+
+EXISTING SCRIPT:
+{original_script}
+
+OUTPUT: Add ONLY the completion sentences (no labels, no "here's the ending")."""
+
 # ---------------------------------------------------------------------------
 # Title generation prompts (from llm_generate.py)
 # ---------------------------------------------------------------------------
@@ -317,6 +328,7 @@ def get_prompt(prompt_name: str, **kwargs) -> str:
         "topic_no_research": TOPIC_NO_RESEARCH,
         # Script prompt
         "script": SCRIPT,
+        "script_complete": SCRIPT_COMPLETE,
         # Title prompts (only TITLE_RETRY per spec)
         "title_retry": TITLE_RETRY,
         # Description prompt
