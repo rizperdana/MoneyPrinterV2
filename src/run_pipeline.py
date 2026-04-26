@@ -270,6 +270,12 @@ def main():
     parser.add_argument(
         "--no-headless", action="store_true", help="Show Firefox browser"
     )
+    parser.add_argument(
+        "--audience",
+        default="general",
+        choices=["beginner", "general", "intermediate", "expert"],
+        help="Target audience level",
+    )
     args = parser.parse_args()
 
     info("=" * 50)
@@ -281,6 +287,7 @@ def main():
         locale=args.locale,
         upload=args.upload,
         headless=not args.no_headless,
+        audience=args.audience,
     )
 
     print("\n" + "=" * 50)
