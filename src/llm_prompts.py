@@ -101,15 +101,11 @@ STRUCTURE:
 3. FINISH (last sentence): Most impactful line — deliberate pacing, strategic pause before if ending a story
 
 CONSTRAINTS:
-- Total: {sentence_length} sentences
-- Each sentence: {max_words_per_sentence} words maximum (keep it SHORT for kids)
-- Total: {max_total_words} words
-- Each sentence wrapped in <prosody>...</prosody> or natural SSML
+- Write naturally in {language}
+- End when story is COMPLETE, not when sentence limit hit
+- Minimum 4 sentences (story arc needs stasis → resolution)
 - NO "welcome", NO "in this video", NO "subscribe"
 - NO markdown, NO numbering, NO bullet points
-- Write in {language}
-- Make it SOUND LIKE A PERSON TALKING, not a textbook
-- Add simple sound effects as <break> tags or whispered segments
 
 EXPLANATION REQUIREMENT:
 - By the end of the script, the central question MUST be answered
