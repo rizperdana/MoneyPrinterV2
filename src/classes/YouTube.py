@@ -46,6 +46,36 @@ from src.constants import (
     YOUTUBE_DONE_BUTTON_ID,
 )
 from typing import List, Optional
+
+
+def llm_judge_uniqueness(topic_a: str, topic_b: str) -> bool:
+    """Ask LLM: would viewer find these topics materially different?"""
+    try:
+        response = generate_text(
+            f"""You are a content uniqueness reviewer for a short-form video channel.
+
+TOPIC A: {topic_a}
+TOPIC B: {topic_b}
+
+If someone watched a video about TOPIC A, then watched a video about TOPIC B, would they feel they watched something genuinely NEW?
+
+Answer YES only if:
+- The subjects are completely different (car vs cooking recipe)
+- The angle/aspect is genuinely different and not just rephrasing
+
+Answer NO if:
+- Both topics cover the same subject or object (platypus vs platypus)
+- Same animal/object appears in both even with different angles (viewer feels repetition)
+- The "different angle" is superficial — same core subject, different wording
+
+YES or NO (one word only):""",
+            job="topic"
+        )
+        return response.strip().upper() == "YES"
+    except Exception:
+        return False  # Conservative: reject on error
+
+
 from moviepy import (
     VideoClip,
     AudioFileClip,
@@ -66,6 +96,21 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+
+from src.topic_tracker import (
+    TopicUniquenessChecker,
+    TopicFamilyTracker,
+    DASKETCH_AVAILABLE,
+)
+
+# Global checker instance (lazy init)
+_topic_checker: Optional[TopicUniquenessChecker] = None
+
+def get_topic_checker() -> TopicUniquenessChecker:
+    global _topic_checker
+    if _topic_checker is None:
+        _topic_checker = TopicUniquenessChecker()
+    return _topic_checker
 
 
 AUDIENCE_GUIDANCE = {
@@ -672,24 +717,11 @@ Example (if niche is "cool animal facts"):
             pass
 
         # Filter out topics that are too similar to already used ones
-        def isSimilar(new_topic, used_list, threshold=0.35):
-            """Check if topic shares too many words with an existing topic."""
-            new_words = set(re.sub(r"[^\w\s]", "", new_topic.lower()).split())
-            for used in used_list:
-                used_words = set(re.sub(r"[^\w\s]", "", used.lower()).split())
-                if not new_words or not used_words:
-                    continue
-                overlap = len(new_words & used_words) / max(
-                    len(new_words), len(used_words)
-                )
-                if overlap > threshold:
-                    return True
-                # Also check if the key words overlap significantly
-                key_words = [w for w in new_words if len(w) > 4]
-                used_key_words = [w for w in used_words if len(w) > 4]
-                if any(kw in used_key_words for kw in key_words[:2]):
-                    return True
-            return False
+        def isSimilar(new_topic: str, used_list: list[str], threshold: float = 0.35) -> bool:
+            """Legacy wrapper — redirects to 3-level dedup pipeline."""
+            checker = get_topic_checker()
+            result = checker.check_topic(new_topic, used_list)
+            return result["rejected"]
 
         # Pick the best topic that hasn't been used
         selected = None
@@ -1471,7 +1503,7 @@ Output format (one per line, numbered):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, ABSOLUTE VISUAL CONSTRAINTS: zero text anywhere in the frame — no letters, no numbers, no signs, no logos, no watermarks, no writing, no UI elements, no labels, no captions, no subtitles, no brand names. Every surface must be blank. No text-producing objects: no books, no screens, no signs, no newspapers, no menus, no labels. If text is required: rendered as illegible symbols or turned away from camera, no random characters, no unrelated people"
         print(f"Generating AI image via Pollinations zimage: {prompt[:80]}...")
 
         try:
@@ -1527,7 +1559,7 @@ Output format (one per line, numbered):
         """
         api_key = os.environ.get("POLLINATIONS_API_KEY", "")
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, ABSOLUTE VISUAL CONSTRAINTS: zero text anywhere in the frame — no letters, no numbers, no signs, no logos, no watermarks, no writing, no UI elements, no labels, no captions, no subtitles, no brand names. Every surface must be blank. No text-producing objects: no books, no screens, no signs, no newspapers, no menus, no labels. If text is required: rendered as illegible symbols or turned away from camera, no random characters, no unrelated people"
         print(f"Generating AI image via Pollinations flux: {prompt[:80]}...")
 
         try:
@@ -1583,7 +1615,7 @@ Output format (one per line, numbered):
                 )
             return None
 
-        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, no random characters, no unrelated people, no text, no watermarks, no logos"
+        enhanced_prompt = f"{prompt}, Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette, ABSOLUTE VISUAL CONSTRAINTS: zero text anywhere in the frame — no letters, no numbers, no signs, no logos, no watermarks, no writing, no UI elements, no labels, no captions, no subtitles, no brand names. Every surface must be blank. No text-producing objects: no books, no screens, no signs, no newspapers, no menus, no labels. If text is required: rendered as illegible symbols or turned away from camera, no random characters, no unrelated people"
 
         # Model fallback chain: Leonardo Phoenix > Flux Schnell > Flux Klein > Flux Dev > SDXL
         models = [

@@ -256,14 +256,52 @@ def search_firecrawl(query, limit=8):
     return []
 
 
+def search_linkup(query: str, max_results: int = 8) -> list:
+    """Search via Linkup API. API key via LINKUP_API_KEY env var."""
+    api_key = os.environ.get("LINKUP_API_KEY")
+    if not api_key:
+        logging.warning("LINKUP_API_KEY not set, skipping Linkup")
+        return []
+    try:
+        response = requests.post(
+            "https://api.linkup.so/v1/search",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "q": query,
+                "depth": "standard",
+                "maxResults": max_results,
+                "outputType": "searchResults"
+            },
+            timeout=30
+        )
+        if response.status_code != 200:
+            logging.warning(f"Linkup search failed: {response.status_code}")
+            return []
+        data = response.json()
+        return [
+            (item.get("name", ""), item.get("content", "")[:150])
+            for item in data.get("results", [])[:max_results]
+            if item.get("name") and item.get("content")
+        ]
+    except Exception as e:
+        logging.warning(f"Linkup search exception: {e}")
+        return []
+
+
 def research_trending_topics(niche: str, locale: str = None) -> str:
     """
-    Researches trending topics with dynamic, unique queries.
-    Priority: Tavily -> Exa -> ddgs -> Wikipedia -> Google RSS -> Firecrawl
-    Uses randomized angles to ensure unique results every time.
+    3-phase tiered research strategy.
+    Phase 1 — PREMIUM DISCOVERY: Rotate ONE premium service per run (Tavily→Exa→Firecrawl→Linkup).
+    Phase 2 — FREE EXPANSION: Only if Phase 1 < 3 results. ddgs (2 queries), Wikipedia, Google Trends.
+    Phase 3 — MERGE & RANK: Deduplicate by title, build context string.
     """
-    context_parts = []
+    from src.topic_tracker import load_research_state, save_research_state, get_next_premium_service
+
     now = datetime.now()
+    state = load_research_state()
 
     # Generate dynamic angle modifiers for unique research
     angle_modifiers = [
@@ -278,11 +316,8 @@ def research_trending_topics(niche: str, locale: str = None) -> str:
         f"hidden gems",
         f"controversial",
     ]
-    # Pick random modifier based on time for variety
     random.seed(int(now.timestamp()) % 10000)
     angle = random.choice(angle_modifiers)
-
-    # Build dynamic queries
     base_query = niche
     dynamic_queries = [
         f"{angle} {base_query}",
@@ -292,189 +327,93 @@ def research_trending_topics(niche: str, locale: str = None) -> str:
         f"{base_query} viral moments",
     ]
 
-    info("   🔍 Starting dynamic topic research...")
-
-    # Method 1: Tavily
-    info("   🔍 Searching Tavily...")
-    query = random.choice(dynamic_queries)
-    topics_found = search_tavily(query, niche, max_results=8, locale=locale)
-    if topics_found:
-        context_parts.append(
-            f"Tavily ({query[:40]}):\n"
-            + "\n".join(f"- {t}: {c}" for t, c in topics_found[:8])
-        )
-        info(f"   ✅ Tavily: {len(topics_found)} results")
-
-    # Method 2: Exa
-    info("   🔍 Searching Exa...")
-    query = random.choice(dynamic_queries)
-    topics_found = search_exa(query, niche, num_results=8, locale=locale)
-    if topics_found:
-        context_parts.append(
-            f"Exa ({query[:40]}):\n"
-            + "\n".join(f"- {t}: {c}" for t, c in topics_found[:8])
-        )
-        info(f"   ✅ Exa: {len(topics_found)} results")
-
-    # Method 3: ddgs (DuckDuckGo via Bing backend - bypasses Indonesia block)
-    info("   🔍 Searching DuckDuckGo (ddgs)...")
-    query = random.choice(dynamic_queries)
-    topics_found = search_ddgs(query, max_results=8)
-    if topics_found:
-        context_parts.append(
-            f"DuckDuckGo ({query[:40]}):\n"
-            + "\n".join(f"- {t}: {c}" for t, c in topics_found[:8])
-        )
-        info(f"   ✅ ddgs: {len(topics_found)} results")
-
-    # Method 4: Wikipedia
-    info("   🔍 Fetching Wikipedia...")
-    topics_found = fetch_wikipedia()
-    if topics_found:
-        # Group by type
-        wiki_parts = []
-        for title, content in topics_found:
-            wiki_parts.append(f"- {title}: {content}")
-        context_parts.append("Wikipedia:\n" + "\n".join(wiki_parts))
-        info(f"   ✅ Wikipedia: fetched")
-
-    # Method 5: Google Trends RSS
-    info("   🔍 Fetching Google Trends...")
-    topics_found = fetch_google_trends(locale)
-    if topics_found:
-        context_parts.append(
-            f"Google Trends ({locale or 'Global'}):\n"
-            + "\n".join(f"- {t}: {c}" for t, c in topics_found[:15])
-        )
-        info(f"   ✅ Google Trends: {len(topics_found)} topics")
-
-    # Method 6: Firecrawl (last fallback)
-    info("   🔍 Searching Firecrawl...")
-    if not any(
-        p
-        for p in context_parts
-        if any(x in p.lower() for x in ["tavily", "exa", "duckduckgo", "ddgs"])
-    ):
-        query = random.choice(dynamic_queries)
-        topics_found = search_firecrawl(query, limit=8)
-        if topics_found:
-            context_parts.append(
-                f"Firecrawl ({query[:40]}):\n"
-                + "\n".join(f"- {t}: {c}" for t, c in topics_found[:8])
-            )
-            info(f"   ✅ Firecrawl: {len(topics_found)} results")
-
-    if context_parts:
-        return "\n\n".join(context_parts)
-    return ""
-
-
-def extract_facts(research_text: str, topic_hint: str) -> dict:
-    """
-    Extract structured facts from raw research text.
-
-    Args:
-        research_text: Raw text from web research (same text used for topic inspiration)
-        topic_hint: The topic string being researched (used for fallback topic_identifier)
-
-    Returns:
-        dict with keys:
-            person_names: list[str] — people's names found
-            locations: list[str] — places found
-            dates: list[str] — dates/years found
-            organizations: list[str] — org names found
-            key_facts: list[str] — specific claims (numbers, events)
-            topic_identifier: str|None — explicit entity name if topic is a specific known thing 
-                (Bigfoot, Bermuda Triangle), else None
-            source_urls: list[str] — URLs facts came from
-            confidence: str — "high" | "medium" | "low"
-            extraction_note: str — human-readable summary
-    """
-    # Check if topic_hint is a specific known identifier (heuristic)
-    specific_identifiers = [
-        "bigfoot", "bermuda triangle", "loch ness", "area 51",
-        "roswell", "yeti", "mothman", "chupacabra",
-        "jack the ripper", "zodiac killer", "d bunker"
-    ]
-    topic_is_specific = topic_hint.lower().strip() in specific_identifiers or any(
-        topic_hint.lower().strip() in ident for ident in specific_identifiers
-    )
-    
-    # Build LLM prompt (system prompt incorporated into user prompt)
-    system_prompt = "You are a fact extraction specialist. Extract all specific entities from the text. Return ONLY a JSON object."
-    user_prompt = f"{system_prompt}\n\nText to extract from:\n{research_text}\n\nTopic hint: {topic_hint}"
-    
+    # === PHASE 1: PREMIUM DISCOVERY (one service, rotated) ========================
+    premium_results = []
+    seq = state.get("premium_sequence", ["tavily", "exa", "firecrawl", "linkup"])
+    next_service = get_next_premium_service(state)
     try:
-        model = get_model_for_job("topic")
-        response = generate_text(user_prompt, model_name=model, job="topic")
-        
-        # Try to parse JSON from response
-        import json
-        
-        # Find JSON in response
-        json_start = response.find("{")
-        json_end = response.rfind("}") + 1
-        if json_start >= 0 and json_end > json_start:
-            json_str = response[json_start:json_end]
-            data = json.loads(json_str)
-            
-            # Extract fields with defaults
-            person_names = data.get("person_names", [])
-            locations = data.get("locations", [])
-            dates = data.get("dates", [])
-            organizations = data.get("organizations", [])
-            key_facts = data.get("key_facts", [])
-            topic_identifier = data.get("topic_identifier")
-            source_urls = data.get("source_urls", [])
-            
-            # Calculate confidence
-            total_facts = len(person_names) + len(locations) + len(dates) + len(organizations) + len(key_facts)
-            if total_facts >= 3:
-                confidence = "high"
-            elif total_facts >= 1:
-                confidence = "medium"
-            else:
-                confidence = "low"
-            
-            # Build extraction note
-            extraction_note = f"Extracted {total_facts} facts from research text"
-            
-            return {
-                "person_names": person_names,
-                "locations": locations,
-                "dates": dates,
-                "organizations": organizations,
-                "key_facts": key_facts,
-                "topic_identifier": topic_identifier,
-                "source_urls": source_urls,
-                "confidence": confidence,
-                "extraction_note": extraction_note
-            }
-        else:
-            raise ValueError("No JSON found in response")
-    except Exception:
-        # Edge case: no facts found
-        if topic_is_specific:
-            return {
-                "person_names": [],
-                "locations": [],
-                "dates": [],
-                "organizations": [],
-                "key_facts": [],
-                "topic_identifier": topic_hint,
-                "source_urls": [],
-                "confidence": "low",
-                "extraction_note": f"No facts found, using topic hint as identifier: {topic_hint}"
-            }
-        else:
-            return {
-                "person_names": [],
-                "locations": [],
-                "dates": [],
-                "organizations": [],
-                "key_facts": [],
-                "topic_identifier": None,
-                "source_urls": [],
-                "confidence": "low",
-                "extraction_note": "No facts extracted from research text"
-            }
+        svc_idx = seq.index(next_service)
+    except ValueError:
+        svc_idx = 0
+    service_order = seq[svc_idx:] + seq[:svc_idx]
+
+    info("   🔍 Phase 1: Premium discovery...")
+    for service in service_order:
+        if service == "tavily" and os.environ.get("TAVILY_API_KEY"):
+            query = random.choice(dynamic_queries)
+            topics_found = search_tavily(query, niche, max_results=8, locale=locale)
+            if topics_found:
+                premium_results.extend(topics_found)
+                info(f"   ✅ Tavily: {len(topics_found)} results")
+                state["last_premium"] = service
+                if len(premium_results) >= 3:
+                    break
+        elif service == "exa" and os.environ.get("EXA_API_KEY"):
+            query = random.choice(dynamic_queries)
+            topics_found = search_exa(query, niche, num_results=8, locale=locale)
+            if topics_found:
+                premium_results.extend(topics_found)
+                info(f"   ✅ Exa: {len(topics_found)} results")
+                state["last_premium"] = service
+                if len(premium_results) >= 3:
+                    break
+        elif service == "firecrawl" and os.environ.get("FIRECRAWL_API_KEY"):
+            query = random.choice(dynamic_queries)
+            topics_found = search_firecrawl(query, limit=8)
+            if topics_found:
+                premium_results.extend(topics_found)
+                info(f"   ✅ Firecrawl: {len(topics_found)} results")
+                state["last_premium"] = service
+                if len(premium_results) >= 3:
+                    break
+        elif service == "linkup":
+            topics_found = search_linkup(niche, max_results=8)
+            if topics_found:
+                premium_results.extend(topics_found)
+                info(f"   ✅ Linkup: {len(topics_found)} results")
+                state["last_premium"] = service
+                if len(premium_results) >= 3:
+                    break
+
+    # === PHASE 2: FREE EXPANSION (only if premium < 3 results) ===================
+    if len(premium_results) < 3:
+        info("   🔍 Phase 2: Free expansion (premium yielded < 3 results)...")
+        free_results = []
+        # ddgs: 2 query variations
+        ddgs_q1 = f"{niche} interesting facts"
+        ddgs_q2 = f"{niche} surprising discoveries"
+        free_results.extend(search_ddgs(ddgs_q1, max_results=4))
+        free_results.extend(search_ddgs(ddgs_q2, max_results=4))
+        # Wikipedia
+        wiki_results = fetch_wikipedia()
+        if wiki_results:
+            free_results.extend(wiki_results)
+        # Google Trends
+        trends_results = fetch_google_trends(locale)
+        if trends_results:
+            free_results.extend(trends_results)
+        # Merge and deduplicate by title
+        if free_results:
+            seen = set()
+            unique_free = []
+            for r in free_results:
+                key = r[0][:50].lower()
+                if key not in seen:
+                    seen.add(key)
+                    unique_free.append(r)
+            premium_results.extend(unique_free[:max(0, 3 - len(premium_results))])
+
+    save_research_state(state)
+
+    # === PHASE 3: MERGE & RANK ===================================================
+    seen = set()
+    unique_results = []
+    for r in premium_results:
+        key = r[0][:50].lower()
+        if key not in seen:
+            seen.add(key)
+            unique_results.append(r)
+
+    if unique_results:
+        return "\n\n".join([f"- {t}: {c[:100]}" for t, c in unique_results[:8]])
+    return ""
