@@ -332,9 +332,6 @@ def generate_image_prompts_response(subject: str, script: str, audience: str = "
         image_size="landscape_16_9"
     )
 
-    # Add audience context to prompt
-    prompt += f"\n\nAudience level: {audience}"
-
     completion = generate_response(prompt, job="image_prompts")
 
     image_prompts = []

@@ -129,8 +129,8 @@ SEO_TAGS = 'Generate a JSON array of 10-15 YouTube SEO tags (single words or sho
 IMAGE_PROMPT = """
 You are a text-to-image prompt engineer writing for Z-Image Turbo (pollinations.ai zimage model).
 
-STYLE (MANDATORY — use this exact style for every prompt, do not omit or modify):
-Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette.
+STYLE: Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette.
+Apply this style to every prompt without exception.
 
 TASK:
 For each script sentence below, write ONE complete visual scene prompt for Z-Image Turbo.
@@ -156,20 +156,16 @@ FOR EACH SENTENCE, CREATE A PROMPT WITH THESE ELEMENTS:
 5. LIGHTING — Type and direction: golden hour sunlight, soft overcast, dramatic rim light, etc.
 6. NUANCE — Any specific visual details that further clarify the subject (materials, textures, colors)?
 
-RULES (STRICT — every prompt must follow these):
-- SUBJECT MUST appear and be clearly identifiable in every prompt
+RULES:
+- Subject must be clearly identifiable in every prompt
 - If script is about a PERSON, show that specific person with distinguishing traits — NOT a generic human figure
 - If script is about an OBJECT, show that object clearly with defining characteristics — NOT a generic item
 - If script is about a PLACE, show recognizable features of that place — NOT a generic looking location
-- DO NOT substitute generic alternatives for the specific subject in the script
-- MANDATORY STYLE: Pixar 3D animation in Studio Ghibli style, soft earthy watercolor lighting, warm inviting palette
-- NO text, no letters, no numbers, no signs, no logos, no writing of any kind
-- NO close-ups of hands, fingers, or human extremities (unless hands are the actual subject)
-- NO vague adjectives alone: do not use "cinematic", "beautiful", "epic", "magical", "dreamlike" without concrete subject info
-- If the topic is ABSTRACT (e.g., "justice", "freedom", "time"), represent it through a concrete visual metaphor before applying style
+- If the topic is ABSTRACT (e.g., "justice", "freedom", "time"), represent it through a concrete visual metaphor
+- No text, letters, numbers, signs, logos, or writing of any kind
+- No close-ups of hands, fingers, or human extremities (unless hands are the actual subject)
 - 90-150 words per prompt (Z-Image Turbo sweet spot)
 - Use complete natural sentences, NOT tag lists
-- Mention the primary subject 2-3 times in different forms within the prompt for reinforcement
 
 TECHNICAL PARAMS (append to each prompt):
 "Params: num_inference_steps={num_inference_steps}, acceleration={acceleration}, image_size={image_size}"
@@ -180,7 +176,6 @@ Numbered 1 to {n_scenes}. Each prompt on its own line.
 - Use complete natural sentences (NOT tags/lists)
 - NO JSON, NO quotes, NO bullet points
 - Scenes must flow as a visual narrative (beginning → middle → end)
-- Same Ghibli/watercolor style across ALL scenes
 """
 
 # Default image generation parameters (kept in spec)

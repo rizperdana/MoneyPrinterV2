@@ -249,7 +249,7 @@ def get_model_for_job(job: str) -> str | None:
             return selected
     except Exception:
         pass
-    
+
     # Fall back to default routing
     models = MODEL_ROUTING.get(job)
     if models:
@@ -260,7 +260,7 @@ def get_model_for_job(job: str) -> str | None:
 def get_fallback_chain(job: str) -> list[str]:
     """Get the fallback chain for a job from config or default."""
     import json as _json
-    
+
     # Try config.py first (reads from DB)
     try:
         from src.config import _get_config
@@ -277,6 +277,6 @@ def get_fallback_chain(job: str) -> list[str]:
                     pass
     except Exception:
         pass
-    
+
     # Return default chain from MODEL_ROUTING
     return MODEL_ROUTING.get(job, [])
