@@ -2,6 +2,7 @@ import re
 import time
 import os
 import random
+import logging
 import requests
 from datetime import datetime
 from src.llm_provider import generate_text, get_model_for_job
