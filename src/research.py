@@ -417,3 +417,101 @@ def research_trending_topics(niche: str, locale: str = None) -> str:
     if unique_results:
         return "\n\n".join([f"- {t}: {c[:100]}" for t, c in unique_results[:8]])
     return ""
+
+
+def extract_facts(research_text: str, topic_hint: str) -> dict:
+    """
+    Extract structured facts from raw research text.
+
+    Args:
+    research_text: Raw text from web research (same text used for topic inspiration)
+    topic_hint: The topic string being researched (used for fallback topic_identifier)
+
+    Returns:
+    dict with keys:
+    person_names: list[str] — people's names found
+    locations: list[str] — places found
+    dates: list[str] — dates/years found
+    organizations: list[str] — org names found
+    key_facts: list[str] — specific claims (numbers, events)
+    topic_identifier: str|None — explicit entity name if topic is a specific known thing
+    (Bigfoot, Bermuda Triangle), else None
+    source_urls: list[str] — URLs facts came from
+    confidence: str — "high" | "medium" | "low"
+    extraction_note: str — human-readable summary
+    """
+    # Check if topic_hint is a specific known identifier (heuristic)
+    specific_identifiers = [
+        "bigfoot", "bermuda triangle", "loch ness", "area 51",
+        "roswell", "yeti", "mothman", "chupacabra",
+        "jack the ripper", "zodiac killer", "d bunker"
+    ]
+    topic_is_specific = topic_hint.lower().strip() in specific_identifiers or any(
+        topic_hint.lower().strip() in ident for ident in specific_identifiers
+    )
+
+    # Build LLM prompt (system prompt incorporated into user prompt)
+    system_prompt = "You are a fact extraction specialist. Extract all specific entities from the text. Return ONLY a JSON object."
+    user_prompt = f"{system_prompt}\n\nText to extract from:\n{research_text}\n\nTopic hint: {topic_hint}"
+
+    try:
+        model = get_model_for_job("topic")
+        response = generate_text(user_prompt, model_name=model, job="topic")
+
+        # Try to parse JSON from response
+        import json
+
+        # Find JSON in response
+        json_start = response.find("{")
+        json_end = response.rfind("}") + 1
+        if json_start >= 0 and json_end > json_start:
+            json_str = response[json_start:json_end]
+            data = json.loads(json_str)
+
+            # Extract fields with defaults
+            person_names = data.get("person_names", [])
+            locations = data.get("locations", [])
+            dates = data.get("dates", [])
+            organizations = data.get("organizations", [])
+            key_facts = data.get("key_facts", [])
+            topic_identifier = data.get("topic_identifier")
+            source_urls = data.get("source_urls", [])
+
+            # Calculate confidence
+            total_facts = len(person_names) + len(locations) + len(dates) + len(organizations) + len(key_facts)
+            if total_facts >= 3:
+                confidence = "high"
+            elif total_facts >= 1:
+                confidence = "medium"
+            else:
+                confidence = "low"
+
+            # Build extraction note
+            extraction_note = f"Extracted {total_facts} facts from research text"
+
+            return {
+                "person_names": person_names,
+                "locations": locations,
+                "dates": dates,
+                "organizations": organizations,
+                "key_facts": key_facts,
+                "topic_identifier": topic_identifier,
+                "source_urls": source_urls,
+                "confidence": confidence,
+                "extraction_note": extraction_note
+            }
+    except Exception as e:
+        warning(f"extract_facts failed: {e}")
+
+    # Fallback
+    return {
+        "person_names": [],
+        "locations": [],
+        "dates": [],
+        "organizations": [],
+        "key_facts": [],
+        "topic_identifier": None,
+        "source_urls": [],
+        "confidence": "low",
+        "extraction_note": "No facts extracted"
+    }
