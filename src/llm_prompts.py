@@ -106,7 +106,7 @@ OUTPUT: Add ONLY the completion sentences (no labels, no "here's the ending").""
 # Title generation prompts (from llm_generate.py)
 # ---------------------------------------------------------------------------
 
-TITLE_RETRY = "Generate a YouTube Shorts title for: {subject}. Rules: Under 50 characters. MUST be EXACTLY 3-8 words (no more, no less). Front-load the most important keywords. No hashtags. TITLE CLARITY:\n- Title must accurately describe the video content\n- Must be readable and make sense as a sentence\n- Avoid vague phrases like \"fires our solar system fast\"\n- Think: would someone know what the video is about from this title?\nReturn ONLY the title, nothing else."
+TITLE_RETRY = "Generate a YouTube Shorts title for: {subject}. Rules: MAX 100 characters. MUST be EXACTLY 3-8 words (no more, no less). Front-load the most important keywords. No hashtags. TITLE CLARITY:\n- Title must accurately describe the video content\n- Must be readable and make sense as a sentence\n- Avoid vague phrases like \"fires our solar system fast\"\n- Think: would someone know what the video is about from this title?\nReturn ONLY the title, nothing else."
 
 # ---------------------------------------------------------------------------
 # Description and hashtag prompts (from llm_generate.py)

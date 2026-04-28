@@ -245,6 +245,15 @@ def generate_title_response(subject: str, audience: str = "general") -> str:
                 words.append("interesting")
             title = " ".join(words)
 
+    # Hard cap: truncate to 100 chars (prefer word boundaries)
+    if len(title) > 100:
+        title = title[:101]
+        last_space = title.rfind(" ")
+        if last_space > 50:
+            title = title[:last_space]
+        else:
+            title = title[:100].rstrip()
+
     return title
 
 
